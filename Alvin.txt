@@ -2,3 +2,4 @@ hallo
 git config --global --list
 git config --global user.name alvinbagus029-sketch
 git config --global user.email alvinbagus029@gmail.com
+jembot
