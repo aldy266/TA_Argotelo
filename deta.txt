@@ -1,0 +1,8 @@
+
+halo
+git config --global --list
+git config --global user.name deta78-wq
+git config --global user.email detamulyana057@gmail.com
+haiii satu
+
+
