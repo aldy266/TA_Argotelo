@@ -60,12 +60,19 @@
                         USERNAME
                     </label>
 
-                    <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        placeholder="Enter your credentials"
-                        required>
+                    <div class="input-group">
+
+                        <i class="bi bi-person"></i>
+
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Enter your username"
+                            autocomplete="username"
+                            required>
+
+                    </div>
 
                 </div>
 
@@ -84,13 +91,16 @@
 
                     </div>
 
-                    <div class="password-wrapper">
+                    <div class="input-group password-wrapper">
+
+                        <i class="bi bi-lock"></i>
 
                         <input
                             type="password"
                             id="password"
                             name="password"
-                            placeholder="••••••••"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
                             required>
 
                         <button
