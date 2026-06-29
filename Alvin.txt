@@ -1,5 +1,12 @@
-hallo titit
+hallo woy
 git config --global --list
 git config --global user.name alvinbagus029-sketch
 git config --global user.email alvinbagus029@gmail.com
+<<<<<<< HEAD
 tes teman -- aldy
+=======
+jembot
+ALVINN JEEMBBOOOTTT
+
+CEKK
+>>>>>>> 88a8ed475c290d3236ffe0f883200fe848ed0910

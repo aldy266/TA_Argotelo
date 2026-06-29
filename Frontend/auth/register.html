@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Register | AMSP</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet"
+          href="../assets/css/auth.css">
+
+    <link rel="stylesheet"
+          href="../assets/css/responsive.css">
+
+</head>
+
+<body>
+    <div class="auth-container">
+
+        <div class="auth-card">
+
+            <!-- Logo -->
+            <div class="logo-container">
+                <img src="../assets/images/logo.png" alt="Argotelo Logo" class="logo">
+            </div>
+
+            <!-- Header -->
+            <div class="auth-header">
+
+                <h1>CREATE ACCOUNT</h1>
+
+                <p>
+                    Create your AMSP account to access the system.
+                </p>
+
+            </div>
+
+            <!-- Form Register -->
+            <form class="auth-form" id="registerForm">
+
+                <!-- Full Name -->
+                <div class="form-group">
+
+                    <label for="fullname">
+                        FULL NAME
+                    </label>
+
+                    <div class="input-group">
+
+                        <i class="bi bi-person"></i>
+
+                        <input
+                            type="text"
+                            id="fullname"
+                            name="fullname"
+                            placeholder="Enter your full name"
+                            required>
+
+                    </div>
+
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+
+                    <label for="email">EMAIL</label>
+
+                    <div class="input-group">
+
+                        <i class="bi bi-envelope"></i>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="Enter email"
+                            required>
+
+                    </div>
+
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+
+                    <label for="phone">PHONE</label>
+
+                    <div class="input-group">
+
+                        <i class="bi bi-telephone"></i>
+
+                        <input
+                            type="text"
+                            id="phone"
+                            name="phone"
+                            placeholder="Enter phone number"
+                            required>
+
+                    </div>
+
+                </div>
+
+                <!-- Username -->
+                <div class="form-group">
+
+                    <label for="username">
+                        USERNAME
+                    </label>
+
+                    <div class="input-group">
+
+                        <i class="bi bi-person-circle"></i>
+
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Enter username"
+                            required>
+
+                    </div>
+
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+
+                    <label for="password">
+                        PASSWORD
+                    </label>
+
+                    <div class="input-group password-wrapper">
+
+                        <i class="bi bi-lock"></i>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Create password"
+                            required>
+
+                        <button
+                            type="button"
+                            class="toggle-password">
+
+                            <i class="bi bi-eye"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn-login">
+
+                    Create Account
+
+                </button>
+
+                <a
+                    href="login.html"
+                    class="btn-register">
+
+                    Back to Login
+
+                </a>
+
+            </form>
+
+            <!-- Footer -->
+
+            <div class="auth-footer">
+
+                <p>
+                    Need help accessing your account?
+                    <a href="#">
+                        Contact Support
+                    </a>
+                </p>
+
+                <div class="footer-links">
+
+                    <a href="#">
+                        Privacy Policy
+                    </a>
+
+                    <a href="#">
+                        Terms of Service
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="../assets/js/auth.js"></script>
+</body>
+
+</html>

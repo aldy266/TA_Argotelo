@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Login | AMSP</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet"
+          href="../assets/css/auth.css">
+
+    <link rel="stylesheet"
+          href="../assets/css/responsive.css">
+
+</head>
+
+<body>
+    <div class="auth-container">
+
+        <div class="auth-card">
+
+            <!-- Logo -->
+            <div class="logo-container">
+                <img src="../assets/images/logo.png" alt="Argotelo Logo" class="logo">
+            </div>
+
+            <!-- Header -->
+            <div class="auth-header">
+
+                <h1>ARGOTELO SALATIGA</h1>
+
+                <p>
+                    Premium POS Management System for Argotelo Salatiga
+                </p>
+
+            </div>
+
+            <!-- Form Login -->
+            <form class="auth-form" id="loginForm">
+
+                <!-- Username -->
+                <div class="form-group">
+
+                    <label for="username">
+                        USERNAME
+                    </label>
+
+                    <div class="input-group">
+
+                        <i class="bi bi-person"></i>
+
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Enter your username"
+                            autocomplete="username"
+                            required>
+
+                    </div>
+
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+
+                    <div class="password-header">
+
+                        <label for="password">
+                            PASSWORD
+                        </label>
+
+                        <a href="#">
+                            Forgot Password?
+                        </a>
+
+                    </div>
+
+                    <div class="input-group password-wrapper">
+
+                        <i class="bi bi-lock"></i>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required>
+
+                        <button
+                            type="button"
+                            id="togglePassword"
+                            class="toggle-password">
+
+                            <i class="bi bi-eye"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- Login -->
+                <button
+                    type="submit"
+                    class="btn-login">
+
+                    Sign In to Dashboard →
+
+                </button>
+
+                <!-- Register -->
+                <a
+                    href="register.html"
+                    class="btn-register">
+
+                    Register Account
+
+                </a>
+
+            </form>
+
+            <!-- Footer -->
+
+            <div class="auth-footer">
+
+                <p>
+                    Need help accessing your account?
+                    <a href="#">
+                        Contact Support
+                    </a>
+                </p>
+
+                <div class="footer-links">
+
+                    <a href="#">
+                        Privacy Policy
+                    </a>
+
+                    <a href="#">
+                        Terms of Service
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="../assets/js/auth.js"></script>
+</body>
+
+</html>
