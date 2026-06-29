@@ -68,36 +68,52 @@ if (loginForm) {
 }
 
 // ==============================
-// REGISTER VALIDATION
+// REGISTER
 // ==============================
 
 const registerForm = document.getElementById("registerForm");
 
 if (registerForm) {
 
-    registerForm.addEventListener("submit", function (e) {
+    registerForm.addEventListener("submit", async function (e) {
 
         e.preventDefault();
 
-        const fullname = document.getElementById("fullname").value.trim();
-        const role = document.getElementById("role").value;
-        const username = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value.trim();
+        const data = {
 
-        if (
-            fullname === "" ||
-            role === "" ||
-            username === "" ||
-            password === ""
-        ) {
+            fullname: document.getElementById("fullname").value.trim(),
 
-            alert("Please complete all fields.");
+            email: document.getElementById("email").value.trim(),
 
-            return;
+            phone: document.getElementById("phone").value.trim(),
+
+            username: document.getElementById("username").value.trim(),
+
+            password: document.getElementById("password").value.trim()
+
+        };
+
+        const response = await fetch("http://127.0.0.1:5000/api/register",{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(data)
+
+        });
+
+        const result = await response.json();
+
+        alert(result.message);
+
+        if(result.success){
+
+            window.location.href="login.html";
 
         }
-
-        alert("Frontend Register Success!");
 
     });
 
