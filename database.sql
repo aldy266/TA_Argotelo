@@ -1,4 +1,4 @@
--- Active: 1782482181680@@gateway01.ap-southeast-1.prod.aws.tidbcloud.com@4000@mysql
+-- Active: 1782482181680@@gateway01.ap-southeast-1.prod.aws.tidbcloud.com@4000@db_argotelo
 CREATE DATABASE db_argotelo;
 USE db_argotelo;
 
