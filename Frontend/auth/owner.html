@@ -40,16 +40,14 @@
 
         <!-- ================= SIDEBAR ================= -->
 
-        <aside class="sidebar">
+            <aside class="sidebar">
 
             <div class="sidebar-logo">
 
-                <img src="../assets/images/logo.png"
-                     alt="Logo">
+                <img src="../assets/images/logo RB.png"
+                    alt="Logo Argotelo">
 
-                <h2>ARGOTELO</h2>
-
-                <span>Salatiga</span>
+                <h2>ARGOTELO SALATIGA</h2>
 
             </div>
 
@@ -66,23 +64,13 @@
                 </a>
 
                 <a href="#">
-                    <i class="bi bi-cup-hot"></i>
-                    <span>Menu Management</span>
-                </a>
-
-                <a href="#">
-                    <i class="bi bi-people-fill"></i>
+                    <i class="bi bi-person-badge"></i>
                     <span>Staff</span>
                 </a>
 
                 <a href="#">
-                    <i class="bi bi-wallet2"></i>
-                    <span>Finance</span>
-                </a>
-
-                <a href="#">
-                    <i class="bi bi-file-earmark-bar-graph"></i>
-                    <span>Reports</span>
+                    <i class="bi bi-tools"></i>
+                    <span>Menu Management</span>
                 </a>
 
             </nav>
@@ -94,7 +82,7 @@
                     <span>Help Center</span>
                 </a>
 
-                <a href="../auth/login.html" class="logout">
+                <a href="#" class="logout">
                     <i class="bi bi-box-arrow-right"></i>
                     <span>Sign Out</span>
                 </a>
@@ -109,19 +97,17 @@
 
         <main class="main-content">
 
-            <header class="topbar">
+        <!-- ================= TOPBAR ================= -->
 
-            <div class="topbar-left">
+        <header class="topbar">
 
-                <div class="search-box">
+            <div class="search-box">
 
-                    <i class="bi bi-search"></i>
+                <i class="bi bi-search"></i>
 
-                    <input
-                        type="text"
-                        placeholder="Cari menu, transaksi, pegawai...">
-
-                </div>
+                <input
+                    type="text"
+                    placeholder="Cari transaksi, produk, atau laporan...">
 
             </div>
 
@@ -129,33 +115,31 @@
 
                 <div class="stock-alert">
 
-                    <i class="bi bi-exclamation-circle-fill"></i>
-
+                    <i class="bi bi-exclamation-triangle"></i>
                     <span>3 Stok Menipis</span>
 
                 </div>
 
                 <button class="icon-button">
-                    <i class="bi bi-bell"></i>
+                    <i class="bi bi-bell-fill"></i>
                 </button>
 
                 <button class="icon-button">
-                    <i class="bi bi-gear"></i>
+                    <i class="bi bi-gear-fill"></i>
                 </button>
 
                 <div class="profile">
 
-                    <img
-                        src="../assets/images/profile.png"
-                        alt="Owner">
-
                     <div class="profile-info">
 
-                        <h4>Owner</h4>
-
-                        <span>Administrator</span>
+                        <h4>Admin Argotelo</h4>
+                        <span>Super Admin</span>
 
                     </div>
+
+                    <img
+                        src="../assets/images/profile.png"
+                        alt="Admin">
 
                 </div>
 
@@ -163,41 +147,33 @@
 
         </header>
 
-            <!-- ==========================
-                    DASHBOARD
-            ========================== -->
+        <!-- ================= HEADER DASHBOARD ================= -->
 
-            <section class="dashboard">
+        <section class="dashboard-header">
 
-                <!-- Header -->
+            <div class="dashboard-title">
 
-                <div class="dashboard-header">
+                <h1>Ringkasan Operasional</h1>
 
-                    <div>
+                <p>
+                    Selamat datang kembali. Berikut adalah performa kedai hari ini.
+                </p>
 
-                        <h1>
+            </div>
 
-                            Ringkasan Operasional
+            <div class="dashboard-action">
 
-                        </h1>
+                <div class="filter-group">
 
-                        <p>
-
-                            Pantau seluruh aktivitas Argotelo Salatiga secara real-time.
-
-                        </p>
-
-                    </div>
-
-                    <button class="primary-button">
-
-                        <i class="bi bi-download"></i>
-
-                        Download Report
-
-                    </button>
+                    <button class="active">Hari Ini</button>
+                    <button>Mingguan</button>
+                    <button>Bulanan</button>
 
                 </div>
+
+            </div>
+
+        </section>
 
                 <!-- ==========================
                         STATISTICS
@@ -334,10 +310,6 @@
                     </div>
 
                 </div>
-                
-                    <!-- ==========================
-                            DASHBOARD CONTENT
-                    ========================== -->
 
                 <div class="dashboard-content">
 
@@ -352,24 +324,22 @@
                             <div>
 
                                 <h3>
-
-                                    Grafik Penjualan
-
+                                    Grafik Penjualan Mingguan
                                 </h3>
 
                                 <p>
-
-                                    Total penjualan selama 7 hari terakhir.
-
+                                    Performa transaksi Argotelo selama 7 hari terakhir
                                 </p>
 
                             </div>
 
-                            <button class="outline-button">
+                            <a href="#" class="detail-link">
 
-                                Mingguan
+                                Lihat Detail
 
-                            </button>
+                                <i class="bi bi-arrow-right"></i>
+
+                            </a>
 
                         </div>
 
@@ -378,59 +348,38 @@
                             <div class="chart-bars">
 
                                 <div class="chart-item">
-
-                                    <div class="bar h-70"></div>
-
+                                    <div class="bar h-40"></div>
                                     <span>Sen</span>
-
                                 </div>
 
                                 <div class="chart-item">
-
-                                    <div class="bar h-90"></div>
-
-                                    <span>Sel</span>
-
-                                </div>
-
-                                <div class="chart-item">
-
-                                    <div class="bar h-80"></div>
-
-                                    <span>Rab</span>
-
-                                </div>
-
-                                <div class="chart-item">
-
-                                    <div class="bar h-100"></div>
-
-                                    <span>Kam</span>
-
-                                </div>
-
-                                <div class="chart-item">
-
                                     <div class="bar h-60"></div>
-
-                                    <span>Jum</span>
-
+                                    <span>Sel</span>
                                 </div>
 
                                 <div class="chart-item">
-
-                                    <div class="bar h-85"></div>
-
-                                    <span>Sab</span>
-
-                                </div>
-
-                                <div class="chart-item">
-
                                     <div class="bar h-55"></div>
+                                    <span>Rab</span>
+                                </div>
 
+                                <div class="chart-item">
+                                    <div class="bar h-80"></div>
+                                    <span>Kam</span>
+                                </div>
+
+                                <div class="chart-item">
+                                    <div class="bar h-45"></div>
+                                    <span>Jum</span>
+                                </div>
+
+                                <div class="chart-item">
+                                    <div class="bar h-70"></div>
+                                    <span>Sab</span>
+                                </div>
+
+                                <div class="chart-item">
+                                    <div class="bar h-35"></div>
                                     <span>Min</span>
-
                                 </div>
 
                             </div>
@@ -446,109 +395,75 @@
                     <div class="card top-product">
 
                         <div class="card-header">
-
-                            <h3>
-
-                                Produk Terlaris
-
-                            </h3>
-
+                            <h3>Produk Terlaris</h3>
                         </div>
 
                         <div class="product-list">
 
+                            <!-- ITEM 1 -->
                             <div class="product-item">
 
-                                <img
-                                    src="../assets/images/menu1.jpg"
-                                    alt="Menu">
+                                <img src="../assets/images/menu1.jpg" alt="">
 
                                 <div class="product-info">
+                                    <h4>Singkong 3 Rasa</h4>
+                                    <span>Keju, Coklat, Hot Mayo</span>
+                                </div>
 
-                                    <h4>
-
-                                        Singkong 3 Rasa
-
-                                    </h4>
-
-                                    <span>
-
-                                        85 Terjual
-
-                                    </span>
-
+                                <div class="product-total">
+                                    <h5>85 Porsi</h5>
+                                    <span class="up">+12%</span>
                                 </div>
 
                             </div>
 
+                            <!-- ITEM 2 -->
                             <div class="product-item">
 
-                                <img
-                                    src="../assets/images/menu2.jpg"
-                                    alt="Menu">
+                                <img src="../assets/images/menu2.jpg" alt="">
 
                                 <div class="product-info">
+                                    <h4>Getuk Krispi</h4>
+                                    <span>Original</span>
+                                </div>
 
-                                    <h4>
-
-                                        Getuk Krispi
-
-                                    </h4>
-
-                                    <span>
-
-                                        62 Terjual
-
-                                    </span>
-
+                                <div class="product-total">
+                                    <h5>62 Porsi</h5>
+                                    <span class="up">+5%</span>
                                 </div>
 
                             </div>
 
+                            <!-- ITEM 3 -->
                             <div class="product-item">
 
-                                <img
-                                    src="../assets/images/menu3.jpg"
-                                    alt="Menu">
+                                <img src="../assets/images/menu3.jpg" alt="">
 
                                 <div class="product-info">
+                                    <h4>Gemblong Lumer</h4>
+                                    <span>Keju, Coklat, Kopi, Durian</span>
+                                </div>
 
-                                    <h4>
-
-                                        Gemblong Lumer
-
-                                    </h4>
-
-                                    <span>
-
-                                        48 Terjual
-
-                                    </span>
-
+                                <div class="product-total">
+                                    <h5>48 Porsi</h5>
+                                    <span class="stable">Stabil</span>
                                 </div>
 
                             </div>
 
+                            <!-- ITEM 4 -->
                             <div class="product-item">
 
-                                <img
-                                    src="../assets/images/menu4.jpg"
-                                    alt="Menu">
+                                <img src="../assets/images/menu4.jpg" alt="">
 
                                 <div class="product-info">
+                                    <h4>Telo Keju</h4>
+                                    <span>Keju Mozarella</span>
+                                </div>
 
-                                    <h4>
-
-                                        Telo Keju
-
-                                    </h4>
-
-                                    <span>
-
-                                        40 Terjual
-
-                                    </span>
-
+                                <div class="product-total">
+                                    <h5>40 Porsi</h5>
+                                    <span class="down">-3%</span>
                                 </div>
 
                             </div>
@@ -559,7 +474,7 @@
 
                 </div>
 
-                                <!-- ==========================
+                                   <!-- ==========================
                         RECENT TRANSACTION
                 ========================== -->
 
@@ -567,29 +482,12 @@
 
                     <div class="card-header">
 
-                        <div>
+                        <h3>Aktivitas Transaksi Terbaru</h3>
 
-                            <h3>
-
-                                Transaksi Terbaru
-
-                            </h3>
-
-                            <p>
-
-                                Daftar transaksi hari ini.
-
-                            </p>
-
-                        </div>
-
-                        <a
-                            href="#"
-                            class="view-all">
-
-                            Lihat Semua
-
-                        </a>
+                        <button class="download-btn">
+                            <i class="bi bi-download"></i>
+                            Unduh Laporan
+                        </button>
 
                     </div>
 
@@ -598,17 +496,12 @@
                         <thead>
 
                             <tr>
-
-                                <th>ID</th>
-
-                                <th>Kasir</th>
-
-                                <th>Menu</th>
-
-                                <th>Total</th>
-
-                                <th>Status</th>
-
+                                <th>ID TRANSAKSI</th>
+                                <th>PELANGGAN</th>
+                                <th>PRODUK</th>
+                                <th>STATUS</th>
+                                <th>TOTAL</th>
+                                <th>WAKTU</th>
                             </tr>
 
                         </thead>
@@ -617,89 +510,116 @@
 
                             <tr>
 
-                                <td>#TRX001</td>
+                                <td>#ARG-8821</td>
 
-                                <td>Aldy</td>
+                                <td>
 
-                                <td>Singkong 3 Rasa</td>
+                                    <div class="customer-info">
 
-                                <td>Rp 45.000</td>
+                                        <div class="customer-avatar">
+                                            BP
+                                        </div>
+
+                                        <span>Budi Pratama</span>
+
+                                    </div>
+
+                                </td>
+
+                                <td>
+                                    2x Gemblong Cotot <br>
+                                    1x Getuk Krispi
+                                </td>
 
                                 <td>
 
                                     <span class="badge success">
-
-                                        Completed
-
+                                        COMPLETED
                                     </span>
 
                                 </td>
+
+                                <td>
+                                    <strong>Rp 65.000</strong>
+                                </td>
+
+                                <td>14:22</td>
 
                             </tr>
 
                             <tr>
 
-                                <td>#TRX002</td>
+                                <td>#ARG-8820</td>
 
-                                <td>Dina</td>
+                                <td>
 
-                                <td>Getuk Krispi</td>
+                                    <div class="customer-info">
 
-                                <td>Rp 32.000</td>
+                                        <div class="customer-avatar light">
+                                            SN
+                                        </div>
+
+                                        <span>Siti Nurhaliza</span>
+
+                                    </div>
+
+                                </td>
+
+                                <td>
+                                    1x Singkong Original
+                                </td>
 
                                 <td>
 
                                     <span class="badge warning">
-
-                                        Process
-
+                                        PROCESS
                                     </span>
 
                                 </td>
+
+                                <td>
+                                    <strong>Rp 20.000</strong>
+                                </td>
+
+                                <td>14:18</td>
 
                             </tr>
 
                             <tr>
 
-                                <td>#TRX003</td>
+                                <td>#ARG-8819</td>
 
-                                <td>Rudi</td>
+                                <td>
 
-                                <td>Gemblong Lumer</td>
+                                    <div class="customer-info">
 
-                                <td>Rp 55.000</td>
+                                        <div class="customer-avatar">
+                                            AS
+                                        </div>
+
+                                        <span>Anto Sugiono</span>
+
+                                    </div>
+
+                                </td>
+
+                                <td>
+                                    3x Gemblong Lumer
+                                </td>
 
                                 <td>
 
                                     <span class="badge success">
-
-                                        Completed
-
+                                        COMPLETED
                                     </span>
 
                                 </td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td>#TRX004</td>
-
-                                <td>Sinta</td>
-
-                                <td>Telo Keju</td>
-
-                                <td>Rp 38.000</td>
 
                                 <td>
-
-                                    <span class="badge success">
-
-                                        Completed
-
-                                    </span>
-
+                                    <strong>Rp 60.000</strong>
                                 </td>
+
+                                <td>14:05</td>
 
                             </tr>
 
@@ -707,19 +627,29 @@
 
                     </table>
 
+                    <div class="transaction-footer">
+
+                        <a href="#">
+                            Lihat Semua Riwayat Transaksi
+                        </a>
+
+                    </div>
+
                 </div>
 
-                <button class="floating-button">
-
-                    <i class="bi bi-plus-lg"></i>
-
-                </button>
-
-            </section>
+            </div> 
 
         </main>
-
+    
     </div>
+
+    <!-- Floating Action Button -->
+
+    <button class="floating-button">
+
+        <i class="bi bi-plus-lg"></i>
+
+    </button>
 
     <script src="../assets/js/owner.js"></script>
 

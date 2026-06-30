@@ -5,22 +5,41 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     // ==========================
-    // ACTIVE SIDEBAR MENU
+    // SIDEBAR ACTIVE
     // ==========================
 
-    const menus = document.querySelectorAll(".sidebar-menu a");
+    const sidebarMenus = document.querySelectorAll(".sidebar-menu a");
 
-    menus.forEach(menu => {
+    sidebarMenus.forEach(menu => {
 
         menu.addEventListener("click", () => {
 
-            menus.forEach(item => {
-
-                item.classList.remove("active");
-
-            });
+            sidebarMenus.forEach(item =>
+                item.classList.remove("active")
+            );
 
             menu.classList.add("active");
+
+        });
+
+    });
+
+
+    // ==========================
+    // FILTER BUTTON
+    // ==========================
+
+    const filters = document.querySelectorAll(".filter-group button");
+
+    filters.forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            filters.forEach(btn =>
+                btn.classList.remove("active")
+            );
+
+            button.classList.add("active");
 
         });
 
@@ -32,48 +51,44 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================
 
     const cards = document.querySelectorAll(
-        ".stat-card, .card, .transaction-card"
+        ".stat-card,.card,.transaction-card"
     );
 
-    cards.forEach((card, index) => {
+    cards.forEach((card,index)=>{
 
-        card.style.opacity = "0";
+        card.style.opacity="0";
+        card.style.transform="translateY(20px)";
 
-        card.style.transform = "translateY(20px)";
+        setTimeout(()=>{
 
-        setTimeout(() => {
+            card.style.transition=".45s ease";
 
-            card.style.transition = "all .5s ease";
+            card.style.opacity="1";
+            card.style.transform="translateY(0)";
 
-            card.style.opacity = "1";
-
-            card.style.transform = "translateY(0)";
-
-        }, index * 150);
+        },index*120);
 
     });
 
 
     // ==========================
-    // SEARCH BOX
+    // SEARCH EFFECT
     // ==========================
 
-    const searchInput =
-        document.querySelector(".search-box input");
+    const searchBox=document.querySelector(".search-box");
+    const searchInput=document.querySelector(".search-box input");
 
     if(searchInput){
 
-        searchInput.addEventListener("focus", () => {
+        searchInput.addEventListener("focus",()=>{
 
-            searchInput.parentElement.style.boxShadow =
-                "0 0 0 4px rgba(59,37,18,.1)";
+            searchBox.style.border="2px solid #4B2E13";
 
         });
 
-        searchInput.addEventListener("blur", () => {
+        searchInput.addEventListener("blur",()=>{
 
-            searchInput.parentElement.style.boxShadow =
-                "0 10px 30px rgba(0,0,0,.08)";
+            searchBox.style.border="2px solid transparent";
 
         });
 
@@ -81,19 +96,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // ==========================
-    // NOTIFICATION BUTTON
+    // NOTIFICATION
     // ==========================
 
-    const notificationButton =
-        document.querySelector(".icon-button");
+    const bell=document.querySelector(".bi-bell-fill");
 
-    if(notificationButton){
+    if(bell){
 
-        notificationButton.addEventListener("click", () => {
+        bell.parentElement.addEventListener("click",()=>{
 
-            alert(
-                "Anda memiliki 3 notifikasi baru."
-            );
+            alert("Anda memiliki 3 notifikasi baru.");
+
+        });
+
+    }
+
+
+    // ==========================
+    // SETTINGS
+    // ==========================
+
+    const setting=document.querySelector(".bi-gear-fill");
+
+    if(setting){
+
+        setting.parentElement.addEventListener("click",()=>{
+
+            alert("Pengaturan akan segera tersedia.");
 
         });
 
@@ -104,18 +133,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // LOGOUT
     // ==========================
 
-    const logout =
-        document.querySelector(".logout");
+    const logout=document.querySelector(".logout");
 
     if(logout){
 
-        logout.addEventListener("click", (e) => {
+        logout.addEventListener("click",(e)=>{
 
-            const confirmLogout = confirm(
-                "Apakah Anda yakin ingin keluar?"
-            );
-
-            if(!confirmLogout){
+            if(!confirm("Apakah Anda yakin ingin keluar?")){
 
                 e.preventDefault();
 
@@ -130,16 +154,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // FLOATING BUTTON
     // ==========================
 
-    const floatingButton =
-        document.querySelector(".floating-button");
+    const fab=document.querySelector(".floating-button");
 
-    if(floatingButton){
+    if(fab){
 
-        floatingButton.addEventListener("click", () => {
+        fab.addEventListener("click",()=>{
 
-            alert(
-                "Fitur tambah data akan segera tersedia."
-            );
+            alert("Tambah data baru");
 
         });
 
