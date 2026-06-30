@@ -129,6 +129,8 @@ def login():
     session["role_id"] = user.role_id
     session["fullname"] = user.fullname
 
+    print(session)   # <-- TAMBAHKAN BARIS INI
+
     return jsonify({
         "success": True,
         "message": "Login berhasil",
@@ -138,4 +140,34 @@ def login():
             "username": user.username,
             "role_id": user.role_id
         }
+    })
+
+# ==========================
+# GET USER LOGIN
+# ==========================
+
+@auth_bp.route("/api/me")
+def me():
+
+    if "user_id" not in session:
+        return jsonify({
+            "success": False,
+            "message": "Belum login"
+        }),401
+
+    user = User.query.get(session["user_id"])
+
+    return jsonify({
+
+        "success": True,
+
+        "user":{
+
+            "fullname": user.fullname,
+            "username": user.username,
+            "email": user.email,
+            "role_id": user.role_id
+
+        }
+
     })

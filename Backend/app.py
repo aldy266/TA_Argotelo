@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_cors import CORS
 
 from config import Config
@@ -13,8 +13,14 @@ app.config.from_object(Config)
 # Secret Key
 app.secret_key = Config.SECRET_KEY
 
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+
 # CORS
-CORS(app)
+CORS(
+    app,
+    supports_credentials=True
+)
 
 # Inisialisasi Database
 db.init_app(app)
@@ -22,11 +28,18 @@ db.init_app(app)
 app.register_blueprint(auth_bp)
 
 @app.route("/")
-def home():
-    return {
-        "success": True,
-        "message": "AMSP Backend Running"
-    }
+def login_page():
+    return render_template("login.html")
+
+
+@app.route("/register")
+def register_page():
+    return render_template("register.html")
+
+
+@app.route("/owner")
+def owner_page():
+    return render_template("owner.html")
 
 
 if __name__ == "__main__":

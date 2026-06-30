@@ -55,13 +55,15 @@ if (loginForm) {
             "http://127.0.0.1:5000/api/login",
             {
 
-                method: "POST",
+                method:"POST",
 
-                headers: {
-                    "Content-Type": "application/json"
+                credentials:"include",
+
+                headers:{
+                    "Content-Type":"application/json"
                 },
 
-                body: JSON.stringify(data)
+                body:JSON.stringify(data)
 
             }
         );
@@ -74,9 +76,7 @@ if (loginForm) {
 
             console.log(result.user);
 
-            // sementara
-            // nanti diganti dashboard
-            window.location.href = "register.html";
+            window.location.href = "/owner";
 
         }
 
@@ -128,7 +128,7 @@ if (registerForm) {
 
         if(result.success){
 
-            window.location.href="login.html";
+            window.location.href = "/";
 
         }
 

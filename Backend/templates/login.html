@@ -22,10 +22,10 @@
 
     <!-- CSS -->
     <link rel="stylesheet"
-          href="../assets/css/auth.css">
+        href="{{ url_for('static', filename='css/auth.css') }}">
 
     <link rel="stylesheet"
-          href="../assets/css/responsive.css">
+        href="{{ url_for('static', filename='css/responsive.css') }}">
 
 </head>
 
@@ -36,7 +36,7 @@
 
             <!-- Logo -->
             <div class="logo-container">
-                <img src="../assets/images/logo.png" alt="Argotelo Logo" class="logo">
+                <img src="{{ url_for('static', filename='images/logo RB.png') }}" alt="Argotelo Logo" class="logo">
             </div>
 
             <!-- Header -->
@@ -127,7 +127,7 @@
 
                 <!-- Register -->
                 <a
-                    href="register.html"
+                    href="/register"
                     class="btn-register">
 
                     Register Account
@@ -165,7 +165,7 @@
 
     </div>
 
-    <script src="../assets/js/auth.js"></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 </body>
 
 </html>
