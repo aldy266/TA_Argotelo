@@ -32,36 +32,53 @@ if (togglePassword && passwordInput) {
 }
 
 // ==============================
-// LOGIN VALIDATION
+// LOGIN
 // ==============================
 
 const loginForm = document.getElementById("loginForm");
 
 if (loginForm) {
 
-    loginForm.addEventListener("submit", function (e) {
+    loginForm.addEventListener("submit", async function (e) {
 
         e.preventDefault();
 
-        const username = document
-            .getElementById("username")
-            .value
-            .trim();
+        const data = {
 
-        const password = document
-            .getElementById("password")
-            .value
-            .trim();
+            username: document.getElementById("username").value.trim(),
 
-        if (username === "" || password === "") {
+            password: document.getElementById("password").value.trim()
 
-            alert("Please complete all fields.");
+        };
 
-            return;
+        const response = await fetch(
+            "http://127.0.0.1:5000/api/login",
+            {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(data)
+
+            }
+        );
+
+        const result = await response.json();
+
+        alert(result.message);
+
+        if (result.success) {
+
+            console.log(result.user);
+
+            // sementara
+            // nanti diganti dashboard
+            window.location.href = "register.html";
 
         }
-
-        alert("Frontend Login Success!");
 
     });
 
