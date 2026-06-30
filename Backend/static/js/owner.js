@@ -2,7 +2,58 @@
 // DOM LOADED
 // ==========================
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    // ==========================
+    // CHECK LOGIN
+    // ==========================
+
+    async function checkLogin() {
+
+        const response = await fetch("/api/me", {
+
+            credentials: "include"
+
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+
+            window.location.href = "/";
+            return;
+
+        }
+
+        document.getElementById("fullname").textContent =
+            result.user.fullname;
+
+        let role = "";
+
+        switch (result.user.role_id) {
+
+            case 1:
+                role = "Owner";
+                break;
+
+            case 2:
+                role = "Finance";
+                break;
+
+            case 3:
+                role = "Kasir";
+                break;
+
+            default:
+                role = "User";
+
+        }
+
+        document.getElementById("role").textContent = role;
+
+    }
+
+    await checkLogin();
+
 
     // ==========================
     // SIDEBAR ACTIVE
@@ -128,20 +179,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
     // ==========================
     // LOGOUT
     // ==========================
 
-    const logout=document.querySelector(".logout");
+    const logout = document.querySelector(".logout");
 
-    if(logout){
+    if (logout) {
 
-        logout.addEventListener("click",(e)=>{
+        logout.addEventListener("click", async (e) => {
 
-            if(!confirm("Apakah Anda yakin ingin keluar?")){
+            e.preventDefault();
 
-                e.preventDefault();
+            if (!confirm("Apakah Anda yakin ingin keluar?")) {
+                return;
+            }
+
+            const response = await fetch("/api/logout", {
+
+                method: "POST",
+
+                credentials: "include"
+
+            });
+
+            const result = await response.json();
+
+            alert(result.message);
+
+            if (result.success) {
+
+                window.location.href = "/";
 
             }
 

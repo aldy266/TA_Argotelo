@@ -171,3 +171,17 @@ def me():
         }
 
     })
+
+# ==========================
+# LOGOUT
+# ==========================
+
+@auth_bp.route("/api/logout", methods=["POST"])
+def logout():
+
+    session.clear()
+
+    return jsonify({
+        "success": True,
+        "message": "Logout berhasil"
+    })

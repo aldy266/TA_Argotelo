@@ -4,6 +4,7 @@ from flask_cors import CORS
 from config import Config
 from model import db
 from routes.auth import auth_bp
+from routes.owner import owner_bp
 
 app = Flask(__name__)
 
@@ -26,6 +27,7 @@ CORS(
 db.init_app(app)
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(owner_bp)
 
 @app.route("/")
 def login_page():
@@ -35,12 +37,6 @@ def login_page():
 @app.route("/register")
 def register_page():
     return render_template("register.html")
-
-
-@app.route("/owner")
-def owner_page():
-    return render_template("owner.html")
-
 
 if __name__ == "__main__":
 
