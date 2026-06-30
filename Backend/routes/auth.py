@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from model import db, User
 import bcrypt
 
@@ -95,3 +95,47 @@ def register():
             "success": False,
             "message": str(e)
         }), 500
+
+# ==========================
+# LOGIN
+# ==========================
+
+@auth_bp.route("/api/login", methods=["POST"])
+def login():
+
+    data = request.get_json()
+
+    username = data.get("username")
+    password = data.get("password")
+
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({
+            "success": False,
+            "message": "Username tidak ditemukan"
+        }), 401
+
+    if not bcrypt.checkpw(
+        password.encode("utf-8"),
+        user.password.encode("utf-8")
+    ):
+        return jsonify({
+            "success": False,
+            "message": "Password salah"
+        }), 401
+
+    session["user_id"] = user.id
+    session["role_id"] = user.role_id
+    session["fullname"] = user.fullname
+
+    return jsonify({
+        "success": True,
+        "message": "Login berhasil",
+        "user": {
+            "id": user.id,
+            "fullname": user.fullname,
+            "username": user.username,
+            "role_id": user.role_id
+        }
+    })
