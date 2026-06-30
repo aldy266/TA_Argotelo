@@ -1,20 +1,23 @@
-from flask import Blueprint, render_template, session, redirect
+from flask import Blueprint, render_template
+from utils.auth import login_required, role_required
 
-owner_bp = Blueprint("owner", __name__)
-
-@owner_bp.route("/owner/dashboard")
+owner_bp = Blueprint(
+    "owner",
+    __name__,
+    url_prefix="/owner"
+)
+# ==========================
+# OWNER DASHBOARD
+# ==========================
+@owner_bp.route("/dashboard")
+@login_required
+@role_required(1)
 def owner_dashboard():
-
-    if "user_id" not in session:
-        return redirect("/")
-
     return render_template("owner_dashboard.html")
 
 
-@owner_bp.route("/owner/inventory")
+@owner_bp.route("/inventory")
+@login_required
+@role_required(1)
 def owner_inventory():
-
-    if "user_id" not in session:
-        return redirect("/")
-
     return render_template("owner_inventory.html")

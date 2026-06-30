@@ -117,7 +117,11 @@ def login():
         }), 401
 
 
-    if password != user.password:
+    # cek password
+    if not bcrypt.checkpw(
+        password.encode("utf-8"),
+        user.password.encode("utf-8")
+    ):
         return jsonify({
             "success": False,
             "message": "Password salah"
