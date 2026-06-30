@@ -116,10 +116,7 @@ def login():
             "message": "Username tidak ditemukan"
         }), 401
 
-    if not bcrypt.checkpw(
-        password.encode("utf-8"),
-        user.password.encode("utf-8")
-    ):
+    if password != user.password:
         return jsonify({
             "success": False,
             "message": "Password salah"

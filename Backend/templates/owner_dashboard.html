@@ -29,7 +29,7 @@
 
     <!-- CSS -->
     <link rel="stylesheet"
-        href="{{ url_for('static', filename='css/owner.css') }}">
+        href="{{ url_for('static', filename='css/owner_dashboard.css') }}">
 
 </head>
 
@@ -50,14 +50,14 @@
 
             </div>
 
-            <nav class="sidebar-menu">
+           <nav class="sidebar-menu">
 
-                <a href="#" class="active">
+                <a href="{{ url_for('owner.owner_dashboard') }}" class="active">
                     <i class="bi bi-grid-fill"></i>
                     <span>Dashboard</span>
                 </a>
 
-                <a href="#">
+                <a href="{{ url_for('owner.owner_inventory') }}">
                     <i class="bi bi-box-seam"></i>
                     <span>Inventory</span>
                 </a>
@@ -649,7 +649,7 @@
 
     </button>
 
-    <script src="{{ url_for('static', filename='js/owner.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/owner_dashboard.js') }}"></script>
 
 </body>
 
