@@ -76,7 +76,7 @@ if (loginForm) {
 
             console.log(result.user);
 
-            window.location.href = "/owner";
+            window.location.href = "/owner/dashboard";
 
         }
 
