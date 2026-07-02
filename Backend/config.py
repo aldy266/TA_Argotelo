@@ -1,4 +1,5 @@
 import os
+import certifi
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,7 +12,15 @@ class Config:
         f"{os.getenv('DB_PASSWORD')}@"
         f"{os.getenv('DB_HOST')}:"
         f"{os.getenv('DB_PORT')}/"
-        f"{os.getenv('DB_NAME')}?ssl_verify_cert=false"
+        f"{os.getenv('DB_NAME')}"
     )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "connect_args": {
+            "ssl": {
+                "ca": certifi.where()
+            }
+        }
+    }

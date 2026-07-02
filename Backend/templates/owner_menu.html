@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Owner Menu Management | AMSP</title>
+
+    <!-- Google Font -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- CSS -->
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/owner_menu.css') }}">
+
+</head>
+
+<body>
+
+    <div class="wrapper">
+
+            <!-- ======================================
+                            SIDEBAR
+            ======================================= -->
+
+            <aside class="sidebar">
+
+                <!-- Logo -->
+
+                <div class="sidebar-logo">
+
+                    <img src="{{ url_for('static', filename='images/logo RB.png') }}"
+                        alt="Logo Argotelo">
+
+                    <h2>ARGOTELO SALATIGA</h2>
+
+                </div>
+
+                <!-- Menu -->
+
+                <nav class="sidebar-menu">
+
+                    <a href="{{ url_for('owner.owner_dashboard') }}">
+                        <i class="bi bi-grid-fill"></i>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a href="{{ url_for('owner.owner_inventory') }}">
+                        <i class="bi bi-box-seam"></i>
+                        <span>Inventory</span>
+                    </a>
+
+                    <a href="{{ url_for('owner.owner_staff') }}">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Staff</span>
+                    </a>
+
+                    <a href="{{ url_for('owner.owner_menu') }}" class="active">
+                        <i class="bi bi-tools"></i>
+                        <span>Menu Management</span>
+                    </a>
+
+                </nav>
+
+                <!-- Footer -->
+
+                <div class="sidebar-footer">
+
+                    <a href="#">
+
+                        <i class="bi bi-question-circle"></i>
+
+                        <span>Help Center</span>
+
+                    </a>
+
+                    <a href="{{ url_for('auth.logout') }}"
+                    class="logout">
+
+                        <i class="bi bi-box-arrow-right"></i>
+
+                        <span>Sign Out</span>
+
+                    </a>
+
+                </div>
+
+            </aside>
+
+        <!-- ======================================
+            MAIN CONTENT
+======================================= -->
+
+<main class="main-content">
+
+    <!-- ======================================
+                TOPBAR
+    ======================================= -->
+
+    <header class="topbar">
+
+        <div class="search-box">
+
+            <i class="bi bi-search"></i>
+
+            <input
+                type="text"
+                placeholder="Cari menu atau kategori...">
+
+        </div>
+
+        <div class="topbar-right">
+
+            <div class="stock-alert">
+
+                <i class="bi bi-exclamation-triangle-fill"></i>
+
+                <span>3 Stok Menipis</span>
+
+            </div>
+
+            <button class="icon-button">
+
+                <i class="bi bi-bell-fill"></i>
+
+            </button>
+
+            <button class="icon-button">
+
+                <i class="bi bi-gear-fill"></i>
+
+            </button>
+
+            <div class="profile">
+
+                <div class="profile-info">
+
+                    <h4 id="fullname">
+
+                        Loading...
+
+                    </h4>
+
+                    <span id="role">
+
+                        Loading...
+
+                    </span>
+
+                </div>
+
+                <img src="{{ url_for('static', filename='images/profile.png') }}"
+                     alt="Profile">
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <!-- ======================================
+                MENU HEADER
+    ======================================= -->
+
+    <section class="menu-header">
+
+    <div class="menu-left">
+
+        <h1>Manajemen Menu</h1>
+
+        <p>
+
+            <i class="bi bi-journal-text"></i>
+
+            Total Menu : <strong>24</strong> Item Katalog
+
+        </p>
+
+    </div>
+
+    <button class="add-menu-btn">
+
+        <i class="bi bi-plus-lg"></i>
+
+        Tambah Menu Baru
+
+    </button>
+
+</section>
+
+    <!-- ======================================
+                MENU CONTENT
+    ======================================= -->
+
+    <section class="menu-content">
+
+
+    <div class="menu-grid">
+
+        <!-- Card 1 -->
+
+        <div class="menu-card">
+
+            <img src="{{ url_for('static', filename='images/menu/menu1.jpg') }}"
+                 alt="Menu">
+
+            <div class="menu-body">
+
+            <div class="menu-top">
+
+                <h3>Singkong 3 Rasa</h3>
+
+                <h4>Rp 27.000</h4>
+
+            </div>
+
+            <div class="menu-bottom">
+
+                <button class="edit-btn">
+
+                    <i class="bi bi-pencil-fill"></i>
+
+                    Edit
+
+                </button>
+
+                <button class="delete-btn">
+
+                    <i class="bi bi-trash"></i>
+
+                </button>
+
+            </div>
+
+        </div>
+
+        </div>
+
+        <!-- Card 2 -->
+
+        <div class="menu-card">
+
+            <img src="{{ url_for('static', filename='images/menu/menu2.jpg') }}"
+                 alt="Menu">
+
+            <div class="menu-body">
+
+                <div class="menu-top">
+
+                    <h3>Singkong 3 Rasa</h3>
+
+                    <h4>Rp 27.000</h4>
+
+                </div>
+
+                <div class="menu-bottom">
+
+                    <button class="edit-btn">
+
+                        <i class="bi bi-pencil-fill"></i>
+
+                        Edit
+
+                    </button>
+
+                    <button class="delete-btn">
+
+                        <i class="bi bi-trash"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Card 3 -->
+
+        <div class="menu-card">
+
+            <img src="{{ url_for('static', filename='images/menu/menu3.jpg') }}"
+                 alt="Menu">
+
+            <div class="menu-body">
+
+                <div class="menu-top">
+
+                    <h3>Singkong 3 Rasa</h3>
+
+                    <h4>Rp 27.000</h4>
+
+                </div>
+
+                <div class="menu-bottom">
+
+                    <button class="edit-btn">
+
+                        <i class="bi bi-pencil-fill"></i>
+
+                        Edit
+
+                    </button>
+
+                    <button class="delete-btn">
+
+                        <i class="bi bi-trash"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Card 4 -->
+
+        <div class="menu-card">
+
+            <img src="{{ url_for('static', filename='images/menu/menu4.jpg') }}"
+                 alt="Menu">
+
+            <div class="menu-body">
+
+                <div class="menu-top">
+
+                    <h3>Singkong 3 Rasa</h3>
+
+                    <h4>Rp 27.000</h4>
+
+                </div>
+
+                <div class="menu-bottom">
+
+                    <button class="edit-btn">
+
+                        <i class="bi bi-pencil-fill"></i>
+
+                        Edit
+
+                    </button>
+
+                    <button class="delete-btn">
+
+                        <i class="bi bi-trash"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+       <!-- Add Card -->
+
+<div class="add-card">
+
+    <div class="add-content">
+
+        <i class="bi bi-plus-circle"></i>
+
+        <p>Tambah Item Baru</p>
+
+    </div>
+
+</div>
+
+</div> <!-- ✅ tutup menu-grid -->
+
+<!-- Pagination -->
+
+<div class="pagination">
+
+    <button class="page-btn">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <button class="page-btn active">1</button>
+
+    <button class="page-btn">2</button>
+
+    <button class="page-btn">3</button>
+
+    <button class="page-btn">
+        <i class="bi bi-chevron-right"></i>
+    </button>
+
+</div>
+
+</section>
+
+        </main>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/owner_menu.js') }}"></script>
+
+</body>
+
+</html>

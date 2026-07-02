@@ -44,7 +44,11 @@
             <img src="{{ url_for('static', filename='images/logo RB.png') }}"
                  alt="Logo Argotelo">
 
-            <h2>ARGOTELO SALATIGA</h2>
+            <h2>
+
+                ARGOTELO SALATIGA
+
+            </h2>
 
         </div>
 
@@ -60,12 +64,12 @@
                 <span>Inventory</span>
             </a>
 
-            <a href="#">
-                <i class="bi bi-person-badge"></i>
+            <a href="{{ url_for('owner.owner_staff') }}">
+                <i class="bi bi-people-fill"></i>
                 <span>Staff</span>
             </a>
 
-            <a href="#">
+            <a href="{{ url_for('owner.owner_menu') }}">
                 <i class="bi bi-tools"></i>
                 <span>Menu Management</span>
             </a>

@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Owner Staff | AMSP</title>
+
+    <!-- Google Font -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- CSS -->
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/owner_staff.css') }}">
+
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <!-- ======================================
+                    SIDEBAR
+    ======================================= -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-logo">
+
+            <img src="{{ url_for('static', filename='images/logo RB.png') }}"
+                 alt="Logo">
+
+            <h2>
+
+                ARGOTELO SALATIGA
+
+            </h2>
+
+        </div>
+
+        <nav class="sidebar-menu">
+
+            <a href="{{ url_for('owner.owner_dashboard') }}">
+                <i class="bi bi-grid-fill"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('owner.owner_inventory') }}">
+                <i class="bi bi-box-seam"></i>
+                <span>Inventory</span>
+            </a>
+
+            <a href="{{ url_for('owner.owner_staff') }}" class="active">
+                <i class="bi bi-people-fill"></i>
+                <span>Staff</span>
+            </a>
+
+            <a href="{{ url_for('owner.owner_menu') }}">
+                <i class="bi bi-tools"></i>
+                <span>Menu Management</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+
+            <a href="#">
+
+                <i class="bi bi-question-circle"></i>
+
+                <span>Help Center</span>
+
+            </a>
+
+            <a href="#"
+               class="logout">
+
+                <i class="bi bi-box-arrow-right"></i>
+
+                <span>Sign Out</span>
+
+            </a>
+
+        </div>
+
+    </aside>
+
+    <!-- ======================================
+                MAIN CONTENT
+    ======================================= -->
+
+    <main class="main-content">
+
+        <!-- ======================================
+                        TOPBAR
+        ======================================= -->
+
+        <header class="topbar">
+
+            <div class="topbar-right">
+
+                <div class="stock-alert">
+
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <span>3 Stok Menipis</span>
+
+                </div>
+
+                <button class="icon-button">
+
+                    <i class="bi bi-bell-fill"></i>
+
+                </button>
+
+                <button class="icon-button">
+
+                    <i class="bi bi-gear-fill"></i>
+
+                </button>
+
+                <div class="profile">
+
+                    <div class="profile-info">
+
+                        <h4 id="fullname">
+
+                            Loading...
+
+                        </h4>
+
+                        <span id="role">
+
+                            Loading...
+
+                        </span>
+
+                    </div>
+
+                    <img src="{{ url_for('static', filename='images/profile.png') }}"
+                         alt="Profile">
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <!-- ======================================
+                    STATISTICS
+        ======================================= -->
+
+        <section class="statistics">
+
+            <div class="stat-card">
+
+                <div class="stat-icon brown">
+
+                    <i class="bi bi-person-check-fill"></i>
+
+                </div>
+
+                <div class="stat-content">
+
+                    <span>
+
+                        Hadir Hari Ini
+
+                    </span>
+
+                    <h2>
+
+                        24 / 28
+
+                    </h2>
+
+                    <small class="success">
+
+                        85% Attendance
+
+                    </small>
+
+                </div>
+
+            </div>
+
+            <div class="stat-card">
+
+                <div class="stat-icon red">
+
+                    <i class="bi bi-clock-fill"></i>
+
+                </div>
+
+                <div class="stat-content">
+
+                    <span>
+
+                        Terlambat
+
+                    </span>
+
+                    <h2>
+
+                        3 Staff
+
+                    </h2>
+
+                    <small class="danger">
+
+                        Rata-rata 12 Menit
+
+                    </small>
+
+                </div>
+
+            </div>
+
+            <div class="stat-card">
+
+                <div class="stat-icon gray">
+
+                    <i class="bi bi-file-earmark-medical-fill"></i>
+
+                </div>
+
+                <div class="stat-content">
+
+                    <span>
+
+                        Izin / Sakit
+
+                    </span>
+
+                    <h2>
+
+                        1 Staff
+
+                    </h2>
+
+                    <small>
+
+                        Perlu Approval
+
+                    </small>
+
+                </div>
+
+            </div>
+
+        </section>
+
+                <!-- ======================================
+                    STAFF CONTENT
+        ======================================= -->
+
+        <section class="staff-content">
+
+            <div class="staff-layout">
+
+                <!-- ======================================
+                        ATTENDANCE
+                ======================================= -->
+
+                <div class="attendance-card">
+
+                <!-- ================= HEADER ================= -->
+
+                <div class="attendance-header">
+
+                    <div class="attendance-title">
+
+                        <h2>Daftar Kehadiran Hari Ini</h2>
+
+                        <span>Kamis, 24 Oktober 2024</span>
+
+                    </div>
+
+                    <div class="attendance-action">
+
+                        <div class="attendance-search">
+
+                            <i class="bi bi-search"></i>
+
+                            <input
+                                type="text"
+                                placeholder="Cari karyawan...">
+
+                        </div>
+
+                        <button class="attendance-filter">
+
+                            <i class="bi bi-funnel"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- ================= TABLE ================= -->
+
+                <table class="attendance-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Karyawan</th>
+
+                            <th>Waktu Clock-In</th>
+
+                            <th>Shift</th>
+
+                            <th>Status</th>
+
+                            <th>Jam Kerja</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                            <tr>
+
+                                <td>
+
+                                    <div class="staff-info">
+
+                                        <img src="{{ url_for('static', filename='images/profile.png') }}">
+
+                                        <div>
+
+                                            <h4>Ahmad Ridwan</h4>
+
+                                            <span>Tim Toko</span>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                                <td>07:52 WIB</td>
+
+                                <td>
+
+                                    <span class="shift-badge">
+
+                                        Shift Pagi
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <span class="badge success">
+
+                                        HADIR
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    07h<br>08m
+
+                                </td>
+
+                                </tr>
+
+                                <tr>
+
+                                <td>
+
+                                    <div class="staff-info">
+
+                                        <img src="{{ url_for('static', filename='images/profile.png') }}">
+
+                                        <div>
+
+                                            <h4>Siti Aminah</h4>
+
+                                            <span>Tim Toko</span>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                                <td>08:52 WIB</td>
+
+                                <td>
+
+                                    <span class="shift-badge">
+
+                                        Shift Pagi
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <span class="badge warning">
+
+                                        TERLAMBAT
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    06h<br>45m
+
+                                </td>
+
+                                </tr>
+
+                                <tr>
+
+                                <td>
+
+                                    <div class="staff-info">
+
+                                        <img src="{{ url_for('static', filename='images/profile.png') }}">
+
+                                        <div>
+
+                                            <h4>Budi Santoso</h4>
+
+                                            <span>Tim Trainer</span>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                                <td>-:-:-</td>
+
+                                <td>
+
+                                    <span class="shift-badge">
+
+                                        Shift Pagi
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <span class="badge danger">
+
+                                        IZIN
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    00h<br>00m
+
+                                </td>
+
+                                </tr>
+
+                                                    </tbody>
+
+                                </table>
+
+                                <div class="attendance-footer">
+
+                                <a href="#">
+
+                                    Lihat Semua Karyawan (28)
+
+                                </a>
+
+                                </div>
+
+                                </div>
+
+                <!-- ======================================
+                        RIGHT PANEL
+                ======================================= -->
+
+                <div class="right-panel">
+
+                    <!-- ===============================
+                            MONTH SUMMARY
+                    ================================ -->
+
+                    <div class="summary-card">
+
+                        <div class="card-header">
+
+                            <h3>Ringkasan Bulan Ini</h3>
+
+                        </div>
+
+                        <div class="attendance-progress">
+
+                            <div class="progress-title">
+
+                                <span>Tingkat Kehadiran</span>
+
+                                <strong>92%</strong>
+
+                            </div>
+
+                            <div class="progress-bar">
+
+                                <div class="progress-fill"></div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="summary-box">
+
+                            <div class="summary-item">
+
+                                <small>Total Hadir</small>
+
+                                <h2>482</h2>
+
+                            </div>
+
+                            <div class="summary-item">
+
+                                <small>Total Izin</small>
+
+                                <h2>12</h2>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ===============================
+                            SHIFT MANAGEMENT
+                    ================================ -->
+
+                    <div class="shift-card">
+
+                        <div class="card-header">
+
+                            <h3>Manajemen Shift</h3>
+
+                            <button class="icon-button">
+
+                                <i class="bi bi-calendar-plus"></i>
+
+                            </button>
+
+                        </div>
+
+                        <div class="shift-item">
+
+                            <div class="shift-date">
+
+                                <span>SEN</span>
+
+                                <strong>24</strong>
+
+                            </div>
+
+                            <div class="shift-detail">
+
+                                <h4>Morning Shift</h4>
+
+                                <span>07:00 - 15:00 • 12 Staff</span>
+
+                            </div>
+
+                            <i class="bi bi-chevron-right"></i>
+
+                        </div>
+
+                        <div class="shift-item">
+
+                            <div class="shift-date">
+
+                                <span>SEN</span>
+
+                                <strong>24</strong>
+
+                            </div>
+
+                            <div class="shift-detail">
+
+                                <h4>Evening Shift</h4>
+
+                                <span>15:00 - 23:00 • 10 Staff</span>
+
+                            </div>
+
+                            <i class="bi bi-chevron-right"></i>
+
+                        </div>
+
+                        <button class="add-schedule">
+
+                            <i class="bi bi-plus-lg"></i>
+
+                            Tambah Penjadwalan
+
+                        </button>
+
+                    </div>
+
+                    <!-- ===============================
+                            APPROVAL
+                    ================================ -->
+
+                    <div class="approval-card">
+
+                        <div class="card-header">
+
+                            <h3>Menunggu Persetujuan</h3>
+
+                        </div>
+
+                        <div class="approval-item">
+
+                            <div class="approval-left">
+
+                                <div class="approval-icon warning">
+
+                                    <i class="bi bi-file-earmark-medical"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h5>Izin Sakit - Maya</h5>
+
+                                    <span>2 Jam Yang Lalu</span>
+
+                                </div>
+
+                            </div>
+
+                            <button class="review-btn">
+
+                                Review
+
+                            </button>
+
+                        </div>
+
+                        <div class="approval-item">
+
+                            <div class="approval-left">
+
+                                <div class="approval-icon primary">
+
+                                    <i class="bi bi-person"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <h5>Pengajuan Cuti - Danu</h5>
+
+                                    <span>5 Jam Yang Lalu</span>
+
+                                </div>
+
+                            </div>
+
+                            <button class="review-btn">
+
+                                Review
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='js/owner_staff.js') }}"></script>
+
+</body>
+
+</html>
+

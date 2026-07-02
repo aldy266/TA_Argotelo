@@ -1,0 +1,861 @@
+/* =====================================================
+                    GLOBAL
+===================================================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+:root{
+
+    --primary:#5A3718;
+    --primary-dark:#3E2510;
+
+    --background:#FAF6F3;
+    --white:#FFFFFF;
+
+    --border:#E9DDD5;
+
+    --text:#2F1D0F;
+    --text-light:#7B7B7B;
+
+    --danger:#E5484D;
+
+    --shadow:0 12px 30px rgba(0,0,0,.05);
+
+}
+
+body{
+
+    font-family:"Poppins",sans-serif;
+
+    background:var(--background);
+
+    color:var(--text);
+
+    overflow-x:hidden;
+
+}
+
+.wrapper{
+
+    display:flex;
+
+    min-height:100vh;
+
+}
+
+/* =====================================================
+                    SIDEBAR
+===================================================== */
+
+.sidebar{
+
+    width:250px;
+
+    background:#fff;
+
+    border-right:1px solid var(--border);
+
+    position:fixed;
+
+    top:0;
+    left:0;
+    bottom:0;
+
+    padding:28px 20px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    z-index:1000;
+
+}
+
+.sidebar-logo{
+
+    text-align:center;
+
+    margin-bottom:35px;
+
+}
+
+.sidebar-logo img{
+
+    width:105px;
+
+    height:105px;
+
+    object-fit:contain;
+
+    margin-bottom:15px;
+
+}
+
+.sidebar-logo h2{
+
+    font-size:18px;
+
+    font-weight:700;
+
+    color:var(--text);
+
+}
+
+.sidebar-menu{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+}
+
+.sidebar-menu a{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    padding:14px 18px;
+
+    text-decoration:none;
+
+    color:#5E554E;
+
+    border-radius:14px;
+
+    font-size:15px;
+
+    font-weight:500;
+
+    transition:.3s;
+
+}
+
+.sidebar-menu a i{
+
+    font-size:18px;
+
+}
+
+.sidebar-menu a:hover{
+
+    background:#F8F4F1;
+
+}
+
+.sidebar-menu a.active{
+
+    background:var(--primary);
+
+    color:#fff;
+
+}
+
+.sidebar-footer{
+
+    margin-top:auto;
+
+    border-top:1px solid var(--border);
+
+    padding-top:20px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+}
+
+.sidebar-footer a{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    text-decoration:none;
+
+    color:#666;
+
+    padding:12px 15px;
+
+    border-radius:12px;
+
+    transition:.3s;
+
+}
+
+.sidebar-footer a:hover{
+
+    background:#F8F4F1;
+
+}
+
+.sidebar-footer .logout{
+
+    color:#D84A4A;
+
+}
+
+/* =====================================================
+                    MAIN CONTENT
+===================================================== */
+
+.main-content{
+
+    margin-left:250px;
+
+    width:calc(100% - 250px);
+
+    padding:24px 30px;
+
+}
+
+/* =====================================================
+                    TOPBAR
+===================================================== */
+
+.topbar{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding-bottom:22px;
+
+    border-bottom:1px solid var(--border);
+
+    margin-bottom:35px;
+
+}
+
+.search-box{
+
+    width:360px;
+
+    height:48px;
+
+    background:#FFF3EA;
+
+    border-radius:30px;
+
+    display:flex;
+
+    align-items:center;
+
+    padding:0 18px;
+
+}
+
+.search-box i{
+
+    color:#888;
+
+    font-size:15px;
+
+}
+
+.search-box input{
+
+    flex:1;
+
+    border:none;
+
+    outline:none;
+
+    background:transparent;
+
+    margin-left:12px;
+
+    font-size:14px;
+
+    font-family:"Poppins",sans-serif;
+
+}
+
+.topbar-right{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+}
+
+.stock-alert{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    padding:10px 18px;
+
+    background:#FFE9E9;
+
+    color:#E5484D;
+
+    border-radius:25px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.icon-button{
+
+    width:42px;
+
+    height:42px;
+
+    border:none;
+
+    background:transparent;
+
+    border-radius:50%;
+
+    cursor:pointer;
+
+    font-size:18px;
+
+    transition:.3s;
+
+}
+
+.icon-button:hover{
+
+    background:#F5F5F5;
+
+}
+
+.profile{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    padding-left:18px;
+
+    border-left:1px solid var(--border);
+
+}
+
+.profile-info{
+
+    text-align:right;
+
+}
+
+.profile-info h4{
+
+    font-size:15px;
+
+    font-weight:600;
+
+}
+
+.profile-info span{
+
+    font-size:13px;
+
+    color:#888;
+
+}
+
+.profile img{
+
+    width:46px;
+
+    height:46px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+}
+
+/* =====================================================
+                    MENU HEADER
+===================================================== */
+
+.menu-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:35px;
+
+}
+
+.menu-left h1{
+
+    font-size:42px;
+
+    font-weight:700;
+
+    color:var(--text);
+
+    margin-bottom:8px;
+
+}
+
+.menu-left p{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    color:#777;
+
+    font-size:15px;
+
+}
+
+.menu-left p i{
+
+    color:var(--primary);
+
+}
+
+.menu-left strong{
+
+    color:var(--primary);
+
+}
+
+.add-menu-btn{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    background:var(--primary);
+
+    color:#fff;
+
+    border:none;
+
+    border-radius:14px;
+
+    padding:15px 24px;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.add-menu-btn:hover{
+
+    background:var(--primary-dark);
+
+}
+
+
+/* =====================================================
+                    MENU GRID
+===================================================== */
+
+.menu-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+
+    gap:22px;
+
+    align-items:start;
+
+}
+
+
+/* =====================================================
+                    MENU CARD
+===================================================== */
+
+.menu-card{
+
+    background:#fff;
+
+    border:1px solid #EFE7E0;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    box-shadow:0 8px 18px rgba(0,0,0,.05);
+
+    transition:.3s;
+
+}
+
+.menu-card:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:0 15px 30px rgba(0,0,0,.08);
+
+}
+
+.menu-card img{
+
+    width:100%;
+
+    height:190px;
+
+    object-fit:cover;
+
+    display:block;
+
+}
+
+.menu-body{
+
+    padding:16px 18px 18px;
+
+}
+
+.menu-top{
+
+    margin-bottom:18px;
+
+}
+
+.menu-top h3{
+
+    font-size:18px;
+
+    font-weight:600;
+
+    color:var(--text);
+
+    line-height:1.4;
+
+    margin-bottom:8px;
+
+}
+
+.menu-top h4{
+
+    font-size:17px;
+
+    font-weight:700;
+
+    color:var(--primary);
+
+}
+
+/* =====================================================
+                    BUTTON
+===================================================== */
+
+.menu-bottom{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.edit-btn{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    border:none;
+
+    background:#F8F3EE;
+
+    color:var(--primary);
+
+    padding:10px 18px;
+
+    border-radius:10px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.edit-btn:hover{
+
+    background:#EFE5DB;
+
+}
+
+.delete-btn{
+
+    width:42px;
+
+    height:42px;
+
+    border:none;
+
+    background:#FFE9E9;
+
+    color:#E5484D;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.delete-btn:hover{
+
+    background:#FFD8D8;
+
+}
+
+.add-card{
+
+    background:#fff;
+
+    border:2px dashed #DCC8B9;
+
+    border-radius:20px;
+
+    height:365px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.add-card{
+
+    height:355px;
+
+}
+
+/* =====================================
+            PAGINATION
+===================================== */
+
+.pagination{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin:40px auto 0;
+
+}
+
+.page-btn{
+
+    width:42px;
+
+    height:42px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#fff;
+
+    color:#5A3718;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    box-shadow:0 4px 12px rgba(0,0,0,.05);
+
+    transition:.3s;
+
+}
+
+.page-btn:hover{
+
+    background:#F6EFEA;
+
+}
+
+.page-btn.active{
+
+    background:#5A3718;
+
+    color:#fff;
+
+}
+
+.page-dots{
+
+    font-size:18px;
+
+    color:#888;
+
+    font-weight:600;
+
+}
+
+
+/* =====================================================
+                    HOVER EFFECT
+===================================================== */
+
+.menu-card,
+.add-card{
+
+    transition:all .3s ease;
+
+}
+
+.menu-card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:0 18px 35px rgba(0,0,0,.08);
+
+}
+
+.add-card:hover{
+
+    transform:translateY(-6px);
+
+}
+
+
+/* =====================================================
+                    RESPONSIVE
+===================================================== */
+
+@media(max-width:1200px){
+
+    .menu-grid{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    .menu-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:20px;
+
+    }
+
+    .menu-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .search-box{
+
+        width:100%;
+
+    }
+
+    .topbar{
+
+        flex-direction:column;
+
+        gap:20px;
+
+        align-items:flex-start;
+
+    }
+
+}
+
+@media(max-width:480px){
+
+    .main-content{
+
+        padding:20px;
+
+    }
+
+    .profile-info{
+
+        display:none;
+
+    }
+
+}
+
+/* =====================================================
+                    CARD DETAIL
+===================================================== */
+
+.menu-card{
+    position:relative;
+}
+
+.menu-card img{
+    transition:.35s;
+}
+
+.menu-card:hover img{
+    transform:scale(1.05);
+}
+
+.menu-info h3{
+    line-height:1.4;
+    min-height:50px;
+}
+
+.menu-info span{
+    display:block;
+    margin-top:5px;
+}

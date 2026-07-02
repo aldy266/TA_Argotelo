@@ -36,7 +36,7 @@ body{
 ====================================================== */
 
 .sidebar{
-    width:240px;
+    width:280px;
     background:#fff;
     border-right:1px solid #ECECEC;
 
@@ -48,7 +48,7 @@ body{
     display:flex;
     flex-direction:column;
 
-    padding:25px 18px;
+    padding:25px 20px;
 }
 
 .sidebar-logo{
@@ -57,16 +57,18 @@ body{
 }
 
 .sidebar-logo img{
-    width:105px;
-    height:105px;
+    width:100px;
+    height:100px;
     object-fit:contain;
     margin-bottom:15px;
 }
 
 .sidebar-logo h2{
-    font-size:20px;
+    font-size:18px;
     font-weight:700;
     color:#322215;
+    line-height:1.2;
+    white-space:nowrap;
 }
 
 .sidebar-menu{
@@ -108,9 +110,7 @@ body{
 
 .sidebar-footer{
     margin-top:auto;
-
     border-top:1px solid var(--border);
-
     padding-top:20px;
 
     display:flex;
@@ -124,7 +124,6 @@ body{
     gap:10px;
 
     text-decoration:none;
-
     color:#666;
 
     padding:12px 15px;
@@ -147,8 +146,8 @@ body{
 ====================================================== */
 
 .main-content{
-    margin-left:240px;
-    width:calc(100% - 240px);
+    margin-left:280px;
+    width:calc(100% - 280px);
     padding:28px 30px;
 }
 
