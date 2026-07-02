@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, redirect, request, jsonify, session
 from model import db, User
 import bcrypt
 
@@ -184,3 +184,14 @@ def logout():
         "success": True,
         "message": "Logout berhasil"
     })
+
+# ==========================
+# LOGOUT PAGE
+# ==========================
+
+@auth_bp.route("/logout")
+def logout_page():
+
+    session.clear()
+
+    return redirect("/")

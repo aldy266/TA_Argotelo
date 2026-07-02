@@ -235,3 +235,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
 });
+
+const logout = document.querySelector(".logout");
+
+if (logout) {
+
+    logout.addEventListener("click", async (e) => {
+
+        e.preventDefault();
+
+        if (!confirm("Apakah Anda yakin ingin keluar?")) {
+            return;
+        }
+
+        const response = await fetch("/api/logout", {
+            method: "POST",
+            credentials: "include"
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            window.location.href = "/";
+        } else {
+            alert(result.message);
+        }
+
+    });
+
+}
