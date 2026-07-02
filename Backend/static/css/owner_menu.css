@@ -1,6 +1,6 @@
-/* =====================================================
-                    GLOBAL
-===================================================== */
+/* ==========================================================
+                        GLOBAL
+========================================================== */
 
 *{
     margin:0;
@@ -13,17 +13,41 @@
     --primary:#5A3718;
     --primary-dark:#3E2510;
 
-    --background:#FAF6F3;
+    --secondary:#F6EFEA;
+
+    --background:#F8F5F2;
+
     --white:#FFFFFF;
 
     --border:#E9DDD5;
 
     --text:#2F1D0F;
-    --text-light:#7B7B7B;
+
+    --text-light:#8A817B;
 
     --danger:#E5484D;
 
-    --shadow:0 12px 30px rgba(0,0,0,.05);
+    --success:#22C55E;
+
+    --shadow-sm:0 5px 15px rgba(0,0,0,.05);
+
+    --shadow-md:0 12px 30px rgba(0,0,0,.08);
+
+    --shadow-lg:0 18px 40px rgba(0,0,0,.12);
+
+    --radius:18px;
+
+    --transition:.3s ease;
+
+}
+
+/* ==========================================================
+                        BODY
+========================================================== */
+
+html{
+
+    scroll-behavior:smooth;
 
 }
 
@@ -39,6 +63,24 @@ body{
 
 }
 
+img{
+
+    display:block;
+
+    max-width:100%;
+
+}
+
+button{
+
+    font-family:"Poppins",sans-serif;
+
+}
+
+/* ==========================================================
+                        WRAPPER
+========================================================== */
+
 .wrapper{
 
     display:flex;
@@ -47,63 +89,75 @@ body{
 
 }
 
-/* =====================================================
-                    SIDEBAR
-===================================================== */
+/* ==========================================================
+                        SIDEBAR
+========================================================== */
 
 .sidebar{
 
-    width:250px;
+    position:fixed;
+
+    top:0;
+
+    left:0;
+
+    bottom:0;
+
+    width:255px;
 
     background:#fff;
 
     border-right:1px solid var(--border);
 
-    position:fixed;
-
-    top:0;
-    left:0;
-    bottom:0;
-
-    padding:28px 20px;
-
     display:flex;
 
     flex-direction:column;
 
-    z-index:1000;
+    padding:28px 22px;
+
+    z-index:999;
+
+    box-shadow:5px 0 25px rgba(0,0,0,.04);
 
 }
+
+/* ==========================================================
+                        LOGO
+========================================================== */
 
 .sidebar-logo{
 
     text-align:center;
 
-    margin-bottom:35px;
+    margin-bottom:38px;
 
 }
 
 .sidebar-logo img{
 
-    width:105px;
+    width:95px;
 
-    height:105px;
+    height:95px;
 
     object-fit:contain;
 
-    margin-bottom:15px;
+    margin:0 auto 14px;
 
 }
 
 .sidebar-logo h2{
 
-    font-size:18px;
+    font-size:20px;
 
     font-weight:700;
 
-    color:var(--text);
+    color:var(--primary);
 
 }
+
+/* ==========================================================
+                        MENU
+========================================================== */
 
 .sidebar-menu{
 
@@ -111,7 +165,7 @@ body{
 
     flex-direction:column;
 
-    gap:10px;
+    gap:8px;
 
 }
 
@@ -125,21 +179,25 @@ body{
 
     padding:14px 18px;
 
+    border-radius:14px;
+
     text-decoration:none;
 
-    color:#5E554E;
-
-    border-radius:14px;
+    color:#655D56;
 
     font-size:15px;
 
     font-weight:500;
 
-    transition:.3s;
+    transition:var(--transition);
 
 }
 
 .sidebar-menu a i{
+
+    width:22px;
+
+    text-align:center;
 
     font-size:18px;
 
@@ -147,17 +205,25 @@ body{
 
 .sidebar-menu a:hover{
 
-    background:#F8F4F1;
+    background:#F7F3EF;
+
+    color:var(--primary);
 
 }
 
 .sidebar-menu a.active{
 
-    background:var(--primary);
+    background:linear-gradient(135deg,#5A3718,#7A4A23);
 
     color:#fff;
 
+    box-shadow:0 12px 25px rgba(90,55,24,.22);
+
 }
+
+/* ==========================================================
+                    SIDEBAR FOOTER
+========================================================== */
 
 .sidebar-footer{
 
@@ -183,47 +249,47 @@ body{
 
     gap:12px;
 
-    text-decoration:none;
-
-    color:#666;
-
-    padding:12px 15px;
+    padding:13px 15px;
 
     border-radius:12px;
 
-    transition:.3s;
+    color:#666;
+
+    text-decoration:none;
+
+    transition:var(--transition);
 
 }
 
 .sidebar-footer a:hover{
 
-    background:#F8F4F1;
+    background:#F7F3EF;
 
 }
 
 .sidebar-footer .logout{
 
-    color:#D84A4A;
+    color:#E5484D;
 
 }
 
-/* =====================================================
+/* ==========================================================
                     MAIN CONTENT
-===================================================== */
+========================================================== */
 
 .main-content{
 
-    margin-left:250px;
+    margin-left:255px;
 
-    width:calc(100% - 250px);
+    width:calc(100% - 255px);
 
-    padding:24px 30px;
+    padding:28px 35px 40px;
 
 }
 
-/* =====================================================
-                    TOPBAR
-===================================================== */
+/* ==========================================================
+                        TOPBAR
+========================================================== */
 
 .topbar{
 
@@ -233,21 +299,23 @@ body{
 
     align-items:center;
 
-    padding-bottom:22px;
-
-    border-bottom:1px solid var(--border);
-
-    margin-bottom:35px;
+    margin-bottom:38px;
 
 }
 
+/* ==========================================================
+                    SEARCH BOX
+========================================================== */
+
 .search-box{
 
-    width:360px;
+    width:380px;
 
-    height:48px;
+    height:50px;
 
-    background:#FFF3EA;
+    background:#fff;
+
+    border:1px solid var(--border);
 
     border-radius:30px;
 
@@ -257,11 +325,21 @@ body{
 
     padding:0 18px;
 
+    transition:var(--transition);
+
+}
+
+.search-box:focus-within{
+
+    border-color:var(--primary);
+
+    box-shadow:0 0 0 4px rgba(90,55,24,.08);
+
 }
 
 .search-box i{
 
-    color:#888;
+    color:#999;
 
     font-size:15px;
 
@@ -281,9 +359,13 @@ body{
 
     font-size:14px;
 
-    font-family:"Poppins",sans-serif;
+    color:#555;
 
 }
+
+/* ==========================================================
+                    RIGHT TOPBAR
+========================================================== */
 
 .topbar-right{
 
@@ -291,55 +373,33 @@ body{
 
     align-items:center;
 
-    gap:16px;
-
-}
-
-.stock-alert{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:8px;
-
-    padding:10px 18px;
-
-    background:#FFE9E9;
-
-    color:#E5484D;
-
-    border-radius:25px;
-
-    font-size:13px;
-
-    font-weight:600;
+    gap:18px;
 
 }
 
 .icon-button{
 
-    width:42px;
+    width:44px;
 
-    height:42px;
+    height:44px;
 
     border:none;
 
-    background:transparent;
-
     border-radius:50%;
+
+    background:#fff;
+
+    box-shadow:var(--shadow-sm);
 
     cursor:pointer;
 
-    font-size:18px;
-
-    transition:.3s;
+    transition:var(--transition);
 
 }
 
 .icon-button:hover{
 
-    background:#F5F5F5;
+    transform:translateY(-3px);
 
 }
 
@@ -349,7 +409,7 @@ body{
 
     align-items:center;
 
-    gap:15px;
+    gap:14px;
 
     padding-left:18px;
 
@@ -369,6 +429,8 @@ body{
 
     font-weight:600;
 
+    margin-bottom:2px;
+
 }
 
 .profile-info span{
@@ -381,19 +443,21 @@ body{
 
 .profile img{
 
-    width:46px;
+    width:48px;
 
-    height:46px;
+    height:48px;
 
     border-radius:50%;
 
     object-fit:cover;
 
+    border:2px solid #F2E8E0;
+
 }
 
-/* =====================================================
+/* ==========================================================
                     MENU HEADER
-===================================================== */
+========================================================== */
 
 .menu-header{
 
@@ -401,7 +465,7 @@ body{
 
     justify-content:space-between;
 
-    align-items:center;
+    align-items:flex-end;
 
     margin-bottom:35px;
 
@@ -409,7 +473,7 @@ body{
 
 .menu-left h1{
 
-    font-size:42px;
+    font-size:38px;
 
     font-weight:700;
 
@@ -427,9 +491,9 @@ body{
 
     gap:8px;
 
-    color:#777;
-
     font-size:15px;
+
+    color:var(--text-light);
 
 }
 
@@ -445,6 +509,12 @@ body{
 
 }
 
+
+
+/* ==========================================================
+                    ADD BUTTON
+========================================================== */
+
 .add-menu-btn{
 
     display:flex;
@@ -453,15 +523,15 @@ body{
 
     gap:10px;
 
-    background:var(--primary);
-
-    color:#fff;
+    padding:14px 24px;
 
     border:none;
 
     border-radius:14px;
 
-    padding:15px 24px;
+    background:linear-gradient(135deg,#5A3718,#7A4A23);
+
+    color:#fff;
 
     font-size:15px;
 
@@ -471,139 +541,228 @@ body{
 
     transition:.3s;
 
+    box-shadow:0 12px 25px rgba(90,55,24,.20);
+
 }
 
 .add-menu-btn:hover{
 
-    background:var(--primary-dark);
+    transform:translateY(-3px);
+
+    box-shadow:0 18px 35px rgba(90,55,24,.30);
 
 }
 
 
-/* =====================================================
+
+/* ==========================================================
                     MENU GRID
-===================================================== */
+========================================================== */
 
 .menu-grid{
 
     display:grid;
 
-    grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+    grid-template-columns:repeat(3,1fr);
 
-    gap:22px;
+    gap:30px;
 
     align-items:start;
 
 }
 
 
-/* =====================================================
+
+/* ==========================================================
                     MENU CARD
-===================================================== */
+========================================================== */
 
 .menu-card{
 
     background:#fff;
 
-    border:1px solid #EFE7E0;
-
     border-radius:18px;
 
     overflow:hidden;
 
-    box-shadow:0 8px 18px rgba(0,0,0,.05);
+    border:1px solid #EEE4DC;
 
-    transition:.3s;
+    box-shadow:var(--shadow-md);
+
+    display:flex;
+
+    flex-direction:column;
 
 }
 
 .menu-card:hover{
 
-    transform:translateY(-5px);
+    transform:translateY(-8px);
 
-    box-shadow:0 15px 30px rgba(0,0,0,.08);
+    box-shadow:var(--shadow-lg);
 
 }
 
-.menu-card img{
+
+
+/* ==========================================================
+                    IMAGE
+========================================================== */
+
+.menu-image{
 
     width:100%;
 
-    height:190px;
+    height:220px;
+
+    overflow:hidden;
+
+    background:#F7F4F1;
+
+}
+
+.menu-image img{
+
+    width:100%;
+
+    height:100%;
 
     object-fit:cover;
 
-    display:block;
+    transition:.45s;
 
 }
+
+.menu-card:hover .menu-image img{
+
+    transform:scale(1.08);
+
+}
+
+
+
+/* ==========================================================
+                    BODY
+========================================================== */
 
 .menu-body{
 
-    padding:16px 18px 18px;
+    padding:18px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
 
 }
 
+.menu-info{
+
+    margin-bottom:auto;
+
+}
+
+
+
+/* ==========================================================
+                    TITLE
+========================================================== */
+
 .menu-top{
-
-    margin-bottom:18px;
-
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:6px;   /* lebih rapat */
 }
 
 .menu-top h3{
+
+    flex:1;
 
     font-size:18px;
 
     font-weight:600;
 
-    color:var(--text);
+    line-height:1.45;
 
-    line-height:1.4;
-
-    margin-bottom:8px;
+    color:#2F1D0F;
 
 }
 
 .menu-top h4{
 
-    font-size:17px;
+    font-size:16px;
 
     font-weight:700;
 
     color:var(--primary);
 
+    white-space:nowrap;
+
 }
 
-/* =====================================================
-                    BUTTON
-===================================================== */
+
+
+/* ==========================================================
+                    DESCRIPTION
+========================================================== */
+
+.menu-info{
+
+    margin-bottom:18px;
+
+}
+
+.menu-info span{
+
+    display:block;
+
+    color:#8A817B;
+
+    font-size:13px;
+
+    line-height:1.6;
+
+}
+
+/* ==========================================================
+                    CARD ACTION
+========================================================== */
 
 .menu-bottom{
-
     display:flex;
-
-    justify-content:space-between;
-
     align-items:center;
-
+    gap:10px;
+    margin-top:8px;  
 }
+
+
+/* ==========================================================
+                    EDIT BUTTON
+========================================================== */
 
 .edit-btn{
 
+    flex:1;
+
+    height:45px;
+
     display:flex;
+
+    justify-content:center;
 
     align-items:center;
 
     gap:8px;
 
-    border:none;
+    background:#fff;
 
-    background:#F8F3EE;
-
-    color:var(--primary);
-
-    padding:10px 18px;
+    border:1px solid #DDD8D4;
 
     border-radius:10px;
+
+    color:#444;
 
     font-size:14px;
 
@@ -615,47 +774,45 @@ body{
 
 }
 
-.edit-btn:hover{
+.edit-btn i{
 
-    background:#EFE5DB;
+    font-size:13px;
 
 }
+
+.edit-btn:hover{
+
+    background:var(--primary);
+
+    color:#fff;
+
+    border-color:var(--primary);
+
+    transform:translateY(-2px);
+
+    box-shadow:0 10px 18px rgba(90,55,24,.20);
+
+}
+
+
+
+/* ==========================================================
+                    DELETE BUTTON
+========================================================== */
 
 .delete-btn{
 
-    width:42px;
+    width:45px;
 
-    height:42px;
-
-    border:none;
-
-    background:#FFE9E9;
-
-    color:#E5484D;
+    height:45px;
 
     border-radius:10px;
 
-    cursor:pointer;
+    border:1px solid #F4C8C8;
 
-    transition:.3s;
+    background:#FFF7F7;
 
-}
-
-.delete-btn:hover{
-
-    background:#FFD8D8;
-
-}
-
-.add-card{
-
-    background:#fff;
-
-    border:2px dashed #DCC8B9;
-
-    border-radius:20px;
-
-    height:365px;
+    color:#E5484D;
 
     display:flex;
 
@@ -669,17 +826,213 @@ body{
 
 }
 
-.add-card{
+.delete-btn i{
 
-    height:355px;
+    font-size:15px;
 
 }
 
-/* =====================================
-            PAGINATION
-===================================== */
+.delete-btn:hover{
+
+    background:#E5484D;
+
+    color:#fff;
+
+    border-color:#E5484D;
+
+    transform:translateY(-2px);
+
+}
+
+
+
+/* ==========================================================
+                    ADD CARD
+========================================================== */
+
+.add-card{
+
+    height:360px;
+
+    border:2px dashed #DCCEC4;
+
+    border-radius:18px;
+
+    background:#FCFAF8;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-direction:column;
+
+    transition:.3s;
+
+}
+
+.add-card:hover{
+
+    border-color:var(--primary);
+
+    background:#FFF8F2;
+
+    transform:translateY(-8px);
+
+    box-shadow:var(--shadow-md);
+
+}
+
+
+
+/* ==========================================================
+                    PLUS ICON
+========================================================== */
+
+.add-card .plus{
+
+    width:72px;
+
+    height:72px;
+
+    border-radius:50%;
+
+    background:#F3E8DF;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:28px;
+
+    color:var(--primary);
+
+    margin-bottom:20px;
+
+    transition:.3s;
+
+}
+
+.add-card:hover .plus{
+
+    background:var(--primary);
+
+    color:#fff;
+
+    transform:rotate(90deg);
+
+}
+
+
+
+/* ==========================================================
+                    ADD TEXT
+========================================================== */
+
+.add-card h3{
+
+    font-size:20px;
+
+    color:var(--primary);
+
+    font-weight:600;
+
+    margin-bottom:8px;
+
+}
+
+.add-card p{
+
+    font-size:14px;
+
+    color:#8C8C8C;
+
+    width:75%;
+
+    text-align:center;
+
+    line-height:1.6;
+
+}
+
+
+
+/* ==========================================================
+                    CARD EFFECT
+========================================================== */
+
+.menu-card{
+
+    animation:fadeUp .45s ease;
+
+}
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(20px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+
+
+/* ==========================================================
+                    IMAGE OVERLAY
+========================================================== */
+
+.menu-image{
+
+    position:relative;
+
+}
+
+.menu-image::after{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:linear-gradient(to top,
+        rgba(0,0,0,.12),
+        transparent);
+
+    opacity:0;
+
+    transition:.35s;
+
+}
+
+.menu-card:hover .menu-image::after{
+
+    opacity:1;
+
+}
+
+/* ==========================================================
+                    PAGINATION
+========================================================== */
 
 .pagination{
+
+    margin-top:45px;
 
     display:flex;
 
@@ -688,8 +1041,6 @@ body{
     align-items:center;
 
     gap:12px;
-
-    margin:40px auto 0;
 
 }
 
@@ -705,72 +1056,113 @@ body{
 
     background:#fff;
 
-    color:#5A3718;
+    color:var(--primary);
+
+    font-size:14px;
 
     font-weight:600;
 
     cursor:pointer;
 
-    box-shadow:0 4px 12px rgba(0,0,0,.05);
-
     transition:.3s;
+
+    box-shadow:0 6px 15px rgba(0,0,0,.05);
 
 }
 
 .page-btn:hover{
 
-    background:#F6EFEA;
+    background:#F4ECE5;
+
+    transform:translateY(-2px);
 
 }
 
 .page-btn.active{
 
-    background:#5A3718;
+    background:var(--primary);
 
     color:#fff;
+
+    box-shadow:0 10px 20px rgba(90,55,24,.25);
 
 }
 
 .page-dots{
 
+    color:#999;
+
     font-size:18px;
-
-    color:#888;
-
-    font-weight:600;
 
 }
 
 
-/* =====================================================
-                    HOVER EFFECT
-===================================================== */
 
-.menu-card,
-.add-card{
+/* ==========================================================
+                    CARD HOVER
+========================================================== */
 
-    transition:all .3s ease;
+.menu-card{
+
+    will-change:transform;
 
 }
 
 .menu-card:hover{
 
-    transform:translateY(-6px);
+    transform:translateY(-10px);
 
-    box-shadow:0 18px 35px rgba(0,0,0,.08);
+}
+
+.menu-card:hover .menu-image img{
+
+    transform:scale(1.08);
 
 }
 
 .add-card:hover{
 
-    transform:translateY(-6px);
+    transform:translateY(-10px);
 
 }
 
 
-/* =====================================================
-                    RESPONSIVE
-===================================================== */
+
+/* ==========================================================
+                    SCROLLBAR
+========================================================== */
+
+::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+::-webkit-scrollbar-track{
+
+    background:#F4F4F4;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#C9B3A0;
+
+    border-radius:20px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:#9D7755;
+
+}
+
+
+
+/* ==========================================================
+                    TABLET
+========================================================== */
 
 @media(max-width:1200px){
 
@@ -780,9 +1172,57 @@ body{
 
     }
 
+    .search-box{
+
+        width:300px;
+
+    }
+
+}
+
+
+
+/* ==========================================================
+                    MOBILE
+========================================================== */
+
+@media(max-width:900px){
+
+    .sidebar{
+
+        width:220px;
+
+    }
+
+    .main-content{
+
+        margin-left:220px;
+
+        width:calc(100% - 220px);
+
+        padding:25px;
+
+    }
+
 }
 
 @media(max-width:768px){
+
+    .topbar{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:20px;
+
+    }
+
+    .search-box{
+
+        width:100%;
+
+    }
 
     .menu-header{
 
@@ -800,27 +1240,21 @@ body{
 
     }
 
-    .search-box{
-
-        width:100%;
-
-    }
-
-    .topbar{
-
-        flex-direction:column;
-
-        gap:20px;
-
-        align-items:flex-start;
-
-    }
-
 }
 
-@media(max-width:480px){
+@media(max-width:576px){
+
+    .sidebar{
+
+        display:none;
+
+    }
 
     .main-content{
+
+        margin-left:0;
+
+        width:100%;
 
         padding:20px;
 
@@ -834,28 +1268,90 @@ body{
 
 }
 
-/* =====================================================
-                    CARD DETAIL
-===================================================== */
 
-.menu-card{
-    position:relative;
+
+/* ==========================================================
+                    SMOOTH
+========================================================== */
+
+.menu-card,
+.add-card,
+.edit-btn,
+.delete-btn,
+.page-btn{
+
+    transition:all .3s ease;
+
 }
 
-.menu-card img{
-    transition:.35s;
+button{
+
+    outline:none;
+
 }
 
-.menu-card:hover img{
-    transform:scale(1.05);
+button:focus{
+
+    outline:none;
+
 }
 
-.menu-info h3{
-    line-height:1.4;
-    min-height:50px;
+/* ===========================
+   STOCK ALERT
+=========================== */
+
+/* ==========================================================
+                    STOCK ALERT
+========================================================== */
+
+.stock-alert{
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    gap:8px;
+
+    height:42px;
+
+    padding:0 18px;
+
+    background:#FFF2F0;
+
+    border:1px solid #FFD8D5;
+
+    border-radius:999px;
+
+    color:#D84A4A;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    line-height:1;
+
+    white-space:nowrap;
+
+    box-shadow:0 4px 10px rgba(229,72,77,.08);
+
+    transition:all .3s ease;
+
 }
 
-.menu-info span{
-    display:block;
-    margin-top:5px;
+.stock-alert:hover{
+
+    background:#FFEAE6;
+
+    transform:translateY(-2px);
+
+}
+
+.stock-alert i{
+
+    font-size:15px;
+
+    color:#D84A4A;
+
+    line-height:1;
+
 }

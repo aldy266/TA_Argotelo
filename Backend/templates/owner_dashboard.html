@@ -54,49 +54,49 @@
 
            <nav class="sidebar-menu">
 
-                <a href="{{ url_for('owner.owner_dashboard') }}">
-                    <i class="bi bi-grid-fill"></i>
-                    <span>Dashboard</span>
-                </a>
+    <a href="{{ url_for('owner.owner_dashboard') }}" class="active">
+        <i class="bi bi-grid-fill"></i>
+        <span>Dashboard</span>
+    </a>
 
-                <a href="{{ url_for('owner.owner_inventory') }}">
-                    <i class="bi bi-box-seam"></i>
-                    <span>Inventory</span>
-                </a>
+    <a href="{{ url_for('owner.owner_inventory') }}">
+        <i class="bi bi-box-seam"></i>
+        <span>Inventory</span>
+    </a>
 
-                <a href="{{ url_for('owner.owner_staff') }}">
-                    <i class="bi bi-people-fill"></i>
-                    <span>Staff</span>
-                </a>
+    <a href="{{ url_for('owner.owner_staff') }}">
+        <i class="bi bi-people-fill"></i>
+        <span>Staff</span>
+    </a>
 
-                <a href="{{ url_for('owner.owner_menu') }}" class="active">
-                    <i class="bi bi-tools"></i>
-                    <span>Menu Management</span>
-                </a>
+    <a href="{{ url_for('owner.owner_menu') }}">
+        <i class="bi bi-tools"></i>
+        <span>Menu Management</span>
+    </a>
 
-            </nav>
+</nav>
 
-            <div class="sidebar-footer">
+<nav class="sidebar-menu">
+...
+</nav>
 
-                <a href="#">
-                    <i class="bi bi-question-circle"></i>
-                    <span>Help Center</span>
-                </a>
+<div class="sidebar-footer">
 
-                <a href="#" class="logout">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Sign Out</span>
-                </a>
+    <a href="#">
+        <i class="bi bi-question-circle"></i>
+        <span>Help Center</span>
+    </a>
 
-            </div>
+    <a href="{{ url_for('auth.logout') }}" class="logout">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Sign Out</span>
+    </a>
 
-        </aside>
+</div>
 
-        <!-- ==========================
-                MAIN CONTENT
-        ========================== -->
+</aside>   <!-- INI HILANG -->
 
-        <main class="main-content">
+<main class="main-content">
 
         <!-- ================= TOPBAR ================= -->
 
