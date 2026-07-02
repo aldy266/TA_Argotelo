@@ -2,9 +2,9 @@ from flask import Blueprint, render_template, session, redirect
 
 owner_bp = Blueprint("owner", __name__)
 
-# ==========================
-# DASHBOARD
-# ==========================
+# ======================================
+# OWNER DASHBOARD
+# ======================================
 
 @owner_bp.route("/owner/dashboard")
 def owner_dashboard():
@@ -15,9 +15,9 @@ def owner_dashboard():
     return render_template("owner_dashboard.html")
 
 
-# ==========================
-# INVENTORY
-# ==========================
+# ======================================
+# OWNER INVENTORY
+# ======================================
 
 @owner_bp.route("/owner/inventory")
 def owner_inventory():
@@ -28,9 +28,9 @@ def owner_inventory():
     return render_template("owner_inventory.html")
 
 
-# ==========================
-# STAFF
-# ==========================
+# ======================================
+# OWNER STAFF
+# ======================================
 
 @owner_bp.route("/owner/staff")
 def owner_staff():
@@ -41,9 +41,9 @@ def owner_staff():
     return render_template("owner_staff.html")
 
 
-# ==========================
-# MENU MANAGEMENT
-# ==========================
+# ======================================
+# OWNER MENU MANAGEMENT
+# ======================================
 
 @owner_bp.route("/owner/menu")
 def owner_menu():

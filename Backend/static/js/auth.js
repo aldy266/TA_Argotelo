@@ -51,8 +51,7 @@ if (loginForm) {
 
         };
 
-        const response = await fetch(
-            "http://127.0.0.1:5000/api/login",
+        const response = await fetch("/api/login",
             {
 
                 method:"POST",
@@ -76,7 +75,23 @@ if (loginForm) {
 
             console.log(result.user);
 
-            window.location.href = "/owner/dashboard";
+            switch (result.user.role_id) {
+
+                case 1:
+                    window.location.href = "/owner/dashboard";
+                    break;
+
+                case 2:
+                    window.location.href = "/finance/dashboard";
+                    break;
+
+                case 3:
+                    window.location.href = "/cashier/dashboard";
+                    break;
+
+                default:
+                    alert("Role tidak dikenali.");
+            }
 
         }
 
@@ -110,7 +125,7 @@ if (registerForm) {
 
         };
 
-        const response = await fetch("http://127.0.0.1:5000/api/register",{
+        const response = await fetch("/api/register",{
 
             method:"POST",
 

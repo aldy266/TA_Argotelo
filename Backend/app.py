@@ -6,6 +6,8 @@ from config import Config
 from model import db
 from routes.auth import auth_bp
 from routes.owner import owner_bp
+from routes.cashier import cashier_bp
+from routes.finance import finance_bp
 
 app = Flask(__name__)
 
@@ -24,6 +26,8 @@ db.init_app(app)
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(owner_bp)
+app.register_blueprint(cashier_bp)
+app.register_blueprint(finance_bp)
 
 @app.route("/")
 def login_page():

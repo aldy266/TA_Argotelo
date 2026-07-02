@@ -116,11 +116,12 @@ def login():
             "message": "Username tidak ditemukan"
         }),401
 
-    if password != user.password:
+    # cek password
+    if user.password != password:
         return jsonify({
             "success": False,
             "message": "Password salah"
-        }),401
+        }), 401
 
     # Simpan session
     session["user_id"] = user.id
