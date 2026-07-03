@@ -82,11 +82,6 @@
 
 <div class="sidebar-footer">
 
-    <a href="#">
-        <i class="bi bi-question-circle"></i>
-        <span>Help Center</span>
-    </a>
-
 <a href="{{ url_for('auth.logout') }}" class="logout">
     <i class="bi bi-box-arrow-right"></i>
     <span>Sign Out</span>
@@ -94,40 +89,152 @@
 
 </div>
 
-</aside>   <!-- INI HILANG -->
+</aside> 
 
 <main class="main-content">
 
-        <!-- ================= TOPBAR ================= -->
+       <!-- ================= TOPBAR ================= -->
 
         <header class="topbar">
 
+            <!-- Search -->
+
             <div class="search-box">
 
-                <i class="bi bi-search"></i>
+                <i class="bi bi-search search-icon"></i>
 
                 <input
-                    type="text"
-                    placeholder="Cari transaksi, produk, atau laporan...">
+                    type="search"
+                    id="dashboardSearch"
+                    name="dashboardSearch"
+                    placeholder="Cari transaksi, produk, atau pelanggan..."
+                    autocomplete="off"
+                    spellcheck="false"
+                    autocapitalize="off">
+
+                <button
+                    id="clearSearch"
+                    class="clear-search"
+                    type="button">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
 
             </div>
-
             <div class="topbar-right">
 
-                <div class="stock-alert">
+                <div class="stock-alert" id="stockAlert">
 
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <span>3 Stok Menipis</span>
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    <span id="stockAlertText">
+
+                        Memuat notifikasi...
+
+                    </span>
 
                 </div>
 
-                <button class="icon-button">
-                    <i class="bi bi-bell-fill"></i>
-                </button>
+                    <!-- ==========================
+                            NOTIFICATION
+                    ========================== -->
 
-                <button class="icon-button">
-                    <i class="bi bi-gear-fill"></i>
-                </button>
+                    <div class="notification-dropdown">
+
+                        <button class="icon-button notification-btn"
+                                id="notificationBtn">
+
+                            <i class="bi bi-bell-fill"></i>
+
+                            <span class="notification-badge"
+                                id="notificationBadge">
+                            </span>
+
+                        </button>
+
+                        <div class="notification-menu" id="notificationMenu">
+
+                            <!-- Header -->
+
+                            <div class="notification-title">
+
+                                <h4>Notifikasi</h4>
+
+                                <small id="notificationSubtitle">
+
+                                    Memuat...
+
+                                </small>
+
+                            </div>
+
+                            <!-- Isi Notification -->
+                            <div class="notification-list"
+                                id="notificationList">
+
+                            </div>
+
+                            <!-- Footer -->
+
+                            <div class="notification-footer"
+                                id="notificationFooter">
+
+                                <button id="viewAllNotification">
+
+                                    Lihat Semua
+
+                                    <i class="bi bi-arrow-right"></i>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                        <div class="settings-dropdown">
+
+                    <button class="icon-button" id="settingBtn">
+                        <i class="bi bi-gear-fill"></i>
+                    </button>
+
+                    <div class="settings-menu" id="settingsMenu">
+
+                        <div class="settings-title">
+                            Pengaturan Akun
+                        </div>
+
+                        <a href="#" id="editProfileBtn">
+
+                            <i class="bi bi-person-circle"></i>
+
+                            <span>Edit Profil</span>
+
+                        </a>
+
+                        <a href="#" id="changePasswordBtn">
+
+                            <i class="bi bi-key"></i>
+
+                            <span>Ubah Password</span>
+
+                        </a>
+
+                        <hr>
+
+                        <a href="{{ url_for('auth.logout') }}" class="logout-setting">
+
+                            <i class="bi bi-box-arrow-right"></i>
+
+                            <span>Logout</span>
+
+                        </a>
+
+                    </div>
+
+                </div>
 
                 <div class="profile">
 
@@ -155,7 +262,7 @@
 
                 <h1>Ringkasan Operasional</h1>
 
-                <p>
+                <p id="dashboard-period">
                     Selamat datang kembali. Berikut adalah performa kedai hari ini.
                 </p>
 
@@ -163,155 +270,177 @@
 
             <div class="dashboard-action">
 
-                <div class="filter-group">
+            <div class="filter-bar">
 
-                    <button class="active">Hari Ini</button>
-                    <button>Mingguan</button>
-                    <button>Bulanan</button>
+                <!-- Filter Cepat -->
+
+                <div class="quick-filter">
+
+                    <button class="active" id="todayBtn">
+                        Hari Ini
+                    </button>
+
+                    <button id="weekBtn">
+                        Minggu Ini
+                    </button>
+
+                    <button id="monthBtn">
+                        Bulan Ini
+                    </button>
+
+                </div>
+
+                <!-- Filter Tanggal -->
+
+                <div class="date-filter">
+
+                    <div class="date-box">
+
+                        <i class="bi bi-calendar3"></i>
+
+                        <input
+                            type="date"
+                            id="startDate">
+
+                    </div>
+
+                    <div class="date-box">
+
+                        <i class="bi bi-calendar3"></i>
+
+                        <input
+                            type="date"
+                            id="endDate">
+
+                    </div>
+
+                    <button
+                        class="btn-filter"
+                        id="filterBtn">
+
+                        <i class="bi bi-funnel"></i>
+
+                        Tampilkan
+
+                    </button>
 
                 </div>
 
             </div>
 
-        </section>
+        </div>
 
-                <!-- ==========================
-                        STATISTICS
-                ========================== -->
+</section>
 
-                <div class="statistics">
+<!-- ==========================
+        STATISTICS
+========================== -->
 
-                    <div class="stat-card">
+<div class="statistics">
 
-                        <div class="stat-icon">
+    <!-- Penjualan -->
+    <div class="stat-card">
 
-                            <i class="bi bi-cash-stack"></i>
+        <div class="stat-icon">
+            <i class="bi bi-cash-stack"></i>
+        </div>
 
-                        </div>
+        <div class="stat-content">
 
-                        <div class="stat-content">
+            <span id="salesTitle">
+                Total Penjualan
+            </span>
 
-                            <span>
+            <h2 id="salesValue">
+                Rp 4.250.000
+            </h2>
 
-                                Penjualan Hari Ini
+            <small class="success" id="salesInfo">
+                Hari Ini
+            </small>
 
-                            </span>
+        </div>
 
-                            <h2>
+    </div>
 
-                                Rp 4.250.000
+    <!-- Transaksi -->
+    <div class="stat-card">
 
-                            </h2>
+        <div class="stat-icon">
+            <i class="bi bi-receipt"></i>
+        </div>
 
-                            <small class="success">
+        <div class="stat-content">
 
-                                ↑ 12% dari kemarin
+            <span>
+                Total Transaksi
+            </span>
 
-                            </small>
+            <h2 id="transactionValue">
+                128
+            </h2>
 
-                        </div>
+            <small id="transactionInfo">
+                Hari Ini
+            </small>
 
-                    </div>
+        </div>
 
-                    <div class="stat-card">
+    </div>
 
-                        <div class="stat-icon">
+    <!-- Pendapatan -->
+    <div class="stat-card">
 
-                            <i class="bi bi-receipt"></i>
+        <div class="stat-icon">
+            <i class="bi bi-wallet2"></i>
+        </div>
 
-                        </div>
+        <div class="stat-content">
 
-                        <div class="stat-content">
+            <span>
+                Total Pendapatan
+            </span>
 
-                            <span>
+            <h2 id="incomeValue">
+                Rp 14.250.000
+            </h2>
 
-                                Total Transaksi
+            <small class="danger" id="incomeInfo">
+                ↓ 3% dibanding periode sebelumnya
+            </small>
 
-                            </span>
+        </div>
 
-                            <h2>
+    </div>
 
-                                128
+    <!-- Pegawai -->
+    <div class="stat-card">
 
-                            </h2>
+        <div class="stat-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
 
-                            <small>
+        <div class="stat-content">
 
-                                Hari Ini
+            <span>
+                Pegawai Hadir
+            </span>
 
-                            </small>
+            <h2 id="attendanceValue">
+                8 / 10
+            </h2>
 
-                        </div>
+            <small class="success" id="attendanceInfo">
+                80% Kehadiran
+            </small>
 
-                    </div>
+        </div>
 
-                    <div class="stat-card">
+    </div>
 
-                        <div class="stat-icon">
+</div>
 
-                            <i class="bi bi-wallet2"></i>
-
-                        </div>
-
-                        <div class="stat-content">
-
-                            <span>
-
-                                Pendapatan Bulan Ini
-
-                            </span>
-
-                            <h2>
-
-                                Rp 14.250.000
-
-                            </h2>
-
-                            <small class="danger">
-
-                                ↓ 3% dari bulan lalu
-
-                            </small>
-
-                        </div>
-
-                    </div>
-
-                    <div class="stat-card">
-
-                        <div class="stat-icon">
-
-                            <i class="bi bi-people-fill"></i>
-
-                        </div>
-
-                        <div class="stat-content">
-
-                            <span>
-
-                                Pegawai Hadir
-
-                            </span>
-
-                            <h2>
-
-                                8 / 10
-
-                            </h2>
-
-                            <small class="success">
-
-                                80% Kehadiran
-
-                            </small>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="dashboard-content">
+<div class="dashboard-content">
 
                     <!-- ==========================
                             SALES CHART
@@ -395,101 +524,72 @@
                     <div class="card top-product">
 
                         <div class="card-header">
+
                             <h3>Produk Terlaris</h3>
+
                         </div>
 
-                        <div class="product-list">
+                        <div
+                            class="product-list"
+                            id="topProductList">
 
-                            <!-- ITEM 1 -->
-                            <div class="product-item">
-
-                                <img src="../assets/images/menu1.jpg" alt="">
-
-                                <div class="product-info">
-                                    <h4>Singkong 3 Rasa</h4>
-                                    <span>Keju, Coklat, Hot Mayo</span>
-                                </div>
-
-                                <div class="product-total">
-                                    <h5>85 Porsi</h5>
-                                    <span class="up">+12%</span>
-                                </div>
-
-                            </div>
-
-                            <!-- ITEM 2 -->
-                            <div class="product-item">
-
-                                <img src="../assets/images/menu2.jpg" alt="">
-
-                                <div class="product-info">
-                                    <h4>Getuk Krispi</h4>
-                                    <span>Original</span>
-                                </div>
-
-                                <div class="product-total">
-                                    <h5>62 Porsi</h5>
-                                    <span class="up">+5%</span>
-                                </div>
-
-                            </div>
-
-                            <!-- ITEM 3 -->
-                            <div class="product-item">
-
-                                <img src="../assets/images/menu3.jpg" alt="">
-
-                                <div class="product-info">
-                                    <h4>Gemblong Lumer</h4>
-                                    <span>Keju, Coklat, Kopi, Durian</span>
-                                </div>
-
-                                <div class="product-total">
-                                    <h5>48 Porsi</h5>
-                                    <span class="stable">Stabil</span>
-                                </div>
-
-                            </div>
-
-                            <!-- ITEM 4 -->
-                            <div class="product-item">
-
-                                <img src="../assets/images/menu4.jpg" alt="">
-
-                                <div class="product-info">
-                                    <h4>Telo Keju</h4>
-                                    <span>Keju Mozarella</span>
-                                </div>
-
-                                <div class="product-total">
-                                    <h5>40 Porsi</h5>
-                                    <span class="down">-3%</span>
-                                </div>
-
-                            </div>
+                            <!-- DIISI OTOMATIS OLEH JAVASCRIPT -->
 
                         </div>
 
                     </div>
-
-                </div>
-
-                                   <!-- ==========================
+                <!-- ==========================
                         RECENT TRANSACTION
                 ========================== -->
 
-                <div class="card transaction-card">
+                <div class="transaction-card">
 
-                    <div class="card-header">
+    <div class="card-header transaction-header">
 
-                        <h3>Aktivitas Transaksi Terbaru</h3>
+    <div>
 
-                        <button class="download-btn">
-                            <i class="bi bi-download"></i>
-                            Unduh Laporan
-                        </button>
+        <div class="title-row">
 
-                    </div>
+            <h3>
+
+                Aktivitas Transaksi Terbaru
+
+            </h3>
+
+            <span class="realtime-badge">
+
+                <i class="bi bi-arrow-repeat"></i>
+
+                Real-time
+
+            </span>
+
+        </div>
+
+        <small
+            id="transactionUpdateTime">
+
+            Terakhir diperbarui: Baru saja
+
+        </small>
+
+    </div>
+
+    <div class="transaction-actions">
+
+        <button
+            class="download-btn"
+            id="downloadReportBtn">
+
+            <i class="bi bi-download"></i>
+
+            Unduh Laporan
+
+        </button>
+
+    </div>
+
+</div>
 
                     <table class="transaction-table">
 
@@ -506,7 +606,7 @@
 
                         </thead>
 
-                        <tbody>
+                        <tbody id="transactionTableBody">
 
                             <tr>
 
@@ -628,20 +728,27 @@
                     </table>
 
                     <div class="transaction-footer">
+                        <a
+                            href="{{ url_for('owner.owner_transaction') }}"
+                            id="viewAllTransaction">
 
-                        <a href="#">
                             Lihat Semua Riwayat Transaksi
+
                         </a>
+
+                    </div>
 
                     </div>
 
                 </div>
 
-            </div> 
+            </div>
 
-        </main>
+        </div>
+
+    </main>
     
-    </div>
+</div>
 
     <!-- Floating Action Button -->
 
@@ -650,6 +757,253 @@
         <i class="bi bi-plus-lg"></i>
 
     </button>
+
+    <!-- ==========================
+        EDIT PROFILE MODAL
+========================== -->
+
+<div class="modal" id="editProfileModal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3>Edit Profil</h3>
+
+            <button class="close-modal" id="closeProfileModal">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="profile-photo">
+
+                <img
+                    id="previewPhoto"
+                    src="{{ url_for('static', filename='images/profile.png') }}">
+
+                <label for="photoInput" class="change-photo">
+
+                    Ganti Foto
+
+                </label>
+
+                <input
+                    type="file"
+                    id="photoInput"
+                    accept="image/*"
+                    hidden>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Nama Lengkap</label>
+
+                <input
+                    type="text"
+                    id="editFullname">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Username</label>
+
+                <input
+                    type="text"
+                    id="editUsername"
+                    readonly>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Email</label>
+
+                <input
+                    type="email"
+                    id="editEmail">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>No. HP</label>
+
+                <input
+                    type="text"
+                    id="editPhone">
+
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button class="btn-cancel"
+                    id="cancelProfile">
+
+                Batal
+
+            </button>
+
+            <button class="btn-save"
+                    id="saveProfile">
+
+                Simpan
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ==========================
+      CHANGE PASSWORD MODAL
+========================== -->
+
+<div class="modal" id="passwordModal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3>Ubah Password</h3>
+
+            <button
+                class="close-modal"
+                id="closePasswordModal">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <div class="form-group">
+
+                <label>Password Lama</label>
+
+                <input
+                    type="password"
+                    id="oldPassword">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Password Baru</label>
+
+                <input
+                    type="password"
+                    id="newPassword">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Konfirmasi Password</label>
+
+                <input
+                    type="password"
+                    id="confirmPassword">
+
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                class="btn-cancel"
+                id="cancelPassword">
+
+                Batal
+
+            </button>
+
+            <button
+                class="btn-save"
+                id="savePassword">
+
+                Simpan
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ===================================== -->
+<!-- ALL NOTIFICATION MODAL -->
+<!-- ===================================== -->
+
+<div class="modal-overlay"
+     id="notificationModal">
+
+    <div class="notification-modal">
+
+        <div class="notification-modal-header">
+
+            <div>
+
+                <h3>
+
+                    <i class="bi bi-bell-fill"></i>
+
+                    Notifikasi Stok Menipis
+
+                </h3>
+
+                <span id="allNotificationCount">
+
+                    0 Notifikasi
+
+                </span>
+
+            </div>
+
+            <button
+                id="closeNotificationModal">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+
+        <div class="notification-modal-body"
+             id="allNotificationList">
+
+            <!-- DIISI JAVASCRIPT -->
+
+        </div>
+
+        <div class="notification-modal-footer">
+
+            <button
+                id="closeNotificationButton">
+
+                Tutup
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
     <script src="{{ url_for('static', filename='js/owner_dashboard.js') }}"></script>
 

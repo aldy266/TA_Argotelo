@@ -52,3 +52,15 @@ def owner_menu():
         return redirect("/")
 
     return render_template("owner_menu.html")
+
+# ======================================
+# OWNER TRANSACTION
+# ======================================
+
+@owner_bp.route("/owner/transaction")
+def owner_transaction():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    return render_template("owner_transaction.html")

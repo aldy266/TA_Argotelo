@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Riwayat Transaksi | AMSP</title>
+
+    <!-- Google Font -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- CSS -->
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/owner_transaction.css') }}">
+
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-logo">
+
+            <img src="{{ url_for('static', filename='images/logo RB.png') }}"
+                 alt="Logo Argotelo">
+
+            <h2>
+
+                ARGOTELO SALATIGA
+
+            </h2>
+
+        </div>
+
+        <nav class="sidebar-menu">
+
+            <a href="{{ url_for('owner.owner_dashboard') }}">
+
+                <i class="bi bi-grid-fill"></i>
+
+                <span>Dashboard</span>
+
+            </a>
+
+            <a href="{{ url_for('owner.owner_inventory') }}">
+
+                <i class="bi bi-box-seam"></i>
+
+                <span>Inventory</span>
+
+            </a>
+
+            <a href="{{ url_for('owner.owner_staff') }}">
+
+                <i class="bi bi-people-fill"></i>
+
+                <span>Staff</span>
+
+            </a>
+
+            <a href="{{ url_for('owner.owner_menu') }}">
+
+                <i class="bi bi-tools"></i>
+
+                <span>Menu Management</span>
+
+            </a>
+
+            <a href="{{ url_for('owner.owner_transaction') }}"
+               class="active">
+
+                <i class="bi bi-clock-history"></i>
+
+                <span>Riwayat Transaksi</span>
+
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+
+            <a href="{{ url_for('auth.logout') }}"
+               class="logout">
+
+                <i class="bi bi-box-arrow-right"></i>
+
+                <span>Sign Out</span>
+
+            </a>
+
+        </div>
+
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="main-content">
+
+               <!-- ================= TOPBAR ================= -->
+
+<header class="topbar">
+
+    <div class="topbar-left">
+
+    </div>
+
+    <div class="topbar-right">
+
+        <!-- Stock Alert -->
+
+        <div
+            class="stock-alert"
+            id="stockAlert">
+
+            <i class="bi bi-exclamation-triangle-fill"></i>
+
+            <span id="stockAlertText">
+
+                Memuat notifikasi...
+
+            </span>
+
+        </div>
+
+
+        <!-- Notification -->
+
+        <div class="notification-dropdown">
+
+            <button
+                class="icon-button notification-btn"
+                id="notificationBtn">
+
+                <i class="bi bi-bell-fill"></i>
+
+                <span
+                    class="notification-badge"
+                    id="notificationBadge">
+
+                    0
+
+                </span>
+
+            </button>
+
+            <div
+                class="notification-menu"
+                id="notificationMenu">
+
+                <div class="notification-title">
+
+                    <h4>Notifikasi</h4>
+
+                    <small id="notificationSubtitle">
+
+                        Memuat...
+
+                    </small>
+
+                </div>
+
+                <div
+                    class="notification-list"
+                    id="notificationList">
+
+                </div>
+
+                <div class="notification-footer">
+
+                    <button
+                        id="viewAllNotification">
+
+                        Lihat Semua
+
+                        <i class="bi bi-arrow-right"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Gear -->
+
+        <div class="settings-dropdown">
+
+            <button
+                class="icon-button"
+                id="settingBtn">
+
+                <i class="bi bi-gear-fill"></i>
+
+            </button>
+
+            <div
+                class="settings-menu"
+                id="settingsMenu">
+
+                <div class="settings-title">
+
+                    Pengaturan Akun
+
+                </div>
+
+                <a href="#"
+                   id="editProfileBtn">
+
+                    <i class="bi bi-person-circle"></i>
+
+                    Edit Profil
+
+                </a>
+
+                <a href="#"
+                   id="changePasswordBtn">
+
+                    <i class="bi bi-key"></i>
+
+                    Ubah Password
+
+                </a>
+
+                <hr>
+
+                <a
+                    href="{{ url_for('auth.logout') }}"
+                    class="logout-setting">
+
+                    <i class="bi bi-box-arrow-right"></i>
+
+                    Logout
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- Profile -->
+
+        <div class="profile">
+
+            <div class="profile-info">
+
+                <h4 id="fullname">
+
+                    Loading...
+
+                </h4>
+
+                <span id="role">
+
+                    Loading...
+
+                </span>
+
+            </div>
+
+            <img
+                src="{{ url_for('static', filename='images/profile.png') }}"
+                alt="Profile">
+
+        </div>
+
+    </div>
+
+</header>
+
+        <!-- ================= PAGE HEADER ================= -->
+
+        <section class="page-header">
+
+            <div class="page-title">
+
+                <h1>
+
+                    Riwayat Transaksi
+
+                </h1>
+
+                <p>
+
+                    Kelola seluruh riwayat transaksi penjualan Argotelo Salatiga.
+
+                </p>
+
+            </div>
+
+            <div class="page-action">
+
+                <button
+                    class="refresh-btn"
+                    id="refreshBtn">
+
+                    <i class="bi bi-arrow-clockwise"></i>
+
+                    Refresh
+
+                </button>
+
+                <button
+                    class="download-btn"
+                    id="downloadReportBtn">
+
+                    <i class="bi bi-download"></i>
+
+                    Export
+
+                </button>
+
+            </div>
+
+        </section>
+    <!-- ===================================== -->
+<!-- FILTER TRANSAKSI -->
+<!-- ===================================== -->
+
+<section class="filter-card">
+
+    <div class="filter-group">
+
+        <!-- Search -->
+
+        <div class="search-filter">
+
+            <label>Pencarian</label>
+
+            <div class="search-input">
+
+                <i class="bi bi-search"></i>
+
+                <input
+                    type="text"
+                    id="searchTransaction"
+                    placeholder="Cari ID transaksi, pelanggan atau kasir...">
+
+            </div>
+
+        </div>
+
+        <!-- Dari -->
+
+        <div class="filter-item">
+
+            <label>Dari</label>
+
+            <input
+                type="date"
+                id="startDate">
+
+        </div>
+
+        <!-- Sampai -->
+
+        <div class="filter-item">
+
+            <label>Sampai</label>
+
+            <input
+                type="date"
+                id="endDate">
+
+        </div>
+
+        <!-- Status -->
+
+        <div class="filter-item">
+
+            <label>Status</label>
+
+            <select id="statusFilter">
+
+                <option value="">Semua Status</option>
+
+                <option value="completed">Completed</option>
+
+                <option value="process">Process</option>
+
+                <option value="cancel">Cancel</option>
+
+            </select>
+
+        </div>
+
+        <!-- Kasir -->
+
+        <div class="filter-item">
+
+            <label>Kasir</label>
+
+            <select id="cashierFilter">
+
+                <option value="">Semua Kasir</option>
+
+                <option>Aldy</option>
+
+                <option>Rina</option>
+
+                <option>Budi</option>
+
+            </select>
+
+        </div>
+
+        <!-- Button -->
+
+        <div class="filter-button">
+
+            <button
+                id="filterBtn"
+                class="btn-primary">
+
+                <i class="bi bi-funnel-fill"></i>
+
+                Terapkan
+
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ===================================== -->
+<!-- TABLE -->
+<!-- ===================================== -->
+
+<section class="transaction-card">
+
+    <div class="card-header">
+
+        <div>
+
+            <h3>
+
+                Daftar Riwayat Transaksi
+
+            </h3>
+
+            <small id="transactionCount">
+
+                Total 0 Transaksi
+
+            </small>
+
+        </div>
+
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="transaction-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Tanggal</th>
+
+                    <th>Pelanggan</th>
+
+                    <th>Kasir</th>
+
+                    <th>Total</th>
+
+                    <th>Status</th>
+
+                    <th>Pembayaran</th>
+
+                    <th>Aksi</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="transactionTableBody">
+
+                <!-- Diisi oleh JavaScript -->
+
+            </tbody>
+
+        </table>
+
+    </div>
+    <!-- ================= PAGINATION ================= -->
+
+    <div class="table-footer">
+
+        <div class="table-info">
+
+            Menampilkan
+
+            <strong id="showingData">
+
+                1 - 10
+
+            </strong>
+
+            dari
+
+            <strong id="totalData">
+
+                0
+
+            </strong>
+
+            transaksi
+
+        </div>
+
+        <div class="pagination">
+
+            <button
+                id="prevPage"
+                class="page-btn">
+
+                <i class="bi bi-chevron-left"></i>
+
+            </button>
+
+            <button
+                class="page-number active">
+
+                1
+
+            </button>
+
+            <button
+                class="page-number">
+
+                2
+
+            </button>
+
+            <button
+                class="page-number">
+
+                3
+
+            </button>
+
+            <button
+                id="nextPage"
+                class="page-btn">
+
+                <i class="bi bi-chevron-right"></i>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- ===================================== -->
+<!-- DETAIL TRANSACTION MODAL -->
+<!-- ===================================== -->
+
+<div
+    class="modal"
+    id="transactionModal">
+
+    <div class="modal-content transaction-detail-modal">
+
+        <div class="modal-header">
+
+            <h3>
+
+                Detail Transaksi
+
+            </h3>
+
+            <button
+                class="close-btn"
+                id="closeTransactionModal">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+
+        <div
+            class="modal-body"
+            id="transactionDetail">
+
+            <!-- Diisi JavaScript -->
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                class="btn-secondary"
+                id="closeTransaction">
+
+                Tutup
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ===================================== -->
+<!-- DOWNLOAD REPORT MODAL -->
+<!-- ===================================== -->
+
+<div
+    class="modal"
+    id="downloadModal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3>
+
+                Unduh Laporan
+
+            </h3>
+
+            <button
+                id="closeDownloadModal"
+                class="close-btn">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <p>
+
+                Pilih format laporan yang ingin diunduh.
+
+            </p>
+
+            <div class="download-option">
+
+                <button
+                    id="downloadPdf"
+                    class="download-item">
+
+                    <i class="bi bi-file-earmark-pdf-fill"></i>
+
+                    Export PDF
+
+                </button>
+
+                <button
+                    id="downloadExcel"
+                    class="download-item">
+
+                    <i class="bi bi-file-earmark-excel-fill"></i>
+
+                    Export Excel
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</main>
+
+</div>
+
+
+
+<!-- ===================================== -->
+<!-- JS -->
+<!-- ===================================== -->
+
+<script src="{{ url_for('static',filename='js/owner_transaction.js') }}"></script>
+
+</body>
+
+</html>
