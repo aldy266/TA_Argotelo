@@ -45,16 +45,44 @@
             <!-- Header -->
             <div class="auth-header">
 
-                <h1>CREATE ACCOUNT</h1>
+                <h1>CREATE OWNER ACCOUNT</h1>
 
                 <p>
-                    Create your AMSP account to access the system.
+                    Create the main owner account for AMSP system.
                 </p>
 
             </div>
 
             <!-- Form Register -->
-            <form class="auth-form" id="registerForm">
+            <form 
+                class="auth-form" 
+                id="registerForm"
+                enctype="multipart/form-data">
+                <!-- Profile Photo -->
+                <div class="form-group">
+
+                    <label for="photo">
+                        PROFILE PHOTO
+                    </label>
+
+
+                    <div class="input-group">
+
+
+                        <i class="bi bi-image"></i>
+
+
+                        <input
+                            type="file"
+                            id="photo"
+                            name="photo"
+                            accept="image/*">
+
+
+                    </div>
+
+
+                </div>
 
                 <!-- Full Name -->
                 <div class="form-group">

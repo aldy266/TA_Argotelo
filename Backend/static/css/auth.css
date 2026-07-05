@@ -28,13 +28,14 @@ body{
 
     min-height:100vh;
 
-    overflow:hidden;
+    overflow-x:hidden;
 
 }
 
 .auth-container{
 
     width:100%;
+
     min-height:100vh;
 
     display:flex;
@@ -43,7 +44,9 @@ body{
 
     align-items:center;
 
-    padding:40px;
+    padding:
+
+    80px 40px;
 
 }
 
@@ -57,12 +60,17 @@ body{
 
     border-radius:22px;
 
-    padding:65px 40px 45px;
+    padding:
+
+    55px 40px 35px;
+
 
     transition:.3s;
 
+
     box-shadow:
-        0 25px 60px rgba(0,0,0,.12);
+
+    0 25px 60px rgba(0,0,0,.12);
 
 }
 
@@ -465,6 +473,62 @@ a:hover{
     outline:none;
 
     appearance:none;
+
+    cursor:pointer;
+
+}
+
+/* ==========================
+   PROFILE PHOTO UPLOAD
+========================== */
+
+input[type="file"]{
+
+    padding:
+
+    12px 15px 12px 48px;
+
+
+    height:auto;
+
+
+    cursor:pointer;
+
+}
+
+
+input[type="file"]::file-selector-button{
+
+
+    background:
+
+    var(--primary);
+
+
+    color:white;
+
+
+    border:none;
+
+
+    border-radius:8px;
+
+
+    padding:
+
+    8px 14px;
+
+
+    margin-right:
+
+    12px;
+
+
+    font-family:
+
+    "Poppins",
+    sans-serif;
+
 
     cursor:pointer;
 

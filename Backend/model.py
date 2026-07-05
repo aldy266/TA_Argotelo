@@ -78,9 +78,8 @@ class User(db.Model):
     )
 
     photo = db.Column(
-        db.String(255)
+        db.Text
     )
-
     is_active = db.Column(
         db.Boolean,
         default=True
@@ -95,6 +94,15 @@ class User(db.Model):
         db.DateTime,
         default=waktu_wib,
         onupdate=waktu_wib
+    )
+
+    reset_token = db.Column(
+        db.String(255)
+    )
+
+
+    reset_expired = db.Column(
+        db.DateTime
     )
 
     role = db.relationship(

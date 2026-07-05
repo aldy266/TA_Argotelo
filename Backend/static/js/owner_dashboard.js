@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const fullname = document.getElementById("fullname");
     const role = document.getElementById("role");
+    const profileImage = document.getElementById("profileImage");
 
     const todayBtn = document.getElementById("todayBtn");
     const weekBtn = document.getElementById("weekBtn");
@@ -52,6 +53,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // CURRENT FILTER
     // =====================================================
 
+    let loginUser = null;
+
     let currentFilter = "today";
 
 
@@ -71,6 +74,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const result = await response.json();
 
+            loginUser = result.user;
+
             if (!result.success) {
 
                 window.location.href = "/";
@@ -81,6 +86,40 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             fullname.textContent =
                 result.user.fullname;
+
+            if(profileImage){
+
+                if(result.user.photo){
+
+
+                    profileImage.src =
+                    result.user.photo;
+
+                    const previewPhoto =
+                    document.getElementById("previewPhoto");
+
+
+                    if(previewPhoto){
+
+
+                        previewPhoto.src =
+                        result.user.photo;
+
+
+                    }
+
+
+                }else{
+
+
+                    profileImage.src =
+                    "/static/images/default.png";
+
+
+                }
+
+
+            }
 
             switch (result.user.role_id) {
 
@@ -972,19 +1011,55 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if(editProfileBtn){
 
+
         editProfileBtn.addEventListener("click",(e)=>{
+
 
             e.preventDefault();
 
+
             if(settingsMenu){
+
 
                 settingsMenu.classList.remove("active");
 
+
             }
+
+
+            document.getElementById("editFullname").value =
+            loginUser.fullname;
+
+
+            document.getElementById("editUsername").value =
+            loginUser.username;
+
+
+            document.getElementById("editEmail").value =
+            loginUser.email;
+
+
+            document.getElementById("editPhone").value =
+            loginUser.phone;
+
+
+
+            if(loginUser.photo){
+
+
+                previewPhoto.src =
+                loginUser.photo;
+
+
+            }
+
+
 
             editProfileModal.classList.add("show");
 
+
         });
+
 
     }
 
@@ -1013,17 +1088,140 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if(saveProfile){
 
-        saveProfile.addEventListener("click",()=>{
 
-            alert("Profil berhasil disimpan.");
-
-            closeProfileModalFunction();
-
-        });
-
-    }
+    saveProfile.addEventListener(
+        "click",
+        async()=>{
 
 
+            const formData =
+            new FormData();
+
+
+            formData.append(
+                "fullname",
+                document.getElementById("editFullname").value
+            );
+
+
+            formData.append(
+                "username",
+                document.getElementById("editUsername").value
+            );
+
+
+            formData.append(
+                "email",
+                document.getElementById("editEmail").value
+            );
+
+
+            formData.append(
+                "phone",
+                document.getElementById("editPhone").value
+            );
+
+
+            const photo =
+            document.getElementById("photoInput").files[0];
+
+
+            if(photo){
+
+
+                formData.append(
+                    "photo",
+                    photo
+                );
+
+
+            }
+
+
+
+            const response =
+            await fetch(
+                "/api/update-profile",
+                {
+
+                    method:"POST",
+
+                    credentials:"include",
+
+                    body:formData
+
+                }
+            );
+
+
+            const result =
+            await response.json();
+
+
+
+            alert(
+                result.message
+            );
+
+
+
+            if(result.success){
+
+
+                // update data cache JS
+                loginUser.fullname =
+                result.user.fullname;
+
+
+                loginUser.username =
+                result.user.username;
+
+
+                loginUser.email =
+                result.user.email;
+
+
+                loginUser.phone =
+                result.user.phone;
+
+
+                loginUser.photo =
+                result.user.photo;
+
+
+
+                // update tampilan header
+                fullname.textContent =
+                result.user.fullname;
+
+
+
+                if(result.user.photo){
+
+
+                    profileImage.src =
+                    result.user.photo;
+
+
+                    previewPhoto.src =
+                    result.user.photo;
+
+
+                }
+
+
+
+                closeProfileModalFunction();
+
+
+            }
+
+
+        }
+    );
+
+
+}
 
     // =====================================================
     // CHANGE PASSWORD
@@ -1097,17 +1295,105 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
 
-    if(savePassword){
+if(savePassword){
 
-        savePassword.addEventListener("click",()=>{
 
-            alert("Password berhasil diperbarui.");
+    savePassword.addEventListener(
+        "click",
+        async()=>{
 
-            closePasswordModalFunction();
 
-        });
+            const oldPassword =
+            document.getElementById(
+                "oldPassword"
+            ).value;
 
-    }
+
+            const newPassword =
+            document.getElementById(
+                "newPassword"
+            ).value;
+
+
+            const confirmPassword =
+            document.getElementById(
+                "confirmPassword"
+            ).value;
+
+
+
+            if(newPassword !== confirmPassword){
+
+
+                alert(
+                    "Konfirmasi password tidak sama"
+                );
+
+
+                return;
+
+            }
+
+
+
+            const response =
+            await fetch(
+                "/api/change-password",
+                {
+
+                    method:"POST",
+
+                    credentials:"include",
+
+                    headers:{
+
+                        "Content-Type":
+                        "application/json"
+
+                    },
+
+
+                    body:JSON.stringify({
+
+                        old_password:
+                        oldPassword,
+
+
+                        new_password:
+                        newPassword
+
+                    })
+
+                }
+            );
+
+
+
+            const result =
+            await response.json();
+
+
+
+            alert(
+                result.message
+            );
+
+
+
+            if(result.success){
+
+
+                closePasswordModalFunction();
+
+
+            }
+
+
+        }
+    );
+
+
+}
 
 
 
@@ -1495,13 +1781,28 @@ setInterval(updateTransactionTime,60000);
 // HISTORY
 // =====================================================
 
-if(historyBtn){
+const historyButton =
+document.getElementById(
+    "historyBtn"
+);
 
-    historyBtn.addEventListener("click",()=>{
 
-        window.location.href="/owner/transaction";
+if(historyButton){
 
-    });
+
+    historyButton.addEventListener(
+        "click",
+        () => {
+
+
+            console.log(
+                "History clicked"
+            );
+
+
+        }
+    );
+
 
 }
 

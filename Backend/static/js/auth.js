@@ -37,116 +37,529 @@ if (togglePassword && passwordInput) {
 
 const loginForm = document.getElementById("loginForm");
 
+
 if (loginForm) {
 
-    loginForm.addEventListener("submit", async function (e) {
 
-        e.preventDefault();
+    loginForm.addEventListener(
+        "submit",
+        async function(e){
 
-        const data = {
 
-            username: document.getElementById("username").value.trim(),
+            e.preventDefault();
 
-            password: document.getElementById("password").value.trim()
 
-        };
 
-        const response = await fetch("/api/login",
-            {
+            const data = {
 
-                method:"POST",
 
-                credentials:"include",
+                username:
+                document
+                .getElementById("username")
+                .value
+                .trim(),
 
-                headers:{
-                    "Content-Type":"application/json"
-                },
 
-                body:JSON.stringify(data)
+
+                password:
+                document
+                .getElementById("password")
+                .value
+                .trim()
+
+
+            };
+
+
+
+
+            const response =
+            await fetch(
+                "/api/login",
+                {
+
+
+                    method:"POST",
+
+
+                    credentials:"include",
+
+
+                    headers:{
+
+                        "Content-Type":
+                        "application/json"
+
+                    },
+
+
+                    body:
+                    JSON.stringify(data)
+
+
+                }
+            );
+
+
+
+
+            const result =
+            await response.json();
+
+
+
+
+            alert(
+                result.message
+            );
+
+
+
+
+            if(result.success){
+
+
+
+                console.log(
+                    result.user
+                );
+
+
+
+
+                switch(
+                    result.user.role
+                ){
+
+
+                    case "OWNER":
+
+
+                        window.location.href =
+                        "/owner/dashboard";
+
+
+                        break;
+
+
+
+
+                    case "FINANCE":
+
+
+                        window.location.href =
+                        "/finance/dashboard";
+
+
+                        break;
+
+
+
+
+                    case "KASIR":
+
+
+                        window.location.href =
+                        "/cashier/dashboard";
+
+
+                        break;
+
+
+
+
+                    default:
+
+
+                        alert(
+                            "Role tidak dikenali"
+                        );
+
+
+                }
+
+
 
             }
-        );
 
-        const result = await response.json();
-
-        alert(result.message);
-
-        if (result.success) {
-
-            console.log(result.user);
-
-            switch (result.user.role_id) {
-
-                case 1:
-                    window.location.href = "/owner/dashboard";
-                    break;
-
-                case 2:
-                    window.location.href = "/finance/dashboard";
-                    break;
-
-                case 3:
-                    window.location.href = "/cashier/dashboard";
-                    break;
-
-                default:
-                    alert("Role tidak dikenali.");
-            }
 
         }
+    );
 
-    });
 
 }
 
 // ==============================
-// REGISTER
+// REGISTER OWNER
 // ==============================
 
-const registerForm = document.getElementById("registerForm");
+const registerForm =
+document.getElementById(
+    "registerForm"
+);
 
-if (registerForm) {
 
-    registerForm.addEventListener("submit", async function (e) {
+if(registerForm){
 
-        e.preventDefault();
 
-        const data = {
+    registerForm.addEventListener(
+        "submit",
+        async function(e){
 
-            fullname: document.getElementById("fullname").value.trim(),
 
-            email: document.getElementById("email").value.trim(),
+            e.preventDefault();
 
-            phone: document.getElementById("phone").value.trim(),
 
-            username: document.getElementById("username").value.trim(),
 
-            password: document.getElementById("password").value.trim()
+            const formData =
+            new FormData();
 
-        };
 
-        const response = await fetch("/api/register",{
 
-            method:"POST",
 
-            headers:{
-                "Content-Type":"application/json"
-            },
+            formData.append(
 
-            body:JSON.stringify(data)
+                "fullname",
 
-        });
+                document
+                .getElementById("fullname")
+                .value
+                .trim()
 
-        const result = await response.json();
+            );
 
-        alert(result.message);
 
-        if(result.success){
 
-            window.location.href = "/";
+
+            formData.append(
+
+                "email",
+
+                document
+                .getElementById("email")
+                .value
+                .trim()
+
+            );
+
+
+
+
+            formData.append(
+
+                "phone",
+
+                document
+                .getElementById("phone")
+                .value
+                .trim()
+
+            );
+
+
+
+
+            formData.append(
+
+                "username",
+
+                document
+                .getElementById("username")
+                .value
+                .trim()
+
+            );
+
+
+
+
+            formData.append(
+
+                "password",
+
+                document
+                .getElementById("password")
+                .value
+                .trim()
+
+            );
+
+
+
+
+            const photoInput =
+            document.getElementById(
+                "photo"
+            );
+
+
+
+
+            if(
+                photoInput.files.length > 0
+            ){
+
+
+                formData.append(
+
+                    "photo",
+
+                    photoInput.files[0]
+
+                );
+
+
+            }
+
+
+
+
+
+            const response =
+            await fetch(
+                "/api/register-owner",
+                {
+
+
+                    method:"POST",
+
+
+                    body:formData
+
+
+                }
+            );
+
+
+
+
+            const result =
+            await response.json();
+
+
+
+
+            alert(
+                result.message
+            );
+
+
+
+
+            if(
+                result.success
+            ){
+
+
+                window.location.href =
+                "/";
+
+
+            }
+
+
+
+        }
+    );
+
+
+}
+
+// ==============================
+// FORGOT PASSWORD
+// ==============================
+
+const forgotForm =
+document.getElementById(
+    "forgotForm"
+);
+
+
+if (forgotForm) {
+
+
+    forgotForm.addEventListener(
+        "submit",
+        async function(e){
+
+
+            e.preventDefault();
+
+
+
+            const email =
+            document
+            .getElementById("email")
+            .value
+            .trim();
+
+
+
+            const response =
+            await fetch(
+
+                "/api/forgot-password",
+
+                {
+
+
+                    method:"POST",
+
+
+                    headers:{
+
+
+                        "Content-Type":
+                        "application/json"
+
+
+                    },
+
+
+                    body:
+                    JSON.stringify({
+
+
+                        email:email
+
+
+                    })
+
+
+                }
+
+            );
+
+
+
+            const result =
+            await response.json();
+
+
+
+            alert(
+                result.message
+            );
+
+
+
+            if(result.success){
+
+
+                window.location.href="/";
+
+
+            }
+
 
         }
 
-    });
+    );
+
+
+}
+
+// ==============================
+// RESET PASSWORD
+// ==============================
+
+const resetPasswordForm =
+document.getElementById(
+    "resetPasswordForm"
+);
+
+
+if(resetPasswordForm){
+
+
+resetPasswordForm.addEventListener(
+
+"submit",
+
+async function(e){
+
+
+e.preventDefault();
+
+
+
+const token =
+document
+.getElementById("token")
+.value;
+
+
+
+const password =
+document
+.getElementById("password")
+.value;
+
+
+
+const response =
+await fetch(
+
+"/api/reset-password",
+
+{
+
+method:"POST",
+
+
+headers:{
+
+
+"Content-Type":
+"application/json"
+
+
+},
+
+
+
+body:
+JSON.stringify({
+
+
+token:token,
+
+
+password:password
+
+
+})
+
+
+}
+
+);
+
+
+
+const result =
+await response.json();
+
+
+
+alert(
+result.message
+);
+
+
+
+if(result.success){
+
+
+window.location.href="/";
+
+
+}
+
+
+}
+
+);
+
 
 }

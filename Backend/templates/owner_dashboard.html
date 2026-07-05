@@ -240,13 +240,21 @@
 
                     <div class="profile-info">
 
-                        <h4 id="fullname">Loading...</h4>
+                        <h4 id="fullname">
+                            Loading...
+                        </h4>
 
-                        <span id="role">Loading...</span>
+                        <span id="role">
+                            Loading...
+                        </span>
 
                     </div>
 
-                    <img src="{{ url_for('static', filename='images/profile.png') }}">
+
+                    <img
+                        id="profileImage"
+                        src="{{ url_for('static', filename='images/profile.png') }}"
+                        alt="Profile">
 
                 </div>
 
@@ -814,10 +822,9 @@
 
                 <label>Username</label>
 
-                <input
-                    type="text"
-                    id="editUsername"
-                    readonly>
+            <input 
+                id="editUsername"
+                type="text">
 
             </div>
 
