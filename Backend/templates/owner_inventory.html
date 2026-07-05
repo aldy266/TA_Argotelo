@@ -288,13 +288,15 @@
 
 </header>
 
-        <!-- ================= INVENTORY HEADER ================= -->
+       <!-- ================= INVENTORY HEADER ================= -->
 
         <section class="inventory-header">
 
             <div class="inventory-title">
 
-                <h1>Manajemen Stok & Gudang</h1>
+                <h1>
+                    Manajemen Stok & Gudang
+                </h1>
 
                 <p>
                     Pantau ketersediaan bahan baku dan perlengkapan secara real-time.
@@ -302,15 +304,57 @@
 
             </div>
 
+
+
             <div class="inventory-action">
 
-                <button class="btn-export">
 
-                    <i class="bi bi-download"></i>
+                <div class="export-wrapper">
 
-                    Export Laporan
 
-                </button>
+                    <button 
+                        class="btn-export"
+                        id="exportBtn">
+
+                        <i class="bi bi-download"></i>
+
+                        Export Laporan
+
+                        <i class="bi bi-chevron-down"></i>
+
+                    </button>
+
+
+
+                    <div 
+                        class="export-menu"
+                        id="exportMenu">
+
+
+                        <button id="exportInventoryBtn">
+
+                            <i class="bi bi-box-seam"></i>
+
+                            Stok Saat Ini
+
+                        </button>
+
+
+                        <button id="openExportHistory">
+
+                            <i class="bi bi-calendar-event"></i>
+
+                            Riwayat Stok
+
+                        </button>
+
+
+                    </div>
+
+
+                </div>
+
+
 
                 <button class="btn-stock">
 
@@ -319,6 +363,7 @@
                     Stok Masuk
 
                 </button>
+
 
             </div>
 
@@ -549,79 +594,38 @@
 
         </section>
         <!-- ==========================
-        STOCK ACTIVITY
+            STOCK ACTIVITY
         ========================== -->
 
-       <div class="activity-card">
+        <div class="activity-card">
 
-                <div class="activity-header">
+            <div class="activity-header">
 
-                    <h3>Aktivitas Stok Terakhir</h3>
+                <h3>
+                    Aktivitas Stok Terakhir
+                </h3>
 
-                    <a href="#">Lihat Semua</a>
+                <a 
+                    href="#"
+                    id="viewAllHistory">
 
-                </div>
+                    Lihat Semua
 
-                <div class="activity-item">
-
-                    <div class="activity-left">
-
-                        <div class="activity-icon green">
-                            <i class="bi bi-arrow-down-circle"></i>
-                        </div>
-
-                        <div class="activity-info">
-
-                            <h4>Singkong +100kg</h4>
-
-                            <p>Update stok masuk dari Supplier Petani Wonosobo</p>
-
-                        </div>
-
-                    </div>
-
-                    <div class="activity-right">
-
-                        <strong>Baru Saja</strong>
-
-                        <span>Admin: Budi S.</span>
-
-                    </div>
-
-                </div>
-
-                <div class="activity-item">
-
-                    <div class="activity-left">
-
-                        <div class="activity-icon red">
-                            <i class="bi bi-arrow-up-circle"></i>
-                        </div>
-
-                        <div class="activity-info">
-
-                            <h4>Tepung -50Kg</h4>
-
-                            <p>Pengambilan stok untuk operasional shift pagi</p>
-
-                        </div>
-
-                    </div>
-
-                    <div class="activity-right">
-
-                        <strong>2 Jam Lalu</strong>
-
-                        <span>Admin: Sinta A.</span>
-
-                    </div>
-
-                </div>
+                </a>
 
             </div>
 
-        </section>
+            <!-- DATA DARI DATABASE -->
+            <div 
+                class="activity-list"
+                id="stockHistory">
 
+
+            </div>
+
+        </div>
+
+    </section>
         <!-- ==========================
                 ALERT NOTIFICATION
         ========================== -->
@@ -1200,6 +1204,219 @@
         <div 
             class="modal-body"
             id="poList">
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+<!-- =====================================================
+     MODAL HISTORY STOCK
+====================================================== -->
+
+<div 
+    class="modal"
+    id="historyModal">
+
+
+    <div class="modal-content">
+
+
+        <div class="modal-header">
+
+
+            <h3>
+                Riwayat Aktivitas Stok
+            </h3>
+
+
+            <button id="closeHistoryModal">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+
+        </div>
+
+
+        <!-- FILTER TANGGAL -->
+        <div class="history-filter">
+
+
+            <div>
+
+                <label>
+                    Dari
+                </label>
+
+
+                <input 
+                    type="date"
+                    id="historyStartDate">
+
+            </div>
+
+
+
+            <div>
+
+                <label>
+                    Sampai
+                </label>
+
+
+                <input 
+                    type="date"
+                    id="historyEndDate">
+
+            </div>
+
+
+
+            <button id="filterHistoryBtn">
+
+                Tampilkan
+
+            </button>
+
+
+        </div>
+
+
+
+        <!-- DATA HISTORY -->
+        <div 
+            class="modal-body"
+            id="allHistoryList">
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+<!-- =====================================================
+     MODAL EXPORT HISTORY STOCK
+====================================================== -->
+
+<div 
+    class="modal"
+    id="exportHistoryModal">
+
+
+    <div class="modal-content">
+
+
+        <div class="modal-header">
+
+
+            <h3>
+
+                Export Riwayat Stok
+
+            </h3>
+
+
+            <button 
+                id="closeExportHistory"
+                class="modal-close">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+
+        </div>
+
+
+
+        <div class="modal-body">
+
+
+            <div class="export-date-wrapper">
+
+
+                <div class="form-group">
+
+
+                    <label>
+                        Dari Tanggal
+                    </label>
+
+
+                    <input
+                        type="date"
+                        id="exportStartDate">
+
+
+                </div>
+
+
+
+                <div class="form-group">
+
+
+                    <label>
+                        Sampai Tanggal
+                    </label>
+
+
+                    <input
+                        type="date"
+                        id="exportEndDate">
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <p class="export-info">
+
+                Pilih rentang tanggal riwayat stok yang ingin 
+                diexport ke Excel.
+
+            </p>
+
+
+        </div>
+
+
+
+        <div class="modal-footer">
+
+
+            <button
+                class="btn-cancel"
+                id="cancelExportHistory">
+
+                Batal
+
+            </button>
+
+
+
+            <button
+                class="btn-save"
+                id="downloadHistoryBtn">
+
+
+                <i class="bi bi-download"></i>
+
+                Download Excel
+
+
+            </button>
 
 
         </div>

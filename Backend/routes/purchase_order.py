@@ -1,6 +1,10 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 
 from model import db, PurchaseOrder
+
+from openpyxl import Workbook
+
+import io
 
 
 purchase_order_bp = Blueprint(
@@ -19,7 +23,9 @@ purchase_order_bp = Blueprint(
 def get_purchase_orders():
 
 
-    orders = PurchaseOrder.query.all()
+    orders = PurchaseOrder.query.filter(
+        PurchaseOrder.status != "SELESAI"
+    ).all()
 
 
     data = []
@@ -198,3 +204,252 @@ def update_status_po(id):
 
 
     })
+
+# ==========================
+# HISTORY STOK MASUK
+# ==========================
+
+@purchase_order_bp.route(
+    "/api/purchase-orders/history",
+    methods=["GET"]
+)
+def history_po():
+
+
+    start_date = request.args.get(
+        "start"
+    )
+
+
+    end_date = request.args.get(
+        "end"
+    )
+
+
+
+    query = PurchaseOrder.query.filter_by(
+        status="SELESAI"
+    )
+
+
+
+    # FILTER TANGGAL
+    if start_date and end_date:
+
+
+        query = query.filter(
+
+            db.func.date(
+                PurchaseOrder.updated_at
+            )
+            >=
+            start_date,
+
+
+            db.func.date(
+                PurchaseOrder.updated_at
+            )
+            <=
+            end_date
+
+        )
+
+
+
+    orders = query.order_by(
+
+        PurchaseOrder.updated_at.desc()
+
+    ).all()
+
+
+
+    data = []
+
+
+
+    for po in orders:
+
+
+        data.append({
+
+
+            "id_po":
+            po.id_po,
+
+
+            "nama_bahan":
+            po.inventory.nama_bahan,
+
+
+            "jumlah_order":
+            float(po.jumlah_order),
+
+
+            "satuan":
+            po.inventory.satuan,
+
+
+            "supplier":
+            po.supplier,
+
+
+            "tanggal":
+            po.updated_at.strftime(
+                "%d-%m-%Y %H:%M"
+            )
+
+
+        })
+
+
+
+    return jsonify({
+
+
+        "success": True,
+
+
+        "data": data
+
+
+    })
+
+# ==========================
+# EXPORT HISTORY STOCK
+# ==========================
+
+@purchase_order_bp.route(
+    "/api/purchase-orders/export-history",
+    methods=["GET"]
+)
+def export_history_stock():
+
+
+    start_date = request.args.get(
+        "start"
+    )
+
+
+    end_date = request.args.get(
+        "end"
+    )
+
+
+
+    query = PurchaseOrder.query.filter_by(
+        status="SELESAI"
+    )
+
+
+
+    # FILTER TANGGAL
+    if start_date and end_date:
+
+
+        query = query.filter(
+
+            db.func.date(
+                PurchaseOrder.updated_at
+            )
+            >=
+            start_date,
+
+
+            db.func.date(
+                PurchaseOrder.updated_at
+            )
+            <=
+            end_date
+
+        )
+
+
+
+    orders = query.order_by(
+
+        PurchaseOrder.updated_at.desc()
+
+    ).all()
+
+
+
+
+    workbook = Workbook()
+
+
+    sheet = workbook.active
+
+
+    sheet.title = "History Stock"
+
+
+
+    sheet.append([
+
+        "Tanggal",
+
+        "Nama Bahan",
+
+        "Jumlah Masuk",
+
+        "Satuan",
+
+        "Supplier"
+
+    ])
+
+
+
+
+    for po in orders:
+
+
+        sheet.append([
+
+
+            po.updated_at.strftime(
+                "%d-%m-%Y %H:%M"
+            ),
+
+
+            po.inventory.nama_bahan,
+
+
+            float(po.jumlah_order),
+
+
+            po.inventory.satuan,
+
+
+            po.supplier
+
+
+        ])
+
+
+
+
+    file = io.BytesIO()
+
+
+    workbook.save(file)
+
+
+    file.seek(0)
+
+
+
+    return send_file(
+
+        file,
+
+        as_attachment=True,
+
+        download_name=
+        "Laporan_History_Stock_Argotelo.xlsx",
+
+        mimetype=
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+    )

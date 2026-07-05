@@ -1,7 +1,15 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta
 
 db = SQLAlchemy()
+
+# ==========================
+# WAKTU INDONESIA (WIB)
+# ==========================
+
+def waktu_wib():
+
+    return datetime.utcnow() + timedelta(hours=7)
 
 
 # ==========================
@@ -80,13 +88,13 @@ class User(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow
+        default=waktu_wib
     )
 
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
+        default=waktu_wib,
+        onupdate=waktu_wib
     )
 
     role = db.relationship(
@@ -141,14 +149,14 @@ class Inventory(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow
+        default=waktu_wib
     )
 
 
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
+        default=waktu_wib,
+        onupdate=waktu_wib
     )
 
 # ==========================
@@ -196,14 +204,14 @@ class PurchaseOrder(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow
+        default=waktu_wib
     )
 
 
     updated_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
+        default=waktu_wib,
+        onupdate=waktu_wib
     )
 
 

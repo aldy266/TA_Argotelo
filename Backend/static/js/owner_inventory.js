@@ -32,6 +32,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     const pendingPO =
     document.getElementById("pendingPO");
 
+    const stockHistory =
+    document.getElementById("stockHistory");
+
+    const viewAllHistory =
+    document.getElementById("viewAllHistory");
+
+    const historyModal =
+    document.getElementById("historyModal");
+
+    const closeHistoryModal =
+    document.getElementById("closeHistoryModal");
+
+    const allHistoryList =
+    document.getElementById("allHistoryList");
+
+    const historyStartDate =
+    document.getElementById("historyStartDate");
+
+    const historyEndDate =
+    document.getElementById("historyEndDate");
+
+    const filterHistoryBtn =
+    document.getElementById("filterHistoryBtn");
+
+    
+
     // =====================================================
     // LIST PURCHASE ORDER MODAL
     // =====================================================
@@ -55,8 +81,138 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.querySelector(".sort-box select");
 
 
-    const exportBtn =
-    document.querySelector(".btn-export");
+    // =====================================================
+    // EXPORT ELEMENT
+    // =====================================================
+
+    const openExportHistory =
+        document.getElementById("openExportHistory");
+
+
+    const exportHistoryModal =
+        document.getElementById("exportHistoryModal");
+
+
+    const closeExportHistory =
+        document.getElementById("closeExportHistory");
+
+
+    const exportStartDate =
+        document.getElementById("exportStartDate");
+
+
+    const exportEndDate =
+        document.getElementById("exportEndDate");
+
+
+    const downloadHistoryBtn =
+        document.getElementById("downloadHistoryBtn");
+
+    const cancelExportHistory =
+        document.getElementById("cancelExportHistory");
+
+
+
+    // =======================
+    // OPEN EXPORT HISTORY
+    // =======================
+
+    openExportHistory.addEventListener(
+        "click",
+        ()=>{
+
+
+            exportMenu.classList.remove(
+                "show"
+            );
+
+
+            exportHistoryModal.classList.add(
+                "show"
+            );
+
+
+        }
+    );
+
+
+
+    // =======================
+    // CLOSE EXPORT HISTORY
+    // =======================
+
+    closeExportHistory.addEventListener(
+        "click",
+        ()=>{
+
+
+            exportHistoryModal.classList.remove(
+                "show"
+            );
+
+
+        }
+    );
+
+    // =======================
+    // CANCEL EXPORT HISTORY
+    // =======================
+
+    if(cancelExportHistory){
+
+
+        cancelExportHistory.addEventListener(
+            "click",
+            ()=>{
+
+
+                exportHistoryModal.classList.remove(
+                    "show"
+                );
+
+
+            }
+        );
+
+
+    }
+    // =======================
+    // DOWNLOAD HISTORY EXCEL
+    // =======================
+
+    downloadHistoryBtn.addEventListener(
+        "click",
+        ()=>{
+
+
+            const start =
+                exportStartDate.value;
+
+
+            const end =
+                exportEndDate.value;
+
+
+            if(
+                start === "" ||
+                end === ""
+            ){
+
+                alert(
+                    "Pilih tanggal laporan"
+                );
+
+                return;
+
+            }
+
+
+            window.location.href =
+            `/api/purchase-orders/export-history?start=${start}&end=${end}`;
+
+
+        }
+    );
 
 
     const stockBtn =
@@ -366,7 +522,388 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     }
 
+    // =====================================================
+    // LOAD HISTORY STOCK PO
+    // =====================================================
 
+    async function loadHistoryPO(){
+
+
+        try{
+
+
+            const response =
+                await fetch(
+                    "/api/purchase-orders/history"
+                );
+
+
+            const result =
+                await response.json();
+
+
+
+            stockHistory.innerHTML = "";
+
+
+
+            result.data
+            .slice(0,2)
+            .forEach(item=>{
+
+
+                stockHistory.innerHTML += `
+
+
+                <div class="activity-item">
+
+
+                    <div class="activity-left">
+
+
+                        <div class="activity-icon green">
+
+                            <i class="bi bi-arrow-down-circle"></i>
+
+                        </div>
+
+
+
+                        <div class="activity-info">
+
+
+                            <h4>
+
+                                ${item.nama_bahan}
+                                +
+                                ${item.jumlah_order}
+                                ${item.satuan}
+
+                            </h4>
+
+
+
+                            <p>
+
+                                Update stok masuk dari Supplier
+                                ${item.supplier}
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="activity-right">
+
+
+                        <strong>
+
+                            ${item.tanggal}
+
+                        </strong>
+
+
+
+                        <span>
+
+                            Sistem PO
+
+                        </span>
+
+
+                    </div>
+
+
+
+                </div>
+
+
+                `;
+
+
+            });
+
+
+
+        }
+
+
+        catch(error){
+
+
+            console.log(error);
+
+
+        }
+
+
+    }
+
+    // =====================================================
+    // VIEW ALL HISTORY STOCK
+    // =====================================================
+
+    viewAllHistory.addEventListener(
+        "click",
+        async(e)=>{
+
+
+            e.preventDefault();
+
+
+
+            const response =
+                await fetch(
+                    "/api/purchase-orders/history"
+                );
+
+
+            const result =
+                await response.json();
+
+
+
+            allHistoryList.innerHTML = "";
+
+
+
+            result.data.forEach(item=>{
+
+
+                allHistoryList.innerHTML += `
+
+
+                <div class="activity-item">
+
+
+                    <div class="activity-left">
+
+
+                        <div class="activity-icon green">
+
+                            <i class="bi bi-arrow-down-circle"></i>
+
+                        </div>
+
+
+                        <div class="activity-info">
+
+
+                            <h4>
+
+                                ${item.nama_bahan}
+                                +
+                                ${item.jumlah_order}
+                                ${item.satuan}
+
+                            </h4>
+
+
+                            <p>
+
+                                Supplier :
+                                ${item.supplier}
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="activity-right">
+
+
+                        <strong>
+
+                            ${item.tanggal}
+
+                        </strong>
+
+
+                        <span>
+                            Sistem PO
+                        </span>
+
+
+                    </div>
+
+
+                </div>
+
+
+                `;
+
+
+            });
+
+
+
+            historyModal.classList.add(
+                "show"
+            );
+
+
+        }
+    );
+
+    // =====================================================
+    // CLOSE HISTORY MODAL
+    // =====================================================
+
+    if(closeHistoryModal){
+
+        closeHistoryModal.addEventListener(
+            "click",
+            ()=>{
+
+
+                historyModal.classList.remove(
+                    "show"
+                );
+
+
+            }
+        );
+
+    }
+
+    // =====================================================
+    // FILTER HISTORY BY DATE
+    // =====================================================
+
+    filterHistoryBtn.addEventListener(
+        "click",
+        async()=>{
+
+
+            const start =
+                historyStartDate.value;
+
+
+            const end =
+                historyEndDate.value;
+
+
+
+            if(
+                start === "" ||
+                end === ""
+            ){
+
+
+                alert(
+                    "Pilih tanggal terlebih dahulu"
+                );
+
+
+                return;
+
+
+            }
+
+
+
+            const response =
+                await fetch(
+                    `/api/purchase-orders/history?start=${start}&end=${end}`
+                );
+
+
+
+            const result =
+                await response.json();
+
+
+
+            allHistoryList.innerHTML = "";
+
+
+
+            result.data.forEach(item=>{
+
+
+                allHistoryList.innerHTML += `
+
+
+                <div class="activity-item">
+
+
+                    <div class="activity-left">
+
+
+                        <div class="activity-icon green">
+
+                            <i class="bi bi-arrow-down-circle"></i>
+
+                        </div>
+
+
+                        <div class="activity-info">
+
+
+                            <h4>
+
+                                ${item.nama_bahan}
+                                +
+                                ${item.jumlah_order}
+                                ${item.satuan}
+
+                            </h4>
+
+
+                            <p>
+
+                                Supplier :
+                                ${item.supplier}
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="activity-right">
+
+
+                        <strong>
+
+                            ${item.tanggal}
+
+                        </strong>
+
+
+                        <span>
+
+                            Sistem PO
+
+                        </span>
+
+
+                    </div>
+
+
+                </div>
+
+
+                `;
+
+
+            });
+
+
+        }
+    );
 
     // =====================================================
     // RENDER INVENTORY
@@ -1113,10 +1650,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 loadInventory();
 
 
-
                 // update angka pending
                 loadPendingPO();
 
+
+                // update history stok
+                loadHistoryPO();
 
 
                 // refresh list PO
@@ -1590,20 +2129,42 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     }
 
-        // =====================================================
-    // EXPORT
+    // =====================================================
+    // EXPORT DROPDOWN
     // =====================================================
 
-    if(exportBtn){
+    exportBtn.addEventListener(
+        "click",
+        (e)=>{
 
-        exportBtn.addEventListener("click",()=>{
 
-            alert("Export laporan berhasil.");
+            e.stopPropagation();
 
-        });
 
-    }
+            exportMenu.classList.toggle(
+                "show"
+            );
 
+
+        }
+    );
+
+
+    // =======================
+    // EXPORT INVENTORY NOW
+    // =======================
+
+    exportInventoryBtn.addEventListener(
+        "click",
+        ()=>{
+
+
+            window.location.href =
+            "/api/inventory/export";
+
+
+        }
+    );
 
     // =====================================================
     // STOK MASUK MODAL
@@ -2479,6 +3040,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     loadPendingPO();
 
+
+    loadHistoryPO();
     // =====================================================
     // READY
     // =====================================================

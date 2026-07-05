@@ -1,6 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 
 from model import db, Inventory, PurchaseOrder
+
+from openpyxl import Workbook
+
+import io
 
 
 inventory_bp = Blueprint(
@@ -233,3 +237,125 @@ def delete_inventory(id):
         "message": "Data inventory berhasil dihapus"
 
     })
+
+    # ==========================
+# EXPORT INVENTORY EXCEL
+# ==========================
+
+@inventory_bp.route(
+    "/api/inventory/export",
+    methods=["GET"]
+)
+def export_inventory():
+
+
+    items = Inventory.query.all()
+
+
+
+    workbook = Workbook()
+
+
+    sheet = workbook.active
+
+
+    sheet.title = "Inventory"
+
+
+
+    # HEADER
+    sheet.append([
+
+        "Nama Bahan",
+
+        "Stok",
+
+        "Satuan",
+
+        "Minimal Stok",
+
+        "Supplier",
+
+        "Status Stok"
+
+    ])
+
+
+
+
+    for item in items:
+
+
+
+        # HITUNG STATUS
+        if item.stok <= item.minimal_stok:
+
+
+            status = "Kritis"
+
+
+
+        elif item.stok <= item.minimal_stok * 2:
+
+
+            status = "Menipis"
+
+
+
+        else:
+
+
+            status = "Aman"
+
+
+
+
+        sheet.append([
+
+            item.nama_bahan,
+
+
+            float(item.stok),
+
+
+            item.satuan,
+
+
+            float(item.minimal_stok),
+
+
+            item.supplier,
+
+
+            status
+
+        ])
+
+
+
+
+    file = io.BytesIO()
+
+
+
+    workbook.save(file)
+
+
+
+    file.seek(0)
+
+
+
+
+    return send_file(
+
+        file,
+
+        as_attachment=True,
+
+        download_name="Laporan_Inventory_Argotelo.xlsx",
+
+        mimetype=
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+    )
