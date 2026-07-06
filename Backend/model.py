@@ -227,3 +227,297 @@ class PurchaseOrder(db.Model):
         "Inventory",
         backref="purchase_orders"
     )
+
+
+# ==========================
+# STAFF
+# ==========================
+
+class Staff(db.Model):
+
+    __tablename__ = "staff"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=True
+    )
+
+    employee_code = db.Column(
+        db.String(50),
+        unique=True,
+        nullable=False
+    )
+
+    full_name = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    department = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    position = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    phone = db.Column(
+        db.String(20)
+    )
+
+    email = db.Column(
+        db.String(100)
+    )
+
+    joined_at = db.Column(
+        db.DateTime,
+        nullable=False
+    )
+
+    status = db.Column(
+        db.Enum("ACTIVE", "INACTIVE"),
+        default="ACTIVE"
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=waktu_wib
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=waktu_wib,
+        onupdate=waktu_wib
+    )
+
+    user = db.relationship("User", backref="staff_profile")
+    schedules = db.relationship("StaffSchedule", backref="staff", cascade="all, delete-orphan")
+    attendance_records = db.relationship("Attendance", backref="staff", cascade="all, delete-orphan")
+    leave_requests = db.relationship("LeaveRequest", backref="staff", cascade="all, delete-orphan")
+
+
+# ==========================
+# SHIFT
+# ==========================
+
+class Shift(db.Model):
+
+    __tablename__ = "shifts"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    shift_name = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    start_time = db.Column(
+        db.Time,
+        nullable=False
+    )
+
+    end_time = db.Column(
+        db.Time,
+        nullable=False
+    )
+
+    tolerance_minutes = db.Column(
+        db.Integer,
+        default=10
+    )
+
+    status = db.Column(
+        db.Enum("ACTIVE", "INACTIVE"),
+        default="ACTIVE"
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=waktu_wib
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=waktu_wib,
+        onupdate=waktu_wib
+    )
+
+    schedules = db.relationship("StaffSchedule", backref="shift", cascade="all, delete-orphan")
+
+
+# ==========================
+# STAFF SCHEDULE
+# ==========================
+
+class StaffSchedule(db.Model):
+
+    __tablename__ = "staff_schedules"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    staff_id = db.Column(
+        db.Integer,
+        db.ForeignKey("staff.id"),
+        nullable=False
+    )
+
+    shift_id = db.Column(
+        db.Integer,
+        db.ForeignKey("shifts.id"),
+        nullable=False
+    )
+
+    schedule_date = db.Column(
+        db.Date,
+        nullable=False
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=waktu_wib
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=waktu_wib,
+        onupdate=waktu_wib
+    )
+
+    attendance = db.relationship("Attendance", backref="schedule", uselist=False, cascade="all, delete-orphan")
+
+    __table_args__ = (
+        db.UniqueConstraint("staff_id", "schedule_date", name="uq_staff_schedule_date"),
+    )
+
+
+# ==========================
+# ATTENDANCE
+# ==========================
+
+class Attendance(db.Model):
+
+    __tablename__ = "attendance"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    staff_id = db.Column(
+        db.Integer,
+        db.ForeignKey("staff.id"),
+        nullable=False
+    )
+
+    schedule_id = db.Column(
+        db.Integer,
+        db.ForeignKey("staff_schedules.id"),
+        nullable=False
+    )
+
+    attendance_date = db.Column(
+        db.Date,
+        nullable=False
+    )
+
+    clock_in = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    clock_out = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    status = db.Column(
+        db.Enum("NOT_CHECKED_IN", "PRESENT", "LATE", "LEAVE", "SICK", "ABSENT", "COMPLETED"),
+        default="NOT_CHECKED_IN"
+    )
+
+    late_minutes = db.Column(
+        db.Integer,
+        default=0
+    )
+
+    work_minutes = db.Column(
+        db.Integer,
+        default=0
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=waktu_wib
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=waktu_wib,
+        onupdate=waktu_wib
+    )
+
+
+# ==========================
+# LEAVE REQUEST
+# ==========================
+
+class LeaveRequest(db.Model):
+
+    __tablename__ = "leave_requests"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    staff_id = db.Column(
+        db.Integer,
+        db.ForeignKey("staff.id"),
+        nullable=False
+    )
+
+    leave_type = db.Column(
+        db.Enum("SICK", "LEAVE", "PERMISSION"),
+        nullable=False
+    )
+
+    start_date = db.Column(
+        db.Date,
+        nullable=False
+    )
+
+    end_date = db.Column(
+        db.Date,
+        nullable=False
+    )
+
+    reason = db.Column(
+        db.Text
+    )
+
+    document_url = db.Column(
+        db.Text,
+        nullable=True
+    )
+
+    status = db.Column(
+        db.Enum("PENDING", "APPROVED", "REJECTED"),
+        default="PENDING"
+    )
+
+    reviewed_by = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=True
+    )
+
+    reviewed_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=waktu_wib
+    )
+
+    reviewer = db.relationship("User", backref="leave_reviews")

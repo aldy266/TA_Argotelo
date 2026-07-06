@@ -11,6 +11,7 @@ from routes.cashier import cashier_bp
 from routes.finance import finance_bp
 from routes.inventory import inventory_bp
 from routes.purchase_order import purchase_order_bp
+from routes.staff import staff_bp
 
 
 app = Flask(__name__)
@@ -50,6 +51,7 @@ app.register_blueprint(cashier_bp)
 app.register_blueprint(finance_bp)
 app.register_blueprint(inventory_bp)
 app.register_blueprint(purchase_order_bp)
+app.register_blueprint(staff_bp)
 
 
 

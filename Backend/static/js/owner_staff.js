@@ -1,31 +1,49 @@
 // ======================================
-// OWNER STAFF MANAGEMENT
+// ARGOTELO STAFF MODULE - API BASED
 // ======================================
 
 document.addEventListener("DOMContentLoaded", async () => {
 
     "use strict";
 
-    const STORAGE_KEY = "argotelo_staff_members";
-    const fullname = document.getElementById("fullname");
-    const role = document.getElementById("role");
+    // =====================================
+    // ELEMENTS
+    // =====================================
+
+    const fullnameEl = document.getElementById("fullname");
+    const roleEl = document.getElementById("role");
+    const todayDateEl = document.getElementById("today-date");
     const searchInput = document.querySelector(".attendance-search input");
     const attendanceTable = document.querySelector(".attendance-table tbody");
     const logoutBtn = document.querySelector(".logout");
+    
+    // Statistics
+    const statPresent = document.getElementById("stat-present");
+    const statRate = document.getElementById("stat-rate");
+    const statLate = document.getElementById("stat-late");
+    const statAvgLate = document.getElementById("stat-avg-late");
+    const statLeave = document.getElementById("stat-leave");
+    
+    // Month summary
+    const monthRate = document.getElementById("month-rate");
+    const monthAttended = document.getElementById("month-attended");
+    const monthLeave = document.getElementById("month-leave");
+    const progressFill = document.getElementById("progress-fill");
+    
+    // Containers
+    const shiftContainer = document.getElementById("shift-container");
+    const approvalContainer = document.getElementById("approval-container");
 
-    let staffMembers = loadStaff();
-    let filteredData = [...staffMembers];
+    // =====================================
+    // STATE
+    // =====================================
+
+    let attendanceData = [];
+    let filteredData = [];
 
     // =====================================
     // UTILITIES
     // =====================================
-
-    function makeId() {
-        if (window.crypto && typeof window.crypto.randomUUID === "function") {
-            return window.crypto.randomUUID();
-        }
-        return `staff-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    }
 
     function escapeHtml(value) {
         return String(value)
@@ -55,69 +73,202 @@ document.addEventListener("DOMContentLoaded", async () => {
         }, 2500);
     }
 
-    // =====================================
-    // STORAGE
-    // =====================================
-
-    function defaultStaff() {
-        return [];
-    }
-
-    function loadStaff() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return defaultStaff();
+    async function apiRequest(url, options = {}) {
         try {
-            return Array.isArray(JSON.parse(saved)) ? JSON.parse(saved) : defaultStaff();
-        } catch {
-            return defaultStaff();
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    "Content-Type": "application/json",
+                    ...options.headers
+                },
+                credentials: "include"
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || `HTTP ${response.status}`);
+            }
+
+            return data;
+        } catch (error) {
+            showToast(error.message, "error");
+            throw error;
         }
     }
 
-    function saveStaff() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(staffMembers));
+    function formatTime(isoString) {
+        if (!isoString) return "--:--";
+        const date = new Date(isoString);
+        return date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return "";
+        const date = new Date(dateString + "T00:00:00");
+        const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        
+        return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    function getStatusBadgeClass(status) {
+        const statusMap = {
+            "PRESENT": "success",
+            "LATE": "warning",
+            "LEAVE": "info",
+            "SICK": "danger",
+            "ABSENT": "danger",
+            "NOT_CHECKED_IN": "secondary"
+        };
+        return statusMap[status] || "secondary";
+    }
+
+    function getStatusLabel(status) {
+        const labelMap = {
+            "PRESENT": "HADIR",
+            "LATE": "TERLAMBAT",
+            "LEAVE": "IZIN",
+            "SICK": "SAKIT",
+            "ABSENT": "TIDAK HADIR",
+            "NOT_CHECKED_IN": "BELUM HADIR",
+            "COMPLETED": "SELESAI"
+        };
+        return labelMap[status] || status;
     }
 
     // =====================================
-    // RENDER TABLE
+    // INIT - LOAD USER INFO
     // =====================================
 
-    function renderTable() {
+    async function initUser() {
+        try {
+            const response = await apiRequest("/api/me");
+            if (response.success) {
+                fullnameEl.textContent = response.user.fullname || "User";
+                roleEl.textContent = response.user.role || "Role";
+            }
+        } catch (error) {
+            console.error("Error loading user:", error);
+        }
+    }
+
+    // =====================================
+    // LOAD STATISTICS
+    // =====================================
+
+    async function loadStatistics() {
+        try {
+            const response = await apiRequest("/api/staff/statistics/today");
+            if (response.success) {
+                updateStatisticsUI(response.data);
+            }
+        } catch (error) {
+            console.error("Error loading statistics:", error);
+        }
+    }
+
+    function updateStatisticsUI(stats) {
+        const { total_scheduled, present_count, attendance_rate, late_count, avg_late_minutes, leave_count } = stats;
+        
+        statPresent.textContent = `${present_count} / ${total_scheduled}`;
+        statRate.textContent = `${attendance_rate}% Attendance`;
+        
+        if (late_count === 0) {
+            statLate.textContent = "0 Staff";
+            statAvgLate.textContent = "Tidak ada keterlambatan";
+        } else {
+            statLate.textContent = `${late_count} Staff`;
+            statAvgLate.textContent = `Rata-rata ${Math.round(avg_late_minutes)} menit`;
+            statAvgLate.classList.add("danger");
+        }
+        
+        if (leave_count === 0) {
+            statLeave.textContent = "0 Staff";
+        } else {
+            statLeave.textContent = `${leave_count} Staff`;
+        }
+    }
+
+    // =====================================
+    // LOAD MONTH STATISTICS
+    // =====================================
+
+    async function loadMonthStatistics() {
+        try {
+            const response = await apiRequest("/api/staff/statistics/month");
+            if (response.success) {
+                updateMonthStatisticsUI(response.data);
+            }
+        } catch (error) {
+            console.error("Error loading month statistics:", error);
+        }
+    }
+
+    function updateMonthStatisticsUI(stats) {
+        const { total_attended, total_leave, attendance_rate } = stats;
+        
+        monthRate.textContent = `${attendance_rate}%`;
+        monthAttended.textContent = total_attended;
+        monthLeave.textContent = total_leave;
+        progressFill.style.width = `${Math.min(attendance_rate, 100)}%`;
+    }
+
+    // =====================================
+    // LOAD ATTENDANCE TABLE
+    // =====================================
+
+    async function loadAttendance() {
+        try {
+            const response = await apiRequest("/api/staff/attendance/today");
+            if (response.success) {
+                attendanceData = response.data;
+                filteredData = [...attendanceData];
+                renderAttendanceTable();
+            }
+        } catch (error) {
+            console.error("Error loading attendance:", error);
+        }
+    }
+
+    function renderAttendanceTable() {
         if (filteredData.length === 0) {
             attendanceTable.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 40px 20px; color: var(--text-light);">
                         <i class="bi bi-inbox" style="font-size: 32px; display: block; margin-bottom: 12px;"></i>
-                        <p>Belum ada data staff. Klik tombol "Tambah Staff" untuk memulai.</p>
+                        <p>Belum ada staff yang dijadwalkan hari ini.</p>
                     </td>
                 </tr>
             `;
             return;
         }
 
-        attendanceTable.innerHTML = filteredData.map(staff => `
+        attendanceTable.innerHTML = filteredData.map(record => `
             <tr>
                 <td>
                     <div class="staff-info">
                         <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile">
                         <div>
-                            <h4>${escapeHtml(staff.name)}</h4>
-                            <span>${escapeHtml(staff.role)}</span>
+                            <h4>${escapeHtml(record.full_name)}</h4>
+                            <span>${escapeHtml(record.position)}</span>
                         </div>
                     </div>
                 </td>
-                <td>${escapeHtml(staff.clockIn)}</td>
-                <td><span class="shift-badge">${escapeHtml(staff.shift)}</span></td>
+                <td>${formatTime(record.clock_in)}</td>
+                <td><span class="shift-badge">${escapeHtml(record.shift_name)}</span></td>
                 <td>
-                    <span class="badge ${staff.status === "HADIR" ? "success" : staff.status === "TERLAMBAT" ? "warning" : "danger"}">
-                        ${escapeHtml(staff.status)}
+                    <span class="badge ${getStatusBadgeClass(record.status)}">
+                        ${getStatusLabel(record.status)}
                     </span>
                 </td>
-                <td>${escapeHtml(staff.workHours)}</td>
+                <td>${record.work_minutes > 0 ? Math.floor(record.work_minutes / 60) + 'h ' + (record.work_minutes % 60) + 'm' : '00h 00m'}</td>
                 <td style="display: flex; gap: 8px; justify-content: center;">
-                    <button class="edit-btn" type="button" data-id="${staff.id}" style="background: #5A3718; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: background 0.3s ease;">
+                    <button class="edit-btn" type="button" data-id="${record.id}" style="background: #5A3718; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: background 0.3s ease;">
                         <i class="bi bi-pencil"></i> Edit
                     </button>
-                    <button class="delete-btn" type="button" data-id="${staff.id}" style="background: #E5484D; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: background 0.3s ease;">
+                    <button class="delete-btn" type="button" data-id="${record.id}" style="background: #E5484D; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: background 0.3s ease;">
                         <i class="bi bi-trash"></i> Hapus
                     </button>
                 </td>
@@ -143,51 +294,173 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // =====================================
-    // FORM MODAL
+    // SEARCH
     // =====================================
 
-    function openStaffForm(staff = null) {
+    function setupSearch() {
+        if (searchInput) {
+            searchInput.addEventListener("input", event => {
+                const keyword = event.target.value.toLowerCase();
+                filteredData = attendanceData.filter(record =>
+                    record.full_name.toLowerCase().includes(keyword) ||
+                    record.employee_code.toLowerCase().includes(keyword) ||
+                    record.position.toLowerCase().includes(keyword)
+                );
+                renderAttendanceTable();
+            });
+        }
+    }
+
+    // =====================================
+    // LOAD SHIFT DATA
+    // =====================================
+
+    async function loadShiftData() {
+        try {
+            const response = await apiRequest("/api/staff/shift");
+            if (response.success && response.data.length > 0) {
+                const today = new Date();
+                const dayNames = ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"];
+                const dayName = dayNames[today.getDay()];
+                
+                shiftContainer.innerHTML = response.data.map(shift => `
+                    <div class="shift-item">
+                        <div class="shift-date">
+                            <span>${dayName}</span>
+                            <strong>${today.getDate()}</strong>
+                        </div>
+                        <div class="shift-detail">
+                            <h4>${escapeHtml(shift.shift_name)}</h4>
+                            <span>${shift.start_time} - ${shift.end_time}</span>
+                        </div>
+                        <i class="bi bi-chevron-right"></i>
+                    </div>
+                `).join("");
+            } else {
+                shiftContainer.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: var(--text-light);">
+                        <p>Tidak ada shift yang terdaftar</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error("Error loading shifts:", error);
+        }
+    }
+
+    // =====================================
+    // LOAD LEAVE REQUESTS
+    // =====================================
+
+    async function loadLeaveRequests() {
+        try {
+            const response = await apiRequest("/api/staff/leave-request");
+            if (response.success && response.data.length > 0) {
+                const leaveTypeMap = {
+                    "SICK": { icon: "file-earmark-medical", label: "Izin Sakit" },
+                    "LEAVE": { icon: "calendar", label: "Cuti" },
+                    "PERMISSION": { icon: "person", label: "Izin" }
+                };
+
+                approvalContainer.innerHTML = response.data.map(req => {
+                    const typeInfo = leaveTypeMap[req.leave_type] || { icon: "file-earmark", label: req.leave_type };
+                    const createdAt = new Date(req.created_at);
+                    const timeDiff = Math.floor((new Date() - createdAt) / 60000);
+                    let timeLabel = `${timeDiff} menit yang lalu`;
+                    if (timeDiff >= 60) timeLabel = `${Math.floor(timeDiff / 60)} jam yang lalu`;
+                    
+                    return `
+                        <div class="approval-item">
+                            <div class="approval-left">
+                                <div class="approval-icon ${req.leave_type === 'SICK' ? 'warning' : 'primary'}">
+                                    <i class="bi bi-${typeInfo.icon}"></i>
+                                </div>
+                                <div>
+                                    <h5>${typeInfo.label} - ${escapeHtml(req.staff_name)}</h5>
+                                    <span>${timeLabel}</span>
+                                </div>
+                            </div>
+                            <button class="review-btn" data-id="${req.id}">
+                                Review
+                            </button>
+                        </div>
+                    `;
+                }).join("");
+
+                approvalContainer.querySelectorAll(".review-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const requestId = btn.dataset.id;
+                        showLeaveReviewModal(requestId, response.data.find(r => r.id == requestId));
+                    });
+                });
+            } else {
+                approvalContainer.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: var(--text-light);">
+                        <p>Tidak ada permohonan menunggu persetujuan</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error("Error loading leave requests:", error);
+        }
+    }
+
+    // =====================================
+    // LEAVE REVIEW MODAL
+    // =====================================
+
+    function showLeaveReviewModal(requestId, leaveReq) {
         const modal = document.createElement("div");
         modal.className = "menu-modal-backdrop";
+        
+        const leaveTypeMap = {
+            "SICK": "Izin Sakit",
+            "LEAVE": "Cuti",
+            "PERMISSION": "Izin"
+        };
+
         modal.innerHTML = `
             <div class="menu-modal" role="dialog" aria-modal="true">
                 <div class="menu-modal-header">
-                    <h2>${staff ? "Edit Staff" : "Tambah Staff Baru"}</h2>
+                    <h2>Detail Permohonan</h2>
                     <button class="modal-close" type="button" aria-label="Tutup">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
-                <form id="staffForm" class="menu-form">
-                    <label>
-                        Nama Staff
-                        <input name="name" type="text" value="${escapeHtml(staff?.name || "")}" required>
-                    </label>
-                    <label>
-                        Role / Jabatan
-                        <input name="role" type="text" value="${escapeHtml(staff?.role || "")}" required>
-                    </label>
-                    <label>
-                        Email
-                        <input name="email" type="email" value="${escapeHtml(staff?.email || "")}" required>
-                    </label>
-                    <label>
-                        No. Telepon
-                        <input name="phone" type="tel" value="${escapeHtml(staff?.phone || "")}" required>
-                    </label>
-                    <label>
-                        Shift
-                        <select name="shift" required>
-                            <option value="">-- Pilih Shift --</option>
-                            <option value="Shift Pagi" ${staff?.shift === "Shift Pagi" ? "selected" : ""}>Shift Pagi</option>
-                            <option value="Shift Sore" ${staff?.shift === "Shift Sore" ? "selected" : ""}>Shift Sore</option>
-                            <option value="Shift Malam" ${staff?.shift === "Shift Malam" ? "selected" : ""}>Shift Malam</option>
-                        </select>
-                    </label>
-                    <div class="menu-form-actions">
-                        <button type="button" class="cancel-btn">Batal</button>
-                        <button type="submit" class="save-btn">Simpan</button>
+                <div class="menu-form" style="gap: 12px;">
+                    <div>
+                        <label><strong>Nama Staff</strong></label>
+                        <p style="margin: 0; color: var(--text-light);">${escapeHtml(leaveReq.staff_name)}</p>
                     </div>
-                </form>
+                    <div>
+                        <label><strong>Jenis Pengajuan</strong></label>
+                        <p style="margin: 0; color: var(--text-light);">${leaveTypeMap[leaveReq.leave_type] || leaveReq.leave_type}</p>
+                    </div>
+                    <div>
+                        <label><strong>Tanggal Mulai</strong></label>
+                        <p style="margin: 0; color: var(--text-light);">${formatDate(leaveReq.start_date)}</p>
+                    </div>
+                    <div>
+                        <label><strong>Tanggal Selesai</strong></label>
+                        <p style="margin: 0; color: var(--text-light);">${formatDate(leaveReq.end_date)}</p>
+                    </div>
+                    <div>
+                        <label><strong>Alasan</strong></label>
+                        <p style="margin: 0; color: var(--text-light);">${escapeHtml(leaveReq.reason || '-')}</p>
+                    </div>
+                    ${leaveReq.document_url ? `
+                    <div>
+                        <label><strong>Lampiran</strong></label>
+                        <a href="${leaveReq.document_url}" target="_blank" class="btn-link" style="color: var(--primary); text-decoration: none;">
+                            <i class="bi bi-download"></i> Unduh Dokumen
+                        </a>
+                    </div>
+                    ` : ''}
+                    <div class="menu-form-actions" style="margin-top: 12px;">
+                        <button type="button" class="cancel-btn" id="btn-reject-leave">Tolak</button>
+                        <button type="button" class="save-btn" id="btn-approve-leave">Setujui</button>
+                    </div>
+                </div>
             </div>
         `;
 
@@ -196,131 +469,41 @@ document.addEventListener("DOMContentLoaded", async () => {
         const close = () => modal.remove();
         modal.querySelector(".modal-close").addEventListener("click", close);
         modal.querySelector(".cancel-btn").addEventListener("click", close);
+        
         modal.addEventListener("click", event => {
             if (event.target === modal) close();
         });
 
-        modal.querySelector("#staffForm").addEventListener("submit", event => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const formData = new FormData(form);
-
-            const name = formData.get("name").trim();
-            const role = formData.get("role").trim();
-            const email = formData.get("email").trim();
-            const phone = formData.get("phone").trim();
-            const shift = formData.get("shift").trim();
-
-            if (!name || !role || !email || !phone || !shift) {
-                showToast("Semua field harus diisi!", "error");
-                return;
+        document.getElementById("btn-approve-leave").addEventListener("click", async () => {
+            try {
+                await apiRequest(`/api/staff/leave-request/${requestId}/approve`, { method: "PATCH" });
+                showToast("Permohonan disetujui");
+                close();
+                await loadLeaveRequests();
+                await loadAttendance();
+            } catch (error) {
+                console.error("Error approving leave:", error);
             }
-
-            const payload = {
-                id: staff?.id || makeId(),
-                name: name,
-                role: role,
-                email: email,
-                phone: phone,
-                shift: shift,
-                clockIn: staff?.clockIn || "-:-:-",
-                status: staff?.status || "HADIR",
-                workHours: staff?.workHours || "00h 00m"
-            };
-
-            if (staff) {
-                staffMembers = staffMembers.map(item => item.id === staff.id ? payload : item);
-                showToast(`${name} berhasil diupdate!`);
-            } else {
-                staffMembers.unshift(payload);
-                showToast(`${name} berhasil ditambahkan!`);
-            }
-
-            saveStaff();
-            filteredData = [...staffMembers];
-            renderTable();
-            close();
         });
 
-        modal.querySelector("input[name='name']").focus();
-    }
-
-    // =====================================
-    // SEARCH
-    // =====================================
-
-    if (searchInput) {
-        searchInput.addEventListener("input", event => {
-            const keyword = event.target.value.toLowerCase();
-            filteredData = staffMembers.filter(staff =>
-                staff.name.toLowerCase().includes(keyword) ||
-                staff.role.toLowerCase().includes(keyword) ||
-                staff.email.toLowerCase().includes(keyword)
-            );
-            renderTable();
+        document.getElementById("btn-reject-leave").addEventListener("click", async () => {
+            try {
+                await apiRequest(`/api/staff/leave-request/${requestId}/reject`, { method: "PATCH" });
+                showToast("Permohonan ditolak");
+                close();
+                await loadLeaveRequests();
+            } catch (error) {
+                console.error("Error rejecting leave:", error);
+            }
         });
     }
 
     // =====================================
-    // TABLE ACTIONS
+    // TODAY'S DATE
     // =====================================
 
-    attendanceTable.addEventListener("click", event => {
-        const editBtn = event.target.closest(".edit-btn");
-        if (editBtn) {
-            const staffId = editBtn.dataset.id;
-            const staff = staffMembers.find(s => s.id === staffId);
-            if (staff) openStaffForm(staff);
-            return;
-        }
-
-        const deleteBtn = event.target.closest(".delete-btn");
-        if (deleteBtn) {
-            const staffId = deleteBtn.dataset.id;
-            const staff = staffMembers.find(s => s.id === staffId);
-            if (staff && confirm(`Hapus ${staff.name}?`)) {
-                staffMembers = staffMembers.filter(s => s.id !== staffId);
-                saveStaff();
-                filteredData = [...staffMembers];
-                renderTable();
-                showToast(`${staff.name} berhasil dihapus!`);
-            }
-        }
-    });
-
-    // =====================================
-    // ADD BUTTONS
-    // =====================================
-
-    const addBtn = document.querySelector(".primary-button, .floating-button");
-    if (addBtn) {
-        addBtn.addEventListener("click", () => openStaffForm());
-    }
-
-    // =====================================
-    // SIDEBAR ACTIVE
-    // =====================================
-
-    document.querySelectorAll(".sidebar-menu a").forEach(link => {
-        link.classList.toggle("active", link.pathname === window.location.pathname);
-    });
-
-    // =====================================
-    // LOAD PROFILE
-    // =====================================
-
-    async function loadProfile() {
-        try {
-            const response = await fetch("/api/me", { credentials: "include" });
-            const result = await response.json();
-
-            if (result.success) {
-                if (fullname) fullname.textContent = result.user.fullname || "User";
-                if (role) role.textContent = result.user.role || "Owner";
-            }
-        } catch (error) {
-            console.error(error);
-        }
+    function updateTodayDate() {
+        todayDateEl.textContent = formatDate(new Date().toISOString().split('T')[0]);
     }
 
     // =====================================
@@ -333,32 +516,34 @@ document.addEventListener("DOMContentLoaded", async () => {
             try {
                 await fetch("/api/logout", { method: "POST", credentials: "include" });
             } catch (error) {
-                console.error(error);
+                console.error("Error logging out:", error);
             }
             window.location.href = "/";
         });
     }
 
     // =====================================
-    // CARD ANIMATION
-    // =====================================
-
-    const cards = document.querySelectorAll(".stat-card, .attendance-card, .summary-card");
-    cards.forEach((card, index) => {
-        card.style.opacity = "0";
-        card.style.transform = "translateY(20px)";
-        setTimeout(() => {
-            card.style.transition = ".45s ease";
-            card.style.opacity = "1";
-            card.style.transform = "translateY(0px)";
-        }, index * 120);
-    });
-
-    // =====================================
     // INITIALIZE
     // =====================================
 
-    await loadProfile();
-    renderTable();
+    async function init() {
+        updateTodayDate();
+        await initUser();
+        await loadStatistics();
+        await loadMonthStatistics();
+        await loadAttendance();
+        await loadShiftData();
+        await loadLeaveRequests();
+        setupSearch();
+    }
+
+    init();
+
+    // Refresh data every 30 seconds
+    setInterval(async () => {
+        await loadStatistics();
+        await loadMonthStatistics();
+        await loadAttendance();
+    }, 30000);
 
 });

@@ -180,15 +180,15 @@
 
                     </span>
 
-                    <h2>
+                    <h2 id="stat-present">
 
-                        24 / 28
+                        0 / 0
 
                     </h2>
 
-                    <small class="success">
+                    <small class="success" id="stat-rate">
 
-                        85% Attendance
+                        0% Attendance
 
                     </small>
 
@@ -212,15 +212,15 @@
 
                     </span>
 
-                    <h2>
+                    <h2 id="stat-late">
 
-                        3 Staff
+                        0 Staff
 
                     </h2>
 
-                    <small class="danger">
+                    <small class="danger" id="stat-avg-late">
 
-                        Rata-rata 12 Menit
+                        Tidak ada keterlambatan
 
                     </small>
 
@@ -244,13 +244,13 @@
 
                     </span>
 
-                    <h2>
+                    <h2 id="stat-leave">
 
-                        1 Staff
+                        0 Staff
 
                     </h2>
 
-                    <small>
+                    <small id="stat-approval">
 
                         Perlu Approval
 
@@ -284,7 +284,7 @@
 
                         <h2>Daftar Kehadiran Hari Ini</h2>
 
-                        <span>Kamis, 24 Oktober 2024</span>
+                        <span id="today-date">Memuat tanggal...</span>
 
                     </div>
 
@@ -304,7 +304,7 @@
 
                             <i class="bi bi-plus-lg"></i>
 
-                            Tambah Staff
+                            Tambah Penjadwalan
 
                         </button>
 
@@ -376,13 +376,13 @@
 
                                 <span>Tingkat Kehadiran</span>
 
-                                <strong>92%</strong>
+                                <strong id="month-rate">0%</strong>
 
                             </div>
 
                             <div class="progress-bar">
 
-                                <div class="progress-fill"></div>
+                                <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
 
                             </div>
 
@@ -394,7 +394,7 @@
 
                                 <small>Total Hadir</small>
 
-                                <h2>482</h2>
+                                <h2 id="month-attended">0</h2>
 
                             </div>
 
@@ -402,7 +402,7 @@
 
                                 <small>Total Izin</small>
 
-                                <h2>12</h2>
+                                <h2 id="month-leave">0</h2>
 
                             </div>
 
@@ -420,7 +420,7 @@
 
                             <h3>Manajemen Shift</h3>
 
-                            <button class="icon-button">
+                            <button class="icon-button" id="btn-add-schedule">
 
                                 <i class="bi bi-calendar-plus"></i>
 
@@ -428,51 +428,17 @@
 
                         </div>
 
-                        <div class="shift-item">
+                        <div id="shift-container">
 
-                            <div class="shift-date">
+                            <div style="padding: 20px; text-align: center; color: var(--text-light);">
 
-                                <span>SEN</span>
-
-                                <strong>24</strong>
+                                <p>Memuat data shift...</p>
 
                             </div>
-
-                            <div class="shift-detail">
-
-                                <h4>Morning Shift</h4>
-
-                                <span>07:00 - 15:00 • 12 Staff</span>
-
-                            </div>
-
-                            <i class="bi bi-chevron-right"></i>
 
                         </div>
 
-                        <div class="shift-item">
-
-                            <div class="shift-date">
-
-                                <span>SEN</span>
-
-                                <strong>24</strong>
-
-                            </div>
-
-                            <div class="shift-detail">
-
-                                <h4>Evening Shift</h4>
-
-                                <span>15:00 - 23:00 • 10 Staff</span>
-
-                            </div>
-
-                            <i class="bi bi-chevron-right"></i>
-
-                        </div>
-
-                        <button class="add-schedule">
+                        <button class="add-schedule" id="btn-new-schedule">
 
                             <i class="bi bi-plus-lg"></i>
 
@@ -494,59 +460,13 @@
 
                         </div>
 
-                        <div class="approval-item">
+                        <div id="approval-container">
 
-                            <div class="approval-left">
+                            <div style="padding: 20px; text-align: center; color: var(--text-light);">
 
-                                <div class="approval-icon warning">
-
-                                    <i class="bi bi-file-earmark-medical"></i>
-
-                                </div>
-
-                                <div>
-
-                                    <h5>Izin Sakit - Maya</h5>
-
-                                    <span>2 Jam Yang Lalu</span>
-
-                                </div>
+                                <p>Tidak ada permohonan menunggu persetujuan</p>
 
                             </div>
-
-                            <button class="review-btn">
-
-                                Review
-
-                            </button>
-
-                        </div>
-
-                        <div class="approval-item">
-
-                            <div class="approval-left">
-
-                                <div class="approval-icon primary">
-
-                                    <i class="bi bi-person"></i>
-
-                                </div>
-
-                                <div>
-
-                                    <h5>Pengajuan Cuti - Danu</h5>
-
-                                    <span>5 Jam Yang Lalu</span>
-
-                                </div>
-
-                            </div>
-
-                            <button class="review-btn">
-
-                                Review
-
-                            </button>
 
                         </div>
 
