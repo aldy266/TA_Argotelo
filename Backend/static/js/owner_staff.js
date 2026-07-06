@@ -60,41 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =====================================
 
     function defaultStaff() {
-        return [
-            {
-                id: makeId(),
-                name: "Ahmad Ridwan",
-                role: "Tim Toko",
-                shift: "Shift Pagi",
-                clockIn: "07:52 WIB",
-                status: "HADIR",
-                workHours: "07h 08m",
-                phone: "081234567890",
-                email: "ahmad@argotelo.com"
-            },
-            {
-                id: makeId(),
-                name: "Siti Aminah",
-                role: "Tim Toko",
-                shift: "Shift Pagi",
-                clockIn: "08:52 WIB",
-                status: "TERLAMBAT",
-                workHours: "06h 45m",
-                phone: "082234567890",
-                email: "siti@argotelo.com"
-            },
-            {
-                id: makeId(),
-                name: "Budi Santoso",
-                role: "Tim Trainer",
-                shift: "Shift Pagi",
-                clockIn: "-:-:-",
-                status: "IZIN",
-                workHours: "00h 00m",
-                phone: "083234567890",
-                email: "budi@argotelo.com"
-            }
-        ];
+        return [];
     }
 
     function loadStaff() {
@@ -116,6 +82,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =====================================
 
     function renderTable() {
+        if (filteredData.length === 0) {
+            attendanceTable.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px 20px; color: var(--text-light);">
+                        <i class="bi bi-inbox" style="font-size: 32px; display: block; margin-bottom: 12px;"></i>
+                        <p>Belum ada data staff. Klik tombol "Tambah Staff" untuk memulai.</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
         attendanceTable.innerHTML = filteredData.map(staff => `
             <tr>
                 <td>
@@ -135,12 +113,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </span>
                 </td>
                 <td>${escapeHtml(staff.workHours)}</td>
-                <td style="display: flex; gap: 8px;">
-                    <button class="edit-btn" type="button" data-id="${staff.id}" style="background: #5A3718; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                <td style="display: flex; gap: 8px; justify-content: center;">
+                    <button class="edit-btn" type="button" data-id="${staff.id}" style="background: #5A3718; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: background 0.3s ease;">
                         <i class="bi bi-pencil"></i> Edit
                     </button>
-                    <button class="delete-btn" type="button" data-id="${staff.id}" style="background: #E5484D; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                        <i class="bi bi-trash"></i>
+                    <button class="delete-btn" type="button" data-id="${staff.id}" style="background: #E5484D; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: background 0.3s ease;">
+                        <i class="bi bi-trash"></i> Hapus
                     </button>
                 </td>
             </tr>
@@ -151,6 +129,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function animateRows() {
         const rows = document.querySelectorAll(".attendance-table tbody tr");
+        if (rows.length === 0) return;
+        
         rows.forEach((row, index) => {
             row.style.opacity = "0";
             row.style.transform = "translateY(12px)";
@@ -225,13 +205,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             const form = event.currentTarget;
             const formData = new FormData(form);
 
+            const name = formData.get("name").trim();
+            const role = formData.get("role").trim();
+            const email = formData.get("email").trim();
+            const phone = formData.get("phone").trim();
+            const shift = formData.get("shift").trim();
+
+            if (!name || !role || !email || !phone || !shift) {
+                showToast("Semua field harus diisi!", "error");
+                return;
+            }
+
             const payload = {
                 id: staff?.id || makeId(),
-                name: formData.get("name").trim(),
-                role: formData.get("role").trim(),
-                email: formData.get("email").trim(),
-                phone: formData.get("phone").trim(),
-                shift: formData.get("shift").trim(),
+                name: name,
+                role: role,
+                email: email,
+                phone: phone,
+                shift: shift,
                 clockIn: staff?.clockIn || "-:-:-",
                 status: staff?.status || "HADIR",
                 workHours: staff?.workHours || "00h 00m"
@@ -239,15 +230,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (staff) {
                 staffMembers = staffMembers.map(item => item.id === staff.id ? payload : item);
+                showToast(`${name} berhasil diupdate!`);
             } else {
                 staffMembers.unshift(payload);
+                showToast(`${name} berhasil ditambahkan!`);
             }
 
             saveStaff();
             filteredData = [...staffMembers];
             renderTable();
             close();
-            showToast(staff ? "Staff berhasil diupdate!" : "Staff berhasil ditambahkan!");
         });
 
         modal.querySelector("input[name='name']").focus();

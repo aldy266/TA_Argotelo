@@ -1313,6 +1313,193 @@ button:hover{
 
 }
 
+.edit-btn {
+    background: #5A3718 !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 14px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.3s ease !important;
+}
+
+.edit-btn:hover {
+    background: #3E2510 !important;
+    transform: translateY(-2px) !important;
+}
+
+.delete-btn {
+    background: #E5484D !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 14px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all 0.3s ease !important;
+}
+
+.delete-btn:hover {
+    background: #c94548 !important;
+    transform: translateY(-2px) !important;
+}
+
+.primary-button {
+    background: #5A3718 !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 16px !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.3s ease !important;
+    font-size: 14px !important;
+}
+
+.primary-button:hover {
+    background: #3E2510 !important;
+    transform: translateY(-2px) !important;
+}
+
+/* =====================================================
+                    MODAL FORM STYLING
+===================================================== */
+
+.menu-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(47, 29, 15, 0.42);
+}
+
+.menu-modal {
+    width: min(520px, 100%);
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+    border: 1px solid #E9DDD5;
+    overflow: hidden;
+}
+
+.menu-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 24px;
+    border-bottom: 1px solid #E9DDD5;
+}
+
+.menu-modal-header h2 {
+    font-size: 22px;
+    color: #2F1D0F;
+    margin: 0;
+}
+
+.modal-close {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: #F7F3EF;
+    color: #5A3718;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: #E9DDD5;
+}
+
+.menu-form {
+    padding: 24px;
+    display: grid;
+    gap: 16px;
+}
+
+.menu-form label {
+    display: grid;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2F1D0F;
+}
+
+.menu-form input,
+.menu-form select {
+    height: 46px;
+    border: 1px solid #E9DDD5;
+    border-radius: 12px;
+    padding: 0 14px;
+    font: inherit;
+    color: #2F1D0F;
+    outline: none;
+    font-size: 14px;
+}
+
+.menu-form input:focus,
+.menu-form select:focus {
+    border-color: #5A3718;
+    box-shadow: 0 0 0 4px rgba(90, 55, 24, 0.08);
+}
+
+.menu-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.cancel-btn,
+.save-btn {
+    height: 44px;
+    border-radius: 12px;
+    padding: 0 18px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.cancel-btn {
+    border: 1px solid #E9DDD5;
+    background: #fff;
+    color: #2F1D0F;
+}
+
+.cancel-btn:hover {
+    background: #F7F3EF;
+}
+
+.save-btn {
+    background: #5A3718;
+    color: #fff;
+}
+
+.save-btn:hover {
+    background: #3E2510;
+}
+
 /* =====================================================
                     SCROLLBAR
 ===================================================== */
