@@ -1,6 +1,8 @@
-from flask import Blueprint, jsonify, request, send_file
+from decimal import Decimal, InvalidOperation
 
-from model import db, PurchaseOrder
+from flask import Blueprint, jsonify, request, send_file, session
+
+from model import db, Inventory, PurchaseOrder, StockMovement
 
 from openpyxl import Workbook
 
@@ -11,6 +13,25 @@ purchase_order_bp = Blueprint(
     "purchase_order",
     __name__
 )
+
+
+def api_error(message, status=400):
+    return jsonify({
+        "success": False,
+        "message": message
+    }), status
+
+
+def decimal_value(value, field_name):
+    try:
+        result = Decimal(str(value))
+    except (InvalidOperation, TypeError):
+        raise ValueError(f"{field_name} tidak valid")
+
+    if result <= 0:
+        raise ValueError(f"{field_name} harus lebih dari 0")
+
+    return result
 
 # ==========================
 # GET SEMUA PO
@@ -96,22 +117,49 @@ def pending_order():
 def create_purchase_order():
 
 
-    data = request.json
+    data = request.get_json(silent=True) or {}
+
+
+    if not data.get("id_inventory") or not data.get("jumlah_order"):
+
+        return api_error("Inventory dan jumlah order wajib diisi", 400)
+
+
+    inventory = Inventory.query.get(
+        data.get("id_inventory")
+    )
+
+
+    if not inventory:
+
+        return api_error("Inventory tidak ditemukan", 404)
+
+
+    try:
+
+        jumlah_order = decimal_value(
+            data.get("jumlah_order"),
+            "Jumlah order"
+        )
+
+    except ValueError as error:
+
+        return api_error(str(error), 400)
 
 
     po = PurchaseOrder(
 
 
         id_inventory =
-        data["id_inventory"],
+        inventory.id_inventory,
 
 
         jumlah_order =
-        data["jumlah_order"],
+        jumlah_order,
 
 
         supplier =
-        data["supplier"],
+        (data.get("supplier") or inventory.supplier or "").strip(),
 
 
         status =
@@ -121,10 +169,17 @@ def create_purchase_order():
     )
 
 
-    db.session.add(po)
+    try:
 
+        db.session.add(po)
 
-    db.session.commit()
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        return api_error("Purchase Order gagal dibuat", 500)
 
 
 
@@ -156,41 +211,78 @@ def update_status_po(id):
     if not po:
 
 
-        return jsonify({
-
-
-            "success": False,
-
-
-            "message": "PO tidak ditemukan"
-
-
-        })
+        return api_error("PO tidak ditemukan", 404)
 
 
 
-    data = request.json
+    data = request.get_json(silent=True) or {}
 
 
-
-    po.status = data["status"]
-
+    new_status = data.get("status")
 
 
-    # Kalau barang sudah diterima
+    valid_status = {"PENDING", "DIKIRIM", "SELESAI"}
+
+    if new_status not in valid_status:
+
+        return api_error("Status PO tidak valid", 400)
+
+
     if po.status == "SELESAI":
 
-
-        po.inventory.stok = (
-
-            po.inventory.stok
-            +
-            po.jumlah_order
-
+        return api_error(
+            "PO sudah selesai dan tidak dapat diterima ulang",
+            409
         )
 
 
-    db.session.commit()
+    allowed_transition = {
+        "PENDING": {"DIKIRIM", "SELESAI"},
+        "DIKIRIM": {"SELESAI"}
+    }
+
+
+    if new_status not in allowed_transition.get(po.status, set()):
+
+        return api_error("Perubahan status PO tidak valid", 409)
+
+
+    try:
+
+        po.status = new_status
+
+
+        # Kalau barang sudah diterima
+        if po.status == "SELESAI":
+
+
+            po.inventory.stok = (
+
+                po.inventory.stok
+                +
+                po.jumlah_order
+
+            )
+
+
+            db.session.add(StockMovement(
+                id_inventory=po.id_inventory,
+                movement_type="IN",
+                quantity=po.jumlah_order,
+                reference_type="PURCHASE_ORDER",
+                reference_id=po.id_po,
+                notes="PO diterima",
+                created_by=session.get("user_id")
+            ))
+
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        return api_error("Status PO gagal diperbarui", 500)
 
 
 

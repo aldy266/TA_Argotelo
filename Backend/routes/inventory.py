@@ -1,6 +1,8 @@
-from flask import Blueprint, request, jsonify, send_file
+from decimal import Decimal, InvalidOperation
 
-from model import db, Inventory, PurchaseOrder
+from flask import Blueprint, request, jsonify, send_file, session
+
+from model import db, Inventory, PurchaseOrder, StockMovement
 
 from openpyxl import Workbook
 
@@ -11,6 +13,40 @@ inventory_bp = Blueprint(
     "inventory",
     __name__
 )
+
+
+def api_error(message, status=400):
+    return jsonify({
+        "success": False,
+        "message": message
+    }), status
+
+
+def decimal_value(value, field_name):
+    try:
+        result = Decimal(str(value))
+    except (InvalidOperation, TypeError):
+        raise ValueError(f"{field_name} tidak valid")
+
+    if result < 0:
+        raise ValueError(f"{field_name} tidak boleh negatif")
+
+    return result
+
+
+def create_stock_movement(item, movement_type, quantity, reference_type, reference_id=None, notes=None):
+    if quantity <= 0:
+        return
+
+    db.session.add(StockMovement(
+        id_inventory=item.id_inventory,
+        movement_type=movement_type,
+        quantity=quantity,
+        reference_type=reference_type,
+        reference_id=reference_id,
+        notes=notes,
+        created_by=session.get("user_id")
+    ))
 
 
 # ==========================
@@ -115,27 +151,65 @@ def get_inventory():
 def add_inventory():
 
 
-    data = request.json
+    data = request.get_json(silent=True) or {}
+
+    required = ["nama_bahan", "stok", "satuan", "minimal_stok"]
+
+    if any(not data.get(field) for field in required):
+
+        return api_error(
+            "Nama bahan, stok, satuan, dan minimal stok wajib diisi",
+            400
+        )
+
+    try:
+
+        stok = decimal_value(data.get("stok"), "Stok")
+
+        minimal_stok = decimal_value(data.get("minimal_stok"), "Minimal stok")
+
+    except ValueError as error:
+
+        return api_error(str(error), 400)
 
 
     item = Inventory(
 
-        nama_bahan=data["nama_bahan"],
+        nama_bahan=data["nama_bahan"].strip(),
 
-        stok=data["stok"],
+        stok=stok,
 
-        satuan=data["satuan"],
+        satuan=data["satuan"].strip(),
 
-        minimal_stok=data["minimal_stok"],
+        minimal_stok=minimal_stok,
 
-        supplier=data["supplier"]
+        supplier=(data.get("supplier") or "").strip()
 
     )
 
 
-    db.session.add(item)
+    try:
 
-    db.session.commit()
+        db.session.add(item)
+
+        db.session.flush()
+
+        create_stock_movement(
+            item,
+            "IN",
+            stok,
+            "INITIAL",
+            item.id_inventory,
+            "Stok awal"
+        )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        return api_error("Data inventory gagal ditambahkan", 500)
 
 
     return jsonify({
@@ -164,30 +238,80 @@ def update_inventory(id):
 
     if not item:
 
-        return jsonify({
-
-            "success": False,
-
-            "message": "Data tidak ditemukan"
-
-        })
+        return api_error("Data tidak ditemukan", 404)
 
 
-    data = request.json
+    data = request.get_json(silent=True) or {}
+
+    required = ["nama_bahan", "stok", "satuan", "minimal_stok"]
+
+    if any(not data.get(field) for field in required):
+
+        return api_error(
+            "Nama bahan, stok, satuan, dan minimal stok wajib diisi",
+            400
+        )
+
+    try:
+
+        new_stok = decimal_value(data.get("stok"), "Stok")
+
+        minimal_stok_value = decimal_value(
+            data.get("minimal_stok"),
+            "Minimal stok"
+        )
+
+    except ValueError as error:
+
+        return api_error(str(error), 400)
+
+    previous_stok = Decimal(item.stok)
 
 
-    item.nama_bahan = data["nama_bahan"]
+    item.nama_bahan = data["nama_bahan"].strip()
 
-    item.stok = data["stok"]
+    item.stok = new_stok
 
-    item.satuan = data["satuan"]
+    item.satuan = data["satuan"].strip()
 
-    item.minimal_stok = data["minimal_stok"]
+    item.minimal_stok = minimal_stok_value
 
-    item.supplier = data["supplier"]
+    item.supplier = (data.get("supplier") or "").strip()
 
 
-    db.session.commit()
+    try:
+
+        diff = new_stok - previous_stok
+
+        if diff > 0:
+
+            create_stock_movement(
+                item,
+                "IN",
+                diff,
+                "MANUAL_ADJUSTMENT",
+                item.id_inventory,
+                "Penyesuaian stok"
+            )
+
+        elif diff < 0:
+
+            create_stock_movement(
+                item,
+                "OUT",
+                abs(diff),
+                "MANUAL_ADJUSTMENT",
+                item.id_inventory,
+                "Penyesuaian stok"
+            )
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        return api_error("Data inventory gagal diupdate", 500)
 
 
     return jsonify({
@@ -216,18 +340,33 @@ def delete_inventory(id):
 
     if not item:
 
-        return jsonify({
-
-            "success": False,
-
-            "message": "Data tidak ditemukan"
-
-        })
+        return api_error("Data tidak ditemukan", 404)
 
 
-    db.session.delete(item)
+    has_po_history = PurchaseOrder.query.filter_by(
+        id_inventory=id
+    ).first()
 
-    db.session.commit()
+
+    if has_po_history:
+
+        return api_error(
+            "Inventory sudah memiliki riwayat PO dan tidak dapat dihapus",
+            409
+        )
+
+
+    try:
+
+        db.session.delete(item)
+
+        db.session.commit()
+
+    except Exception:
+
+        db.session.rollback()
+
+        return api_error("Data inventory gagal dihapus", 500)
 
 
     return jsonify({

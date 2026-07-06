@@ -16,6 +16,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     const searchInput = document.querySelector(".attendance-search input");
     const attendanceTable = document.querySelector(".attendance-table tbody");
     const logoutBtn = document.querySelector(".logout");
+    const importStaffBtn = document.getElementById("btn-import-staff");
+    const staffImportModal = document.getElementById("staffImportModal");
+    const closeImportModal = document.getElementById("closeImportModal");
+    const cancelImport = document.getElementById("cancelImport");
+    const staffExcelInput = document.getElementById("staffExcelInput");
+    const selectedExcelName = document.getElementById("selectedExcelName");
+    const submitImport = document.getElementById("submitImport");
+    const importResultModal = document.getElementById("importResultModal");
+    const closeImportResult = document.getElementById("closeImportResult");
+    const closeImportResultButton = document.getElementById("closeImportResultButton");
+    const resultTotal = document.getElementById("resultTotal");
+    const resultImported = document.getElementById("resultImported");
+    const resultSkipped = document.getElementById("resultSkipped");
+    const resultFailed = document.getElementById("resultFailed");
+    const importErrorSection = document.getElementById("importErrorSection");
+    const importErrorList = document.getElementById("importErrorList");
+    const viewAllStaff = document.getElementById("view-all-staff");
+    const allStaffModal = document.getElementById("allStaffModal");
+    const closeAllStaffModal = document.getElementById("closeAllStaffModal");
+    const allStaffSearch = document.getElementById("allStaffSearch");
+    const allStaffList = document.getElementById("allStaffList");
+    const scheduleButtons = [
+        document.getElementById("btn-top-schedule"),
+        document.getElementById("btn-add-schedule"),
+        document.getElementById("btn-new-schedule")
+    ].filter(Boolean);
+    const scheduleModal = document.getElementById("scheduleModal");
+    const closeScheduleModal = document.getElementById("closeScheduleModal");
+    const cancelSchedule = document.getElementById("cancelSchedule");
+    const saveSchedule = document.getElementById("saveSchedule");
+    const scheduleStaffSelect = document.getElementById("scheduleStaffSelect");
+    const scheduleShiftSelect = document.getElementById("scheduleShiftSelect");
+    const scheduleDateInput = document.getElementById("scheduleDateInput");
     
     // Statistics
     const statPresent = document.getElementById("stat-present");
@@ -40,13 +73,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let attendanceData = [];
     let filteredData = [];
+    let selectedImportFile = null;
+    let allStaffData = [];
 
     // =====================================
     // UTILITIES
     // =====================================
 
     function escapeHtml(value) {
-        return String(value)
+        return String(value ?? "")
             .replaceAll("&", "&amp;")
             .replaceAll("<", "&lt;")
             .replaceAll(">", "&gt;")
@@ -77,10 +112,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             const response = await fetch(url, {
                 ...options,
-                headers: {
-                    "Content-Type": "application/json",
-                    ...options.headers
-                },
+                headers: options.body instanceof FormData
+                    ? { ...options.headers }
+                    : {
+                        "Content-Type": "application/json",
+                        ...options.headers
+                    },
                 credentials: "include"
             });
 
@@ -245,11 +282,28 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        attendanceTable.innerHTML = filteredData.map(record => `
+        attendanceTable.innerHTML = filteredData.map(record => {
+            let action = `<span style="color: var(--text-light);">-</span>`;
+
+            if (record.status === "NOT_CHECKED_IN") {
+                action = `
+                    <button class="edit-btn clock-btn" type="button" data-action="clock-in" data-schedule-id="${record.schedule_id}">
+                        <i class="bi bi-box-arrow-in-right"></i> Clock In
+                    </button>
+                `;
+            } else if (record.status === "PRESENT" || record.status === "LATE") {
+                action = `
+                    <button class="edit-btn clock-btn" type="button" data-action="clock-out" data-schedule-id="${record.schedule_id}">
+                        <i class="bi bi-box-arrow-right"></i> Clock Out
+                    </button>
+                `;
+            }
+
+            return `
             <tr>
                 <td>
                     <div class="staff-info">
-                        <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile">
+                        <img src="/static/images/profile.png" alt="Profile">
                         <div>
                             <h4>${escapeHtml(record.full_name)}</h4>
                             <span>${escapeHtml(record.position)}</span>
@@ -265,15 +319,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </td>
                 <td>${record.work_minutes > 0 ? Math.floor(record.work_minutes / 60) + 'h ' + (record.work_minutes % 60) + 'm' : '00h 00m'}</td>
                 <td style="display: flex; gap: 8px; justify-content: center;">
-                    <button class="edit-btn" type="button" data-id="${record.id}" style="background: #5A3718; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: background 0.3s ease;">
-                        <i class="bi bi-pencil"></i> Edit
-                    </button>
-                    <button class="delete-btn" type="button" data-id="${record.id}" style="background: #E5484D; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: background 0.3s ease;">
-                        <i class="bi bi-trash"></i> Hapus
-                    </button>
+                    ${action}
                 </td>
             </tr>
-        `).join("");
+        `;
+        }).join("");
 
         animateRows();
     }
@@ -310,6 +360,28 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
         }
     }
+
+    attendanceTable?.addEventListener("click", async event => {
+        const button = event.target.closest(".clock-btn");
+        if (!button) return;
+
+        const action = button.dataset.action;
+        const scheduleId = button.dataset.scheduleId;
+        const endpoint = action === "clock-in"
+            ? `/api/staff/attendance/${scheduleId}/clock-in`
+            : `/api/staff/attendance/${scheduleId}/clock-out`;
+
+        button.disabled = true;
+        try {
+            const response = await apiRequest(endpoint, { method: "PATCH" });
+            showToast(response.message || "Kehadiran berhasil diperbarui");
+            await loadStatistics();
+            await loadMonthStatistics();
+            await loadAttendance();
+        } finally {
+            button.disabled = false;
+        }
+    });
 
     // =====================================
     // LOAD SHIFT DATA
@@ -499,6 +571,205 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // =====================================
+    // STAFF LIST MODAL
+    // =====================================
+
+    async function loadAllStaff(includeInactive = true) {
+        const suffix = includeInactive ? "?include_inactive=1" : "";
+        const response = await apiRequest(`/api/staff${suffix}`);
+        allStaffData = response.data || [];
+        return allStaffData;
+    }
+
+    function renderAllStaffList() {
+        const keyword = (allStaffSearch?.value || "").toLowerCase().trim();
+        const data = allStaffData.filter(staff =>
+            !keyword ||
+            staff.employee_code.toLowerCase().includes(keyword) ||
+            staff.full_name.toLowerCase().includes(keyword) ||
+            staff.department.toLowerCase().includes(keyword) ||
+            staff.position.toLowerCase().includes(keyword)
+        );
+
+        if (!data.length) {
+            allStaffList.innerHTML = `
+                <div style="padding: 28px; text-align: center; color: var(--text-light);">
+                    Belum ada Staff yang terdaftar.
+                </div>
+            `;
+            return;
+        }
+
+        allStaffList.innerHTML = data.map(staff => `
+            <div class="staff-list-row">
+                <strong>${escapeHtml(staff.employee_code)}</strong>
+                <div>
+                    <strong>${escapeHtml(staff.full_name)}</strong>
+                    <span style="display:block;">${escapeHtml(staff.email || "-")}</span>
+                </div>
+                <span>${escapeHtml(staff.department)}</span>
+                <span>${escapeHtml(staff.position)}</span>
+                <span class="staff-status-pill ${staff.status === "ACTIVE" ? "active" : "inactive"}">
+                    ${escapeHtml(staff.status)}
+                </span>
+            </div>
+        `).join("");
+    }
+
+    async function openAllStaffModal() {
+        await loadAllStaff(true);
+        renderAllStaffList();
+        allStaffModal.classList.remove("hidden");
+        allStaffSearch?.focus();
+    }
+
+    function closeAllStaff() {
+        allStaffModal?.classList.add("hidden");
+    }
+
+    // =====================================
+    // SCHEDULE MODAL
+    // =====================================
+
+    async function openScheduleModal() {
+        const [staffResponse, shiftResponse] = await Promise.all([
+            apiRequest("/api/staff"),
+            apiRequest("/api/staff/shift")
+        ]);
+
+        const activeStaff = staffResponse.data || [];
+        const shifts = shiftResponse.data || [];
+
+        scheduleStaffSelect.innerHTML = activeStaff.length
+            ? activeStaff.map(staff => `
+                <option value="${staff.id}">
+                    ${escapeHtml(staff.employee_code)} - ${escapeHtml(staff.full_name)}
+                </option>
+            `).join("")
+            : `<option value="">Belum ada Staff ACTIVE</option>`;
+
+        scheduleShiftSelect.innerHTML = shifts.length
+            ? shifts.map(shift => `
+                <option value="${shift.id}">
+                    ${escapeHtml(shift.shift_name)} (${escapeHtml(shift.start_time)} - ${escapeHtml(shift.end_time)})
+                </option>
+            `).join("")
+            : `<option value="">Belum ada Shift</option>`;
+
+        scheduleDateInput.value = new Date().toISOString().split("T")[0];
+        scheduleModal.classList.remove("hidden");
+    }
+
+    function closeSchedule() {
+        scheduleModal?.classList.add("hidden");
+    }
+
+    async function saveScheduleData() {
+        if (!scheduleStaffSelect.value || !scheduleShiftSelect.value || !scheduleDateInput.value) {
+            showToast("Staff, Shift, dan tanggal wajib diisi", "error");
+            return;
+        }
+
+        saveSchedule.disabled = true;
+        try {
+            await apiRequest("/api/staff/schedule", {
+                method: "POST",
+                body: JSON.stringify({
+                    staff_id: Number(scheduleStaffSelect.value),
+                    shift_id: Number(scheduleShiftSelect.value),
+                    schedule_date: scheduleDateInput.value
+                })
+            });
+            showToast("Jadwal berhasil ditambahkan");
+            closeSchedule();
+            await loadStatistics();
+            await loadMonthStatistics();
+            await loadAttendance();
+        } finally {
+            saveSchedule.disabled = false;
+        }
+    }
+
+    // =====================================
+    // IMPORT EXCEL
+    // =====================================
+
+    function openImportModal() {
+        selectedImportFile = null;
+        staffExcelInput.value = "";
+        selectedExcelName.textContent = "Belum ada file dipilih";
+        submitImport.disabled = true;
+        staffImportModal.classList.remove("hidden");
+    }
+
+    function closeImport() {
+        staffImportModal?.classList.add("hidden");
+    }
+
+    function showImportResult(data) {
+        resultTotal.textContent = data.total_rows || 0;
+        resultImported.textContent = data.imported || 0;
+        resultSkipped.textContent = data.skipped || 0;
+        resultFailed.textContent = data.failed || 0;
+
+        const errors = data.errors || [];
+        if (errors.length) {
+            importErrorSection.classList.remove("hidden");
+            importErrorList.innerHTML = errors.map(error => `
+                <div class="import-error-item">
+                    <strong>Baris ${escapeHtml(error.row)}</strong>
+                    ${error.employee_code ? ` - ${escapeHtml(error.employee_code)}` : ""}
+                    <br>
+                    ${escapeHtml(error.message)}
+                </div>
+            `).join("");
+        } else {
+            importErrorSection.classList.add("hidden");
+            importErrorList.innerHTML = "";
+        }
+
+        importResultModal.classList.remove("hidden");
+    }
+
+    function closeImportResultModal() {
+        importResultModal?.classList.add("hidden");
+    }
+
+    async function submitImportFile() {
+        if (!selectedImportFile) {
+            showToast("File Excel belum dipilih.", "error");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", selectedImportFile);
+
+        submitImport.disabled = true;
+        submitImport.textContent = "Mengimport...";
+
+        try {
+            const response = await apiRequest("/api/staff/import-excel", {
+                method: "POST",
+                body: formData
+            });
+            closeImport();
+            showToast(response.message || "Import data Staff selesai");
+            showImportResult(response.data || {});
+            await loadStatistics();
+            await loadMonthStatistics();
+            await loadAttendance();
+            await loadShiftData();
+            if (!allStaffModal.classList.contains("hidden")) {
+                await loadAllStaff(true);
+                renderAllStaffList();
+            }
+        } finally {
+            submitImport.disabled = false;
+            submitImport.textContent = "Import Data";
+        }
+    }
+
+    // =====================================
     // TODAY'S DATE
     // =====================================
 
@@ -521,6 +792,68 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.location.href = "/";
         });
     }
+
+    importStaffBtn?.addEventListener("click", openImportModal);
+    closeImportModal?.addEventListener("click", closeImport);
+    cancelImport?.addEventListener("click", closeImport);
+
+    staffExcelInput?.addEventListener("change", event => {
+        const file = event.target.files[0];
+
+        if (!file) {
+            selectedImportFile = null;
+            selectedExcelName.textContent = "Belum ada file dipilih";
+            submitImport.disabled = true;
+            return;
+        }
+
+        if (!file.name.toLowerCase().endsWith(".xlsx")) {
+            selectedImportFile = null;
+            staffExcelInput.value = "";
+            selectedExcelName.textContent = "Format file harus .xlsx.";
+            submitImport.disabled = true;
+            showToast("Format file harus .xlsx.", "error");
+            return;
+        }
+
+        selectedImportFile = file;
+        selectedExcelName.textContent = file.name;
+        submitImport.disabled = false;
+    });
+
+    submitImport?.addEventListener("click", () => {
+        submitImportFile().catch(error => console.error(error));
+    });
+
+    closeImportResult?.addEventListener("click", closeImportResultModal);
+    closeImportResultButton?.addEventListener("click", closeImportResultModal);
+
+    viewAllStaff?.addEventListener("click", event => {
+        event.preventDefault();
+        openAllStaffModal().catch(error => console.error(error));
+    });
+
+    closeAllStaffModal?.addEventListener("click", closeAllStaff);
+    allStaffSearch?.addEventListener("input", renderAllStaffList);
+
+    scheduleButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            openScheduleModal().catch(error => console.error(error));
+        });
+    });
+
+    closeScheduleModal?.addEventListener("click", closeSchedule);
+    cancelSchedule?.addEventListener("click", closeSchedule);
+    saveSchedule?.addEventListener("click", () => {
+        saveScheduleData().catch(error => console.error(error));
+    });
+
+    [staffImportModal, importResultModal, allStaffModal, scheduleModal].forEach(modal => {
+        modal?.addEventListener("click", event => {
+            if (event.target !== modal) return;
+            modal.classList.add("hidden");
+        });
+    });
 
     // =====================================
     // INITIALIZE

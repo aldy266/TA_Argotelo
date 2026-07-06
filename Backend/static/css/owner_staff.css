@@ -1373,6 +1373,27 @@ button:hover{
     transform: translateY(-2px) !important;
 }
 
+.secondary-button {
+    background: #fff !important;
+    color: #5A3718 !important;
+    border: 1px solid #E9DDD5 !important;
+    padding: 10px 16px !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.3s ease !important;
+    font-size: 14px !important;
+    white-space: nowrap;
+}
+
+.secondary-button:hover {
+    background: #F7F3EF !important;
+    transform: translateY(-2px) !important;
+}
+
 /* =====================================================
                     MODAL FORM STYLING
 ===================================================== */
@@ -1386,6 +1407,10 @@ button:hover{
     justify-content: center;
     padding: 24px;
     background: rgba(47, 29, 15, 0.42);
+}
+
+.menu-modal-backdrop.hidden {
+    display: none !important;
 }
 
 .menu-modal {
@@ -1498,6 +1523,173 @@ button:hover{
 
 .save-btn:hover {
     background: #3E2510;
+}
+
+.save-btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.import-modal {
+    width: min(640px, 100%);
+}
+
+.modal-help {
+    margin-top: 8px;
+    color: var(--text-light);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.upload-box {
+    min-height: 150px;
+    border: 1.5px dashed #CDBBAF;
+    border-radius: 14px;
+    background: #FFF8F3;
+    display: grid !important;
+    place-items: center;
+    text-align: center;
+    gap: 8px !important;
+    padding: 24px;
+    cursor: pointer;
+}
+
+.upload-box i {
+    font-size: 34px;
+    color: #5A3718;
+}
+
+.upload-box span {
+    color: var(--text-light);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.template-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.template-link {
+    min-height: 44px;
+    border: 1px solid #E9DDD5;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #5A3718;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    background: #fff;
+    padding: 10px 12px;
+    text-align: center;
+}
+
+.template-link:hover {
+    background: #F7F3EF;
+}
+
+.import-result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.import-result-grid div {
+    border: 1px solid #E9DDD5;
+    border-radius: 14px;
+    background: #FBF8F6;
+    padding: 16px;
+    text-align: center;
+}
+
+.import-result-grid small {
+    display: block;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.import-result-grid strong {
+    color: #5A3718;
+    font-size: 24px;
+}
+
+.import-error-section {
+    border-top: 1px solid #E9DDD5;
+    padding-top: 14px;
+}
+
+.import-error-section h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.import-error-item {
+    border: 1px solid #FFD9D6;
+    background: #FFF4F2;
+    color: #8A2D2D;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.staff-list-modal {
+    width: min(820px, 100%);
+}
+
+.staff-list-table {
+    max-height: 56vh;
+    overflow: auto;
+    border: 1px solid #E9DDD5;
+    border-radius: 14px;
+}
+
+.staff-list-row {
+    display: grid;
+    grid-template-columns: 110px 1.3fr 1fr 1fr 90px;
+    gap: 12px;
+    padding: 14px;
+    border-bottom: 1px solid #EFE7E0;
+    align-items: center;
+    font-size: 13px;
+}
+
+.staff-list-row:last-child {
+    border-bottom: none;
+}
+
+.staff-list-row strong {
+    color: var(--text);
+}
+
+.staff-list-row span {
+    color: var(--text-light);
+}
+
+.staff-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.staff-status-pill.active {
+    background: #DDF5E6;
+    color: #1D9A4A;
+}
+
+.staff-status-pill.inactive {
+    background: #F2F2F2;
+    color: #666;
 }
 
 /* =====================================================
@@ -1689,6 +1881,16 @@ html{
 
         min-width:700px;
 
+    }
+
+    .template-actions,
+    .import-result-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .staff-list-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
     }
 
 }

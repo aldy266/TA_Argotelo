@@ -7,7 +7,7 @@ from flask import (
     render_template
 )
 
-from model import db, User
+from model import Role, db, User
 
 import bcrypt
 
@@ -23,10 +23,69 @@ from datetime import datetime
 
 from cloudinary_config import *
 
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+
 auth_bp = Blueprint(
     "auth",
     __name__
 )
+
+
+def api_success(message="Berhasil", data=None, status=200):
+    payload = {
+        "success": True,
+        "message": message
+    }
+    if data is not None:
+        payload["data"] = data
+    return jsonify(payload), status
+
+
+def api_error(message, status=400):
+    return jsonify({
+        "success": False,
+        "message": message
+    }), status
+
+
+def is_allowed_image(file_storage):
+    if not file_storage or not file_storage.filename:
+        return False
+
+    extension = file_storage.filename.rsplit(".", 1)[-1].lower()
+    return extension in ALLOWED_IMAGE_EXTENSIONS
+
+
+def upload_profile_photo(file_storage):
+    if not file_storage:
+        return None
+
+    if not is_allowed_image(file_storage):
+        raise ValueError("Format foto harus JPG, JPEG, PNG, atau WEBP")
+
+    upload = cloudinary.uploader.upload(
+        file_storage,
+        folder="argotelo/profile"
+    )
+
+    secure_url = upload.get("secure_url")
+    if not secure_url:
+        raise ValueError("Upload foto gagal")
+
+    return secure_url
+
+
+def verify_password(password, stored_hash):
+    if not password or not stored_hash:
+        return False
+
+    try:
+        return bcrypt.checkpw(
+            password.encode("utf-8"),
+            stored_hash.encode("utf-8")
+        )
+    except ValueError:
+        return False
 
 
 @auth_bp.route("/api/test")
@@ -98,21 +157,12 @@ def register_owner():
     # CEK INPUT
     # ==========================
 
-    if not all([
-        fullname,
-        username,
-        password,
-        email
-    ]):
+    if not all([fullname, username, password, email]):
+        return api_error("Data wajib diisi", 400)
 
-
-        return jsonify({
-
-            "success":False,
-
-            "message":"Data wajib diisi"
-
-        }),400
+    owner_role = Role.query.filter_by(role_name="OWNER").first()
+    if not owner_role:
+        return api_error("Role OWNER belum tersedia", 500)
 
 
 
@@ -122,20 +172,14 @@ def register_owner():
 
 
     owner_exist = User.query.filter_by(
-        role_id=1
+        role_id=owner_role.id
     ).first()
 
 
     if owner_exist:
 
 
-        return jsonify({
-
-            "success":False,
-
-            "message":"Owner sudah dibuat"
-
-        }),400
+        return api_error("Owner sudah dibuat", 409)
 
 
 
@@ -152,13 +196,7 @@ def register_owner():
     if user:
 
 
-        return jsonify({
-
-            "success":False,
-
-            "message":"Username sudah ada"
-
-        }),400
+        return api_error("Username sudah ada", 409)
 
 
 
@@ -175,13 +213,7 @@ def register_owner():
     if email_exist:
 
 
-        return jsonify({
-
-            "success":False,
-
-            "message":"Email sudah digunakan"
-
-        }),400
+        return api_error("Email sudah digunakan", 409)
 
 
 
@@ -194,20 +226,10 @@ def register_owner():
 
 
     if photo_file:
-
-
-        upload = cloudinary.uploader.upload(
-
-            photo_file,
-
-            folder="argotelo/profile"
-
-        )
-
-
-        photo_url = upload[
-            "secure_url"
-        ]
+        try:
+            photo_url = upload_profile_photo(photo_file)
+        except ValueError as error:
+            return api_error(str(error), 400)
 
 
 
@@ -228,7 +250,7 @@ def register_owner():
 
     owner = User(
 
-        role_id=1,
+        role_id=owner_role.id,
 
         fullname=fullname,
 
@@ -246,22 +268,14 @@ def register_owner():
 
 
 
-    db.session.add(
-        owner
-    )
+    try:
+        db.session.add(owner)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return api_error("Owner gagal dibuat", 500)
 
-
-    db.session.commit()
-
-
-
-    return jsonify({
-
-        "success":True,
-
-        "message":"Owner berhasil dibuat"
-
-    })
+    return api_success("Owner berhasil dibuat")
 
 # ==========================
 # LOGIN
@@ -274,7 +288,7 @@ def register_owner():
 def login():
 
 
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
 
     username = data.get(
@@ -287,6 +301,9 @@ def login():
     )
 
 
+    if not username or not password:
+        return api_error("Username dan password wajib diisi", 400)
+
     user = User.query.filter_by(
         username=username
     ).first()
@@ -298,14 +315,7 @@ def login():
     if not user:
 
 
-        return jsonify({
-
-            "success": False,
-
-            "message":
-            "Username tidak ditemukan"
-
-        }),401
+        return api_error("Username tidak ditemukan", 401)
 
 
 
@@ -315,37 +325,17 @@ def login():
     if not user.is_active:
 
 
-        return jsonify({
-
-            "success":False,
-
-            "message":
-            "Akun tidak aktif"
-
-        }),403
+        return api_error("Akun tidak aktif", 403)
 
 
 
 
     # CEK PASSWORD BCRYPT
 
-    if not bcrypt.checkpw(
-
-        password.encode("utf-8"),
-
-        user.password.encode("utf-8")
-
-    ):
+    if not verify_password(password, user.password):
 
 
-        return jsonify({
-
-            "success":False,
-
-            "message":
-            "Password salah"
-
-        }),401
+        return api_error("Password salah", 401)
 
 
 
@@ -361,42 +351,15 @@ def login():
 
 
     return jsonify({
-
-
         "success": True,
-
-
-        "message":
-        "Login berhasil",
-
-
-
-        "user":{
-
-
-            "id":
-            user.id,
-
-
-            "fullname":
-            user.fullname,
-
-
-            "username":
-            user.username,
-
-
-            "photo":
-            user.photo,
-
-
-            "role":
-            user.role.role_name
-
-
+        "message": "Login berhasil",
+        "user": {
+            "id": user.id,
+            "fullname": user.fullname,
+            "username": user.username,
+            "photo": user.photo,
+            "role": user.role.role_name
         }
-
-
     })
 
 # ==========================
@@ -424,6 +387,9 @@ def me():
         session["user_id"]
     )
 
+    if not user:
+        session.clear()
+        return api_error("Session tidak valid", 401)
 
 
     return jsonify({
@@ -500,6 +466,9 @@ def update_profile():
         session["user_id"]
     )
 
+    if not user:
+        session.clear()
+        return api_error("Session tidak valid", 401)
 
 
     fullname = request.form.get(
@@ -528,6 +497,24 @@ def update_profile():
 
 
 
+    if not fullname or not username:
+        return api_error("Nama lengkap dan username wajib diisi", 400)
+
+    username_exists = User.query.filter(
+        User.username == username,
+        User.id != user.id
+    ).first()
+    if username_exists:
+        return api_error("Username sudah digunakan", 409)
+
+    if email:
+        email_exists = User.query.filter(
+            User.email == email,
+            User.id != user.id
+        ).first()
+        if email_exists:
+            return api_error("Email sudah digunakan", 409)
+
     # update data
 
     user.fullname = fullname
@@ -543,24 +530,16 @@ def update_profile():
     # jika ganti foto
 
     if photo_file:
+        try:
+            user.photo = upload_profile_photo(photo_file)
+        except ValueError as error:
+            return api_error(str(error), 400)
 
-
-        upload = cloudinary.uploader.upload(
-
-            photo_file,
-
-            folder="argotelo/profile"
-
-        )
-
-
-        user.photo = upload[
-            "secure_url"
-        ]
-
-
-
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return api_error("Profil gagal diperbarui", 500)
 
 
 
@@ -634,7 +613,7 @@ def change_password():
 
 
 
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
 
     old_password = data.get(
@@ -654,24 +633,15 @@ def change_password():
 
 
 
+    if not old_password or not new_password:
+        return api_error("Password lama dan baru wajib diisi", 400)
+
     # cek password lama
 
-    if not bcrypt.checkpw(
-
-        old_password.encode("utf-8"),
-
-        user.password.encode("utf-8")
-
-    ):
+    if not verify_password(old_password, user.password):
 
 
-        return jsonify({
-
-            "success":False,
-
-            "message":"Password lama salah"
-
-        }),400
+        return api_error("Password lama salah", 400)
 
 
 
@@ -713,7 +683,7 @@ def change_password():
 def forgot_password():
 
 
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
 
     email = data.get(
@@ -743,17 +713,10 @@ def forgot_password():
 
     # hanya owner boleh reset sendiri
 
-    if user.role_id != 1:
+    if user.role.role_name != "OWNER":
 
 
-        return jsonify({
-
-            "success":False,
-
-            "message":
-            "Silakan hubungi Owner untuk reset password"
-
-        }),403
+        return api_error("Silakan hubungi Owner untuk reset password", 403)
 
 
 
@@ -813,7 +776,7 @@ def forgot_password():
 def reset_password():
 
 
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
 
     token = data.get(
@@ -938,7 +901,7 @@ def reset_password_page(token):
 
 
 
-    if user.reset_expired < datetime.now():
+    if user.reset_expired and user.reset_expired < datetime.now():
 
 
         return "Token sudah expired"

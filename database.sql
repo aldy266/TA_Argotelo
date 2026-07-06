@@ -21,6 +21,8 @@ CREATE TABLE users (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    reset_token VARCHAR(255),
+    reset_expired DATETIME,
     CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles (id)
 );
 
@@ -28,27 +30,10 @@ INSERT INTO
     roles (role_name, description)
 VALUES ('OWNER', 'Pemilik Sistem'),
     ('FINANCE', 'Bagian Keuangan'),
-    ('KASIR', 'Kasir / Tim Toko');
+    ('KASIR', 'Kasir / Tim Toko'),
+    ('HRD', 'Human Resource');
 
-INSERT INTO
-    users (
-        role_id,
-        fullname,
-        username,
-        password,
-        email,
-        phone
-    )
-VALUES (
-        1,
-        'Owner Argotelo',
-        'owner',
-        'owner123',
-        'owner@argotelo.com',
-        '081234567890'
-    );
-
-SELECT * FROM users;
+-- Buat akun owner melalui halaman /register-owner agar password tersimpan sebagai hash.
 
 -- ==========================================
 -- STAFF MANAGEMENT TABLES
@@ -81,6 +66,18 @@ CREATE TABLE IF NOT EXISTS shifts (
     status ENUM('ACTIVE', 'INACTIVE') DEFAULT 'ACTIVE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT INTO shifts (shift_name, start_time, end_time, tolerance_minutes, status)
+SELECT 'Morning Shift', '07:00:00', '15:00:00', 10, 'ACTIVE'
+WHERE NOT EXISTS (
+    SELECT 1 FROM shifts WHERE shift_name = 'Morning Shift'
+);
+
+INSERT INTO shifts (shift_name, start_time, end_time, tolerance_minutes, status)
+SELECT 'Evening Shift', '15:00:00', '23:00:00', 10, 'ACTIVE'
+WHERE NOT EXISTS (
+    SELECT 1 FROM shifts WHERE shift_name = 'Evening Shift'
 );
 
 CREATE TABLE IF NOT EXISTS staff_schedules (
@@ -142,4 +139,88 @@ CREATE TABLE IF NOT EXISTS leave_requests (
     CONSTRAINT fk_leave_reviewer FOREIGN KEY (reviewed_by) REFERENCES users (id) ON DELETE SET NULL,
     INDEX idx_leave_status (status),
     INDEX idx_leave_staff (staff_id)
+);
+
+-- ==========================================
+-- INVENTORY AND PURCHASE ORDER
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS inventory (
+    id_inventory INT PRIMARY KEY AUTO_INCREMENT,
+    nama_bahan VARCHAR(100) NOT NULL,
+    stok DECIMAL(10, 2) NOT NULL,
+    satuan VARCHAR(30) NOT NULL,
+    minimal_stok DECIMAL(10, 2) NOT NULL,
+    supplier VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS purchase_orders (
+    id_po INT PRIMARY KEY AUTO_INCREMENT,
+    id_inventory INT NOT NULL,
+    jumlah_order DECIMAL(10, 2) NOT NULL,
+    supplier VARCHAR(100),
+    status ENUM('PENDING', 'DIKIRIM', 'SELESAI') DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_po_inventory FOREIGN KEY (id_inventory) REFERENCES inventory (id_inventory)
+);
+
+CREATE TABLE IF NOT EXISTS stock_movements (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_inventory INT NOT NULL,
+    movement_type ENUM('IN', 'OUT') NOT NULL,
+    quantity DECIMAL(10, 2) NOT NULL,
+    reference_type VARCHAR(50),
+    reference_id INT,
+    notes VARCHAR(255),
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_stock_movement_inventory FOREIGN KEY (id_inventory) REFERENCES inventory (id_inventory),
+    CONSTRAINT fk_stock_movement_user FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+);
+
+-- ==========================================
+-- MENU AND TRANSACTIONS
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS menu_items (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(120) NOT NULL,
+    category VARCHAR(80) NOT NULL,
+    price DECIMAL(12, 2) NOT NULL,
+    image_url TEXT,
+    status ENUM('ACTIVE', 'INACTIVE') DEFAULT 'ACTIVE',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_menu_status (status),
+    INDEX idx_menu_category (category)
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    transaction_number VARCHAR(50) NOT NULL UNIQUE,
+    cashier_id INT,
+    customer_name VARCHAR(100) DEFAULT 'Umum',
+    subtotal DECIMAL(12, 2) NOT NULL DEFAULT 0,
+    tax DECIMAL(12, 2) NOT NULL DEFAULT 0,
+    total DECIMAL(12, 2) NOT NULL DEFAULT 0,
+    payment_method VARCHAR(40) NOT NULL,
+    status ENUM('COMPLETED', 'CANCELLED') DEFAULT 'COMPLETED',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_transaction_cashier FOREIGN KEY (cashier_id) REFERENCES users (id) ON DELETE SET NULL,
+    INDEX idx_transaction_created_at (created_at),
+    INDEX idx_transaction_status (status)
+);
+
+CREATE TABLE IF NOT EXISTS transaction_items (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    transaction_id INT NOT NULL,
+    menu_item_id INT NOT NULL,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(12, 2) NOT NULL,
+    subtotal DECIMAL(12, 2) NOT NULL,
+    CONSTRAINT fk_transaction_item_transaction FOREIGN KEY (transaction_id) REFERENCES transactions (id) ON DELETE CASCADE,
+    CONSTRAINT fk_transaction_item_menu FOREIGN KEY (menu_item_id) REFERENCES menu_items (id)
 );

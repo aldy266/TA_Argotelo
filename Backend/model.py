@@ -230,6 +230,223 @@ class PurchaseOrder(db.Model):
 
 
 # ==========================
+# STOCK MOVEMENT
+# ==========================
+
+class StockMovement(db.Model):
+
+    __tablename__ = "stock_movements"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    id_inventory = db.Column(
+        db.Integer,
+        db.ForeignKey("inventory.id_inventory"),
+        nullable=False
+    )
+
+    movement_type = db.Column(
+        db.Enum("IN", "OUT"),
+        nullable=False
+    )
+
+    quantity = db.Column(
+        db.Numeric(10, 2),
+        nullable=False
+    )
+
+    reference_type = db.Column(
+        db.String(50)
+    )
+
+    reference_id = db.Column(
+        db.Integer
+    )
+
+    notes = db.Column(
+        db.String(255)
+    )
+
+    created_by = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=True
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=waktu_wib
+    )
+
+    inventory = db.relationship(
+        "Inventory",
+        backref="stock_movements"
+    )
+
+    creator = db.relationship(
+        "User",
+        backref="stock_movements"
+    )
+
+
+# ==========================
+# MENU ITEM
+# ==========================
+
+class MenuItem(db.Model):
+
+    __tablename__ = "menu_items"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    name = db.Column(
+        db.String(120),
+        nullable=False
+    )
+
+    category = db.Column(
+        db.String(80),
+        nullable=False
+    )
+
+    price = db.Column(
+        db.Numeric(12, 2),
+        nullable=False
+    )
+
+    image_url = db.Column(
+        db.Text
+    )
+
+    status = db.Column(
+        db.Enum("ACTIVE", "INACTIVE"),
+        default="ACTIVE"
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=waktu_wib
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=waktu_wib,
+        onupdate=waktu_wib
+    )
+
+
+# ==========================
+# TRANSACTION
+# ==========================
+
+class Transaction(db.Model):
+
+    __tablename__ = "transactions"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    transaction_number = db.Column(
+        db.String(50),
+        unique=True,
+        nullable=False
+    )
+
+    cashier_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=True
+    )
+
+    customer_name = db.Column(
+        db.String(100),
+        default="Umum"
+    )
+
+    subtotal = db.Column(
+        db.Numeric(12, 2),
+        nullable=False,
+        default=0
+    )
+
+    tax = db.Column(
+        db.Numeric(12, 2),
+        nullable=False,
+        default=0
+    )
+
+    total = db.Column(
+        db.Numeric(12, 2),
+        nullable=False,
+        default=0
+    )
+
+    payment_method = db.Column(
+        db.String(40),
+        nullable=False
+    )
+
+    status = db.Column(
+        db.Enum("COMPLETED", "CANCELLED"),
+        default="COMPLETED"
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=waktu_wib
+    )
+
+    cashier = db.relationship(
+        "User",
+        backref="transactions"
+    )
+
+    items = db.relationship(
+        "TransactionItem",
+        backref="transaction",
+        cascade="all, delete-orphan"
+    )
+
+
+class TransactionItem(db.Model):
+
+    __tablename__ = "transaction_items"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    transaction_id = db.Column(
+        db.Integer,
+        db.ForeignKey("transactions.id"),
+        nullable=False
+    )
+
+    menu_item_id = db.Column(
+        db.Integer,
+        db.ForeignKey("menu_items.id"),
+        nullable=False
+    )
+
+    quantity = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    unit_price = db.Column(
+        db.Numeric(12, 2),
+        nullable=False
+    )
+
+    subtotal = db.Column(
+        db.Numeric(12, 2),
+        nullable=False
+    )
+
+    menu_item = db.relationship(
+        "MenuItem",
+        backref="transaction_items"
+    )
+
+
+# ==========================
 # STAFF
 # ==========================
 

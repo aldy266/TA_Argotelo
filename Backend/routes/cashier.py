@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template
-from utils.auth import login_required, role_required
+from utils.auth import role_name_required
 
 cashier_bp = Blueprint(
     "cashier",
@@ -12,8 +12,7 @@ cashier_bp = Blueprint(
 # ==========================
 
 @cashier_bp.route("/dashboard")
-@login_required
-@role_required(3)
+@role_name_required("KASIR")
 def dashboard():
 
     return render_template("cashier_dashboard.html")

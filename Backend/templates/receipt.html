@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt {{ transaction.transaction_number }}</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; background: #f4f1ed; color: #222; }
+        .receipt { width: min(380px, 100%); margin: 24px auto; background: #fff; padding: 24px; border: 1px solid #ddd; }
+        h1, p { margin: 0; }
+        .center { text-align: center; }
+        .muted { color: #666; font-size: 13px; }
+        .line { border-top: 1px dashed #aaa; margin: 16px 0; }
+        .row { display: flex; justify-content: space-between; gap: 12px; margin: 8px 0; }
+        .total { font-size: 18px; font-weight: 700; }
+        button { width: 100%; padding: 12px; border: 0; border-radius: 8px; background: #5a3718; color: #fff; font-weight: 700; cursor: pointer; margin-top: 16px; }
+        @media print {
+            body { background: #fff; }
+            .receipt { margin: 0; border: 0; width: 100%; }
+            button { display: none; }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="receipt">
+        <div class="center">
+            <h1>ARGOTELO</h1>
+            <p class="muted">Salatiga</p>
+            <p class="muted">{{ transaction.transaction_number }}</p>
+            <p class="muted">{{ transaction.created_at.strftime("%d-%m-%Y %H:%M") }}</p>
+        </div>
+
+        <div class="line"></div>
+
+        <div class="row">
+            <span>Kasir</span>
+            <strong>{{ transaction.cashier.fullname if transaction.cashier else "-" }}</strong>
+        </div>
+        <div class="row">
+            <span>Pelanggan</span>
+            <strong>{{ transaction.customer_name or "Umum" }}</strong>
+        </div>
+        <div class="row">
+            <span>Pembayaran</span>
+            <strong>{{ transaction.payment_method }}</strong>
+        </div>
+
+        <div class="line"></div>
+
+        {% for item in transaction.items %}
+        <div>
+            <div class="row">
+                <span>{{ item.quantity }}x {{ item.menu_item.name }}</span>
+                <strong>Rp {{ "{:,.0f}".format(item.subtotal).replace(",", ".") }}</strong>
+            </div>
+            <p class="muted">Rp {{ "{:,.0f}".format(item.unit_price).replace(",", ".") }} / item</p>
+        </div>
+        {% endfor %}
+
+        <div class="line"></div>
+
+        <div class="row">
+            <span>Subtotal</span>
+            <strong>Rp {{ "{:,.0f}".format(transaction.subtotal).replace(",", ".") }}</strong>
+        </div>
+        <div class="row">
+            <span>Pajak</span>
+            <strong>Rp {{ "{:,.0f}".format(transaction.tax).replace(",", ".") }}</strong>
+        </div>
+        <div class="row total">
+            <span>Total</span>
+            <strong>Rp {{ "{:,.0f}".format(transaction.total).replace(",", ".") }}</strong>
+        </div>
+
+        <button type="button" onclick="window.print()">Print Receipt</button>
+    </main>
+</body>
+
+</html>

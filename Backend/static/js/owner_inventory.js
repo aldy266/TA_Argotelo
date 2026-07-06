@@ -2445,50 +2445,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("viewAllNotification");
 
 
-    // =====================================================
-    // DUMMY NOTIFICATION
-    // NANTI DIGANTI API
-    // =====================================================
-
-    let notifications=[
-
-        {
-
-            id:1,
-
-            product:"Keju Cheddar",
-
-            stock:"2 Kg",
-
-            time:"Baru saja"
-
-        },
-
-        {
-
-            id:2,
-
-            product:"Tepung",
-
-            stock:"25 Kg",
-
-            time:"5 menit lalu"
-
-        },
-
-        {
-
-            id:3,
-
-            product:"Packaging",
-
-            stock:"50 Pcs",
-
-            time:"10 menit lalu"
-
-        }
-
-    ];
+    let notifications=[];
 
         // =====================================================
         // RENDER NOTIFICATION
@@ -2995,9 +2952,35 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function refreshNotification(){
 
-        // nanti backend
+        try{
+
+            const response =
+                await fetch(
+                    "/api/notification",
+                    {
+                        credentials:"include"
+                    }
+                );
+
+            const result =
+                await response.json();
+
+            notifications =
+                result.success
+                ? result.data
+                : [];
+
+        }catch(error){
+
+            console.error(error);
+
+            notifications=[];
+
+        }
 
         renderNotifications();
+
+        rotateStockAlert();
 
     }
 
@@ -3042,6 +3025,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     loadHistoryPO();
+
+    refreshNotification();
     // =====================================================
     // READY
     // =====================================================

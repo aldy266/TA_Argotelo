@@ -115,7 +115,7 @@
 
                     <i class="bi bi-exclamation-triangle"></i>
 
-                    <span>3 Stok Menipis</span>
+                    <span>Status inventori</span>
 
                 </div>
 
@@ -300,7 +300,15 @@
 
                         </div>
 
-                        <button class="primary-button" style="background: #5A3718; color: white; border: none; padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; font-size: 14px;">
+                        <button class="secondary-button" id="btn-import-staff" type="button">
+
+                            <i class="bi bi-file-earmark-spreadsheet"></i>
+
+                            Import Excel
+
+                        </button>
+
+                        <button class="primary-button" id="btn-top-schedule" type="button" style="background: #5A3718; color: white; border: none; padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; font-size: 14px;">
 
                             <i class="bi bi-plus-lg"></i>
 
@@ -344,7 +352,7 @@
 
                 <div class="attendance-footer">
 
-                    <a href="#">
+                    <a href="#" id="view-all-staff">
                         Lihat Semua Karyawan
                     </a>
 
@@ -438,7 +446,7 @@
 
                         </div>
 
-                        <button class="add-schedule" id="btn-new-schedule">
+                        <button class="add-schedule" id="btn-new-schedule" type="button">
 
                             <i class="bi bi-plus-lg"></i>
 
@@ -479,6 +487,117 @@
         </section>
 
     </main>
+
+    <!-- IMPORT STAFF MODAL -->
+    <div class="menu-modal-backdrop hidden" id="staffImportModal">
+        <div class="menu-modal import-modal" role="dialog" aria-modal="true">
+            <div class="menu-modal-header">
+                <h2>Import Data Staff</h2>
+                <button class="modal-close" id="closeImportModal" type="button" aria-label="Tutup">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="menu-form">
+                <div>
+                    <h3>Import Data Staff dari Excel</h3>
+                    <p class="modal-help">Upload file Excel untuk menambahkan banyak data Staff sekaligus. Format yang didukung: .xlsx</p>
+                </div>
+                <label class="upload-box" for="staffExcelInput">
+                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                    <strong>Pilih File Excel</strong>
+                    <span id="selectedExcelName">Belum ada file dipilih</span>
+                    <input id="staffExcelInput" type="file" accept=".xlsx" hidden>
+                </label>
+                <div class="template-actions">
+                    <a class="template-link" href="/api/staff/import-template">
+                        <i class="bi bi-download"></i>
+                        Download Template Excel
+                    </a>
+                    <a class="template-link" href="/api/staff/dummy-excel">
+                        <i class="bi bi-file-earmark-arrow-down"></i>
+                        Download Data Dummy
+                    </a>
+                </div>
+                <div class="menu-form-actions">
+                    <button class="cancel-btn" id="cancelImport" type="button">Batal</button>
+                    <button class="save-btn" id="submitImport" type="button" disabled>Import Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMPORT RESULT MODAL -->
+    <div class="menu-modal-backdrop hidden" id="importResultModal">
+        <div class="menu-modal import-modal" role="dialog" aria-modal="true">
+            <div class="menu-modal-header">
+                <h2>Import Selesai</h2>
+                <button class="modal-close" id="closeImportResult" type="button" aria-label="Tutup">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="menu-form">
+                <div class="import-result-grid">
+                    <div><small>Total Data</small><strong id="resultTotal">0</strong></div>
+                    <div><small>Berhasil</small><strong id="resultImported">0</strong></div>
+                    <div><small>Dilewati</small><strong id="resultSkipped">0</strong></div>
+                    <div><small>Gagal</small><strong id="resultFailed">0</strong></div>
+                </div>
+                <div id="importErrorSection" class="import-error-section hidden">
+                    <h3>Detail Data Gagal</h3>
+                    <div id="importErrorList"></div>
+                </div>
+                <div class="menu-form-actions">
+                    <button class="save-btn" id="closeImportResultButton" type="button">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALL STAFF MODAL -->
+    <div class="menu-modal-backdrop hidden" id="allStaffModal">
+        <div class="menu-modal staff-list-modal" role="dialog" aria-modal="true">
+            <div class="menu-modal-header">
+                <h2>Semua Karyawan</h2>
+                <button class="modal-close" id="closeAllStaffModal" type="button" aria-label="Tutup">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="menu-form">
+                <input id="allStaffSearch" type="search" placeholder="Cari nama, kode, divisi, atau jabatan...">
+                <div class="staff-list-table" id="allStaffList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCHEDULE MODAL -->
+    <div class="menu-modal-backdrop hidden" id="scheduleModal">
+        <div class="menu-modal" role="dialog" aria-modal="true">
+            <div class="menu-modal-header">
+                <h2>Tambah Penjadwalan</h2>
+                <button class="modal-close" id="closeScheduleModal" type="button" aria-label="Tutup">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="menu-form">
+                <label>
+                    Staff
+                    <select id="scheduleStaffSelect"></select>
+                </label>
+                <label>
+                    Shift
+                    <select id="scheduleShiftSelect"></select>
+                </label>
+                <label>
+                    Tanggal
+                    <input id="scheduleDateInput" type="date">
+                </label>
+                <div class="menu-form-actions">
+                    <button class="cancel-btn" id="cancelSchedule" type="button">Batal</button>
+                    <button class="save-btn" id="saveSchedule" type="button">Simpan Jadwal</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="{{ url_for('static', filename='js/owner_staff.js') }}"></script>
 
