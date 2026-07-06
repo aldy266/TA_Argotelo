@@ -1558,7 +1558,8 @@ button:focus{
 
 }
 
-.menu-form input{
+.menu-form input,
+.menu-form select{
 
     height:46px;
 
@@ -1576,7 +1577,8 @@ button:focus{
 
 }
 
-.menu-form input:focus{
+.menu-form input:focus,
+.menu-form select:focus{
 
     border-color:var(--primary);
 

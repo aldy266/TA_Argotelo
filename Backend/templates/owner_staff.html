@@ -88,7 +88,7 @@
         <span>Help Center</span>
     </a>
 
-<a href="{{ url_for('auth.logout') }}" class="logout">
+<a href="{{ url_for('auth.logout_page') }}" class="logout">
     <i class="bi bi-box-arrow-right"></i>
     <span>Sign Out</span>
 </a>
@@ -300,9 +300,11 @@
 
                         </div>
 
-                        <button class="attendance-filter">
+                        <button class="primary-button" style="background: #5A3718; color: white; border: none; padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
 
-                            <i class="bi bi-funnel"></i>
+                            <i class="bi bi-plus-lg"></i>
+
+                            Tambah Staff
 
                         </button>
 
@@ -328,75 +330,17 @@
 
                             <th>Jam Kerja</th>
 
+                            <th>Aksi</th>
+
                         </tr>
 
                     </thead>
 
                     <tbody>
+                        <!-- Rows will be rendered by JavaScript -->
+                    </tbody>
 
-                            <tr>
-
-                                <td>
-
-                                    <div class="staff-info">
-
-                                        <img src="{{ url_for('static', filename='images/profile.png') }}">
-
-                                        <div>
-
-                                            <h4>Ahmad Ridwan</h4>
-
-                                            <span>Tim Toko</span>
-
-                                        </div>
-
-                                    </div>
-
-                                </td>
-
-                                <td>07:52 WIB</td>
-
-                                <td>
-
-                                    <span class="shift-badge">
-
-                                        Shift Pagi
-
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    <span class="badge success">
-
-                                        HADIR
-
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    07h<br>08m
-
-                                </td>
-
-                                </tr>
-
-                                <tr>
-
-                                <td>
-
-                                    <div class="staff-info">
-
-                                        <img src="{{ url_for('static', filename='images/profile.png') }}">
-
-                                        <div>
-
-                                            <h4>Siti Aminah</h4>
-
-                                            <span>Tim Toko</span>
+                </table>
 
                                         </div>
 
@@ -434,57 +378,7 @@
 
                                 </tr>
 
-                                <tr>
-
-                                <td>
-
-                                    <div class="staff-info">
-
-                                        <img src="{{ url_for('static', filename='images/profile.png') }}">
-
-                                        <div>
-
-                                            <h4>Budi Santoso</h4>
-
-                                            <span>Tim Trainer</span>
-
-                                        </div>
-
-                                    </div>
-
-                                </td>
-
-                                <td>-:-:-</td>
-
-                                <td>
-
-                                    <span class="shift-badge">
-
-                                        Shift Pagi
-
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    <span class="badge danger">
-
-                                        IZIN
-
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    00h<br>00m
-
-                                </td>
-
-                                </tr>
-
-                                                    </tbody>
+                                </tbody>
 
                                 </table>
 
@@ -492,7 +386,7 @@
 
                                 <a href="#">
 
-                                    Lihat Semua Karyawan (28)
+                                    Lihat Semua Karyawan
 
                                 </a>
 

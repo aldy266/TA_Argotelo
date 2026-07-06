@@ -161,14 +161,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <span>${escapeHtml(menu.category)}</span>
                     </div>
 
-                    <div class="menu-help-center" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #e7f3ff; border-radius: 6px; margin: 8px 0; font-size: 12px; color: #0066cc;">
-                        <i class="bi bi-info-circle-fill" style="color: #0066cc;"></i>
-                        <span>Klik Edit untuk mengubah foto atau info</span>
-                        <button class="help-dismiss-btn" type="button" data-action="dismiss-help" aria-label="Tutup bantuan" style="margin-left: auto; background: none; border: none; color: #0066cc; cursor: pointer; font-size: 14px;">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-
                     <div class="menu-bottom">
                         <button class="edit-btn" type="button" data-action="edit">
                             <i class="bi bi-pencil-fill"></i>
@@ -436,16 +428,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (addCard) {
             openMenuForm();
-            return;
-        }
-
-        const helpDismiss = event.target.closest("[data-action='dismiss-help']");
-        if (helpDismiss) {
-            const card = helpDismiss.closest(".menu-card");
-            const helpCenter = card.querySelector(".menu-help-center");
-            if (helpCenter) {
-                helpCenter.style.display = "none";
-            }
             return;
         }
 
