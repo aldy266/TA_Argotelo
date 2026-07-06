@@ -870,6 +870,8 @@ button{
 
     transition:.3s;
 
+    cursor:pointer;
+
 }
 
 .add-card:hover{
@@ -1085,6 +1087,16 @@ button{
     color:#fff;
 
     box-shadow:0 10px 20px rgba(90,55,24,.25);
+
+}
+
+.page-btn:disabled{
+
+    cursor:not-allowed;
+
+    opacity:.45;
+
+    transform:none;
 
 }
 
@@ -1353,5 +1365,357 @@ button:focus{
     color:#D84A4A;
 
     line-height:1;
+
+}
+
+/* ==========================================================
+                    PLACEHOLDER & EMPTY
+========================================================== */
+
+.menu-placeholder{
+
+    width:100%;
+
+    height:100%;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:10px;
+
+    color:#8A817B;
+
+    background:linear-gradient(135deg,#F6EFEA,#EFE4DB);
+
+}
+
+.menu-placeholder i{
+
+    font-size:42px;
+
+    color:var(--primary);
+
+}
+
+.menu-placeholder span{
+
+    font-size:14px;
+
+    font-weight:600;
+
+}
+
+.empty-state{
+
+    min-height:360px;
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    background:#fff;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    padding:32px;
+
+    color:var(--text-light);
+
+}
+
+.empty-state i{
+
+    font-size:42px;
+
+    color:var(--primary);
+
+    margin-bottom:14px;
+
+}
+
+.empty-state h3{
+
+    color:var(--text);
+
+    margin-bottom:8px;
+
+}
+
+/* ==========================================================
+                    MENU MODAL
+========================================================== */
+
+.menu-modal-backdrop{
+
+    position:fixed;
+
+    inset:0;
+
+    z-index:2000;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    padding:24px;
+
+    background:rgba(47,29,15,.42);
+
+}
+
+.menu-modal{
+
+    width:min(520px,100%);
+
+    background:#fff;
+
+    border-radius:18px;
+
+    box-shadow:var(--shadow-lg);
+
+    border:1px solid var(--border);
+
+    overflow:hidden;
+
+}
+
+.menu-modal-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:22px 24px;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.menu-modal-header h2{
+
+    font-size:22px;
+
+    color:var(--text);
+
+}
+
+.modal-close{
+
+    width:38px;
+
+    height:38px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:#F7F3EF;
+
+    color:var(--primary);
+
+    cursor:pointer;
+
+}
+
+.menu-form{
+
+    padding:24px;
+
+    display:grid;
+
+    gap:16px;
+
+}
+
+.menu-form label{
+
+    display:grid;
+
+    gap:8px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    color:var(--text);
+
+}
+
+.menu-form input{
+
+    height:46px;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    padding:0 14px;
+
+    font:inherit;
+
+    color:var(--text);
+
+    outline:none;
+
+}
+
+.menu-form input:focus{
+
+    border-color:var(--primary);
+
+    box-shadow:0 0 0 4px rgba(90,55,24,.08);
+
+}
+
+.menu-form-actions{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:12px;
+
+    margin-top:8px;
+
+}
+
+.cancel-btn,
+.save-btn{
+
+    height:44px;
+
+    border-radius:12px;
+
+    padding:0 18px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+}
+
+.cancel-btn{
+
+    border:1px solid var(--border);
+
+    background:#fff;
+
+    color:var(--text);
+
+}
+
+.save-btn{
+
+    border:none;
+
+    background:var(--primary);
+
+    color:#fff;
+
+}
+
+/* Image input styles */
+.image-input-group{
+
+    display:grid;
+
+    gap:12px;
+
+}
+
+.image-file-label{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:8px;
+
+    height:120px;
+
+    border:2px dashed var(--border);
+
+    border-radius:12px;
+
+    background:#F7F3EF;
+
+    color:var(--primary);
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:all var(--transition);
+
+}
+
+.image-file-label:hover{
+
+    border-color:var(--primary);
+
+    background:#F0EBE5;
+
+}
+
+.image-file-label i{
+
+    font-size:28px;
+
+}
+
+.image-preview{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    height:180px;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    background:#F7F3EF;
+
+    overflow:hidden;
+
+}
+
+.image-preview img{
+
+    width:100%;
+
+    height:100%;
+
+    object-fit:cover;
+
+}
+
+.image-preview span{
+
+    color:var(--text-light);
+
+    font-size:13px;
 
 }

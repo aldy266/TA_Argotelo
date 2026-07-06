@@ -93,7 +93,7 @@
 
                     </a>
 
-<a href="{{ url_for('auth.logout') }}" class="logout">
+<a href="{{ url_for('auth.logout_page') }}" class="logout" id="logoutBtn">
     <i class="bi bi-box-arrow-right"></i>
     <span>Sign Out</span>
 </a>
@@ -119,6 +119,7 @@
             <i class="bi bi-search"></i>
 
             <input
+                id="menuSearch"
                 type="text"
                 placeholder="Cari menu atau kategori...">
 
@@ -164,7 +165,9 @@
 
                 </div>
 
-                <img src="{{ url_for('static', filename='images/profile.png') }}"
+                <img id="profileImage"
+                     src="{{ url_for('static', filename='images/profile.png') }}"
+                     data-default-src="{{ url_for('static', filename='images/logo.png') }}"
                      alt="Profile">
 
             </div>
@@ -187,13 +190,13 @@
 
             <i class="bi bi-journal-text"></i>
 
-            Total Menu : <strong>24</strong> Item Katalog
+            Total Menu : <strong id="totalMenu">0</strong> Item Katalog
 
         </p>
 
     </div>
 
-    <button class="add-menu-btn">
+    <button class="add-menu-btn" id="addMenuBtn" type="button">
 
         <i class="bi bi-plus-lg"></i>
 
@@ -210,7 +213,7 @@
     <section class="menu-content">
 
 
-    <div class="menu-grid">
+    <div class="menu-grid" id="menuGrid">
 
         <!-- Card 1 -->
 
@@ -402,7 +405,7 @@
 
        <!-- Add Card -->
 
-<div class="add-card">
+<div class="add-card" id="addMenuCard">
 
     <div class="plus">
         <i class="bi bi-plus-lg"></i>
@@ -418,7 +421,7 @@
 
 <!-- Pagination -->
 
-<div class="pagination">
+<div class="pagination" id="pagination">
 
     <button class="page-btn">
         <i class="bi bi-chevron-left"></i>

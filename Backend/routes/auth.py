@@ -891,10 +891,14 @@ def reset_password():
 # LOGOUT
 # ==========================
 
-@auth_bp.route("/api/logout", methods=["POST"])
+@auth_bp.route("/api/logout", methods=["GET", "POST"])
 def logout():
 
     session.clear()
+
+    if request.method == "GET":
+
+        return redirect("/")
 
     return jsonify({
         "success": True,
