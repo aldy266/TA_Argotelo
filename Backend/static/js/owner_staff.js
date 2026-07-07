@@ -12,7 +12,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const fullnameEl = document.getElementById("fullname");
     const roleEl = document.getElementById("role");
+    const attendanceTitleEl = document.getElementById("attendanceTitle");
     const todayDateEl = document.getElementById("today-date");
+    const attendanceDateInput = document.getElementById("attendanceDateInput");
     const searchInput = document.querySelector(".attendance-search input");
     const attendanceTable = document.querySelector(".attendance-table tbody");
     const logoutBtn = document.querySelector(".logout");
@@ -43,12 +45,36 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("btn-new-schedule")
     ].filter(Boolean);
     const scheduleModal = document.getElementById("scheduleModal");
+    const scheduleModalTitle = document.getElementById("scheduleModalTitle");
     const closeScheduleModal = document.getElementById("closeScheduleModal");
     const cancelSchedule = document.getElementById("cancelSchedule");
     const saveSchedule = document.getElementById("saveSchedule");
     const scheduleStaffSelect = document.getElementById("scheduleStaffSelect");
     const scheduleShiftSelect = document.getElementById("scheduleShiftSelect");
+    const scheduleRangeSelect = document.getElementById("scheduleRangeSelect");
+    const scheduleRangeLabel = document.getElementById("scheduleRangeLabel");
+    const scheduleEndDateInput = document.getElementById("scheduleEndDateInput");
+    const scheduleRangeHelp = document.getElementById("scheduleRangeHelp");
     const scheduleDateInput = document.getElementById("scheduleDateInput");
+    const shiftModal = document.getElementById("shiftModal");
+    const closeShiftModal = document.getElementById("closeShiftModal");
+    const cancelShift = document.getElementById("cancelShift");
+    const saveShift = document.getElementById("saveShift");
+    const shiftNameInput = document.getElementById("shiftNameInput");
+    const shiftStartInput = document.getElementById("shiftStartInput");
+    const shiftEndInput = document.getElementById("shiftEndInput");
+    const shiftToleranceInput = document.getElementById("shiftToleranceInput");
+    const leaveModal = document.getElementById("leaveModal");
+    const closeLeaveModal = document.getElementById("closeLeaveModal");
+    const cancelLeave = document.getElementById("cancelLeave");
+    const saveLeave = document.getElementById("saveLeave");
+    const leaveStaffId = document.getElementById("leaveStaffId");
+    const leaveStaffName = document.getElementById("leaveStaffName");
+    const leaveTypeSelect = document.getElementById("leaveTypeSelect");
+    const leaveStartDateInput = document.getElementById("leaveStartDateInput");
+    const leaveEndDateInput = document.getElementById("leaveEndDateInput");
+    const leaveReasonInput = document.getElementById("leaveReasonInput");
+    const leaveAutoApprove = document.getElementById("leaveAutoApprove");
     
     // Statistics
     const statPresent = document.getElementById("stat-present");
@@ -56,6 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const statLate = document.getElementById("stat-late");
     const statAvgLate = document.getElementById("stat-avg-late");
     const statLeave = document.getElementById("stat-leave");
+    const statApproval = document.getElementById("stat-approval");
     
     // Month summary
     const monthRate = document.getElementById("month-rate");
@@ -75,6 +102,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     let filteredData = [];
     let selectedImportFile = null;
     let allStaffData = [];
+    let shiftData = [];
+    let selectedScheduleId = null;
+    let selectedShiftId = null;
+    let selectedAttendanceDate = "";
 
     // =====================================
     // UTILITIES
@@ -150,6 +181,113 @@ document.addEventListener("DOMContentLoaded", async () => {
         return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
     }
 
+    function getTodayInputValue() {
+        const today = new Date();
+        return formatDateInput(today);
+    }
+
+    function formatDateInput(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
+    function parseDateInput(value) {
+        const [year, month, day] = String(value || "").split("-").map(Number);
+        if (!year || !month || !day) return new Date();
+        return new Date(year, month - 1, day);
+    }
+
+    function addDays(date, days) {
+        const next = new Date(date);
+        next.setDate(next.getDate() + days);
+        return next;
+    }
+
+    function addMonths(date, months) {
+        const next = new Date(date);
+        const day = next.getDate();
+        next.setMonth(next.getMonth() + months);
+        if (next.getDate() < day) {
+            next.setDate(0);
+        }
+        return next;
+    }
+
+    function getTomorrowInputValue() {
+        return formatDateInput(addDays(new Date(), 1));
+    }
+
+    function isTodayValue(value) {
+        return value === getTodayInputValue();
+    }
+
+    function updateAttendanceDateLabel() {
+        const selectedDate = selectedAttendanceDate || getTodayInputValue();
+        if (attendanceTitleEl) {
+            attendanceTitleEl.textContent = isTodayValue(selectedDate)
+                ? "Daftar Kehadiran Hari Ini"
+                : "Daftar Jadwal Karyawan";
+        }
+        if (todayDateEl) {
+            todayDateEl.textContent = formatDate(selectedDate);
+        }
+        if (attendanceDateInput && attendanceDateInput.value !== selectedDate) {
+            attendanceDateInput.value = selectedDate;
+        }
+    }
+
+    function toTimeInputValue(value) {
+        return String(value || "").slice(0, 5);
+    }
+
+    function findAttendanceRecord(scheduleId) {
+        return attendanceData.find(record => String(record.schedule_id) === String(scheduleId));
+    }
+
+    function updateScheduleRangeByPreset() {
+        if (!scheduleRangeSelect || !scheduleDateInput || !scheduleEndDateInput) return;
+
+        const preset = scheduleRangeSelect.value;
+        const baseValue = scheduleDateInput.value || getTodayInputValue();
+        let startDate = parseDateInput(baseValue);
+        let endDate = new Date(startDate);
+
+        if (preset === "tomorrow") {
+            startDate = parseDateInput(getTomorrowInputValue());
+            endDate = new Date(startDate);
+        } else if (preset === "week") {
+            endDate = addDays(startDate, 6);
+        } else if (preset === "month") {
+            endDate = addDays(addMonths(startDate, 1), -1);
+        } else if (preset === "year") {
+            endDate = addDays(startDate, 365);
+        } else if (preset === "custom") {
+            const currentEnd = scheduleEndDateInput.value
+                ? parseDateInput(scheduleEndDateInput.value)
+                : startDate;
+            endDate = currentEnd < startDate ? startDate : currentEnd;
+        }
+
+        scheduleDateInput.value = formatDateInput(startDate);
+        scheduleEndDateInput.value = formatDateInput(endDate);
+
+        const totalDays = Math.round((endDate - startDate) / 86400000) + 1;
+        if (scheduleRangeHelp) {
+            scheduleRangeHelp.textContent = totalDays > 1
+                ? `Akan membuat jadwal harian selama ${totalDays} hari. Tanggal yang sudah punya jadwal akan dilewati.`
+                : "Akan membuat jadwal untuk 1 tanggal.";
+        }
+    }
+
+    function setScheduleRangeVisibility(isEditing) {
+        [scheduleRangeLabel, scheduleRangeHelp, scheduleEndDateInput?.closest("label")].forEach(element => {
+            if (!element) return;
+            element.style.display = isEditing ? "none" : "";
+        });
+    }
+
     function getStatusBadgeClass(status) {
         const statusMap = {
             "PRESENT": "success",
@@ -183,8 +321,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             const response = await apiRequest("/api/me");
             if (response.success) {
-                fullnameEl.textContent = response.user.fullname || "User";
-                roleEl.textContent = response.user.role || "Role";
+                if (fullnameEl) fullnameEl.textContent = response.user.fullname || "User";
+                if (roleEl) roleEl.textContent = response.user.role || "Role";
             }
         } catch (error) {
             console.error("Error loading user:", error);
@@ -207,9 +345,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function updateStatisticsUI(stats) {
-        const { total_scheduled, present_count, attendance_rate, late_count, avg_late_minutes, leave_count } = stats;
+        const { total_scheduled, total_staff, present_count, attendance_rate, late_count, avg_late_minutes, leave_count } = stats;
+        const staffTotal = Number.isFinite(Number(total_staff))
+            ? Number(total_staff)
+            : Number(total_scheduled || 0);
         
-        statPresent.textContent = `${present_count} / ${total_scheduled}`;
+        statPresent.textContent = `${present_count} / ${staffTotal}`;
         statRate.textContent = `${attendance_rate}% Attendance`;
         
         if (late_count === 0) {
@@ -256,9 +397,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     // LOAD ATTENDANCE TABLE
     // =====================================
 
-    async function loadAttendance() {
+    async function loadAttendance(dateValue = selectedAttendanceDate || getTodayInputValue()) {
         try {
-            const response = await apiRequest("/api/staff/attendance/today");
+            selectedAttendanceDate = dateValue;
+            updateAttendanceDateLabel();
+            const response = await apiRequest(`/api/staff/attendance?date=${encodeURIComponent(selectedAttendanceDate)}`);
             if (response.success) {
                 attendanceData = response.data;
                 filteredData = [...attendanceData];
@@ -271,11 +414,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function renderAttendanceTable() {
         if (filteredData.length === 0) {
+            const emptyText = isTodayValue(selectedAttendanceDate)
+                ? "Belum ada staff yang dijadwalkan hari ini."
+                : "Belum ada staff yang dijadwalkan pada tanggal ini.";
             attendanceTable.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 40px 20px; color: var(--text-light);">
                         <i class="bi bi-inbox" style="font-size: 32px; display: block; margin-bottom: 12px;"></i>
-                        <p>Belum ada staff yang dijadwalkan hari ini.</p>
+                        <p>${emptyText}</p>
                     </td>
                 </tr>
             `;
@@ -283,16 +429,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         attendanceTable.innerHTML = filteredData.map(record => {
-            let action = `<span style="color: var(--text-light);">-</span>`;
+            let clockAction = "";
 
-            if (record.status === "NOT_CHECKED_IN") {
-                action = `
+            if (record.status === "NOT_CHECKED_IN" && isTodayValue(record.schedule_date)) {
+                clockAction = `
                     <button class="edit-btn clock-btn" type="button" data-action="clock-in" data-schedule-id="${record.schedule_id}">
                         <i class="bi bi-box-arrow-in-right"></i> Clock In
                     </button>
                 `;
-            } else if (record.status === "PRESENT" || record.status === "LATE") {
-                action = `
+            } else if ((record.status === "PRESENT" || record.status === "LATE") && isTodayValue(record.schedule_date)) {
+                clockAction = `
                     <button class="edit-btn clock-btn" type="button" data-action="clock-out" data-schedule-id="${record.schedule_id}">
                         <i class="bi bi-box-arrow-right"></i> Clock Out
                     </button>
@@ -302,13 +448,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             return `
             <tr>
                 <td>
-                    <div class="staff-info">
-                        <img src="/static/images/profile.png" alt="Profile">
-                        <div>
-                            <h4>${escapeHtml(record.full_name)}</h4>
-                            <span>${escapeHtml(record.position)}</span>
-                        </div>
-                    </div>
+                    <strong class="staff-name-only">${escapeHtml(record.full_name)}</strong>
                 </td>
                 <td>${formatTime(record.clock_in)}</td>
                 <td><span class="shift-badge">${escapeHtml(record.shift_name)}</span></td>
@@ -318,8 +458,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </span>
                 </td>
                 <td>${record.work_minutes > 0 ? Math.floor(record.work_minutes / 60) + 'h ' + (record.work_minutes % 60) + 'm' : '00h 00m'}</td>
-                <td style="display: flex; gap: 8px; justify-content: center;">
-                    ${action}
+                <td>
+                    <div class="attendance-row-actions">
+                        ${clockAction}
+                        <button class="edit-btn schedule-edit-btn" type="button" data-schedule-id="${record.schedule_id}">
+                            <i class="bi bi-pencil-square"></i> Edit Shift
+                        </button>
+                        <button class="secondary-button leave-btn" type="button" data-schedule-id="${record.schedule_id}">
+                            <i class="bi bi-file-earmark-medical"></i> Izin/Sakit
+                        </button>
+                        <button class="delete-btn schedule-delete-btn" type="button" data-schedule-id="${record.schedule_id}">
+                            <i class="bi bi-trash3"></i> Hapus
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -362,16 +513,56 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     attendanceTable?.addEventListener("click", async event => {
-        const button = event.target.closest(".clock-btn");
-        if (!button) return;
+        const clockButton = event.target.closest(".clock-btn");
+        const editButton = event.target.closest(".schedule-edit-btn");
+        const leaveButton = event.target.closest(".leave-btn");
+        const deleteButton = event.target.closest(".schedule-delete-btn");
 
-        const action = button.dataset.action;
-        const scheduleId = button.dataset.scheduleId;
+        if (editButton) {
+            const record = findAttendanceRecord(editButton.dataset.scheduleId);
+            if (record) {
+                openScheduleModal(record).catch(error => console.error(error));
+            }
+            return;
+        }
+
+        if (leaveButton) {
+            const record = findAttendanceRecord(leaveButton.dataset.scheduleId);
+            if (record) {
+                openLeaveModal(record);
+            }
+            return;
+        }
+
+        if (deleteButton) {
+            const record = findAttendanceRecord(deleteButton.dataset.scheduleId);
+            const name = record?.full_name || "karyawan ini";
+            if (!confirm(`Hapus jadwal ${name} hari ini?`)) return;
+
+            deleteButton.disabled = true;
+            try {
+                const response = await apiRequest(`/api/staff/schedule/${deleteButton.dataset.scheduleId}`, {
+                    method: "DELETE"
+                });
+                showToast(response.message || "Jadwal berhasil dihapus");
+                await loadStatistics();
+                await loadMonthStatistics();
+                await loadAttendance();
+            } finally {
+                deleteButton.disabled = false;
+            }
+            return;
+        }
+
+        if (!clockButton) return;
+
+        const action = clockButton.dataset.action;
+        const scheduleId = clockButton.dataset.scheduleId;
         const endpoint = action === "clock-in"
             ? `/api/staff/attendance/${scheduleId}/clock-in`
             : `/api/staff/attendance/${scheduleId}/clock-out`;
 
-        button.disabled = true;
+        clockButton.disabled = true;
         try {
             const response = await apiRequest(endpoint, { method: "PATCH" });
             showToast(response.message || "Kehadiran berhasil diperbarui");
@@ -379,9 +570,73 @@ document.addEventListener("DOMContentLoaded", async () => {
             await loadMonthStatistics();
             await loadAttendance();
         } finally {
-            button.disabled = false;
+            clockButton.disabled = false;
         }
     });
+
+    // =====================================
+    // LEAVE / SICK MODAL
+    // =====================================
+
+    function openLeaveModal(record) {
+        leaveStaffId.value = record.id;
+        leaveStaffName.textContent = `${record.full_name} - ${record.shift_name}`;
+        leaveTypeSelect.value = "PERMISSION";
+        leaveStartDateInput.value = record.schedule_date || selectedAttendanceDate || getTodayInputValue();
+        leaveEndDateInput.value = record.schedule_date || selectedAttendanceDate || getTodayInputValue();
+        leaveReasonInput.value = "";
+        leaveAutoApprove.checked = true;
+        leaveModal?.classList.remove("hidden");
+        leaveTypeSelect?.focus();
+    }
+
+    function closeLeave() {
+        leaveModal?.classList.add("hidden");
+        if (leaveStaffId) leaveStaffId.value = "";
+        if (leaveStaffName) leaveStaffName.textContent = "-";
+        if (leaveReasonInput) leaveReasonInput.value = "";
+        if (leaveAutoApprove) leaveAutoApprove.checked = true;
+    }
+
+    async function saveLeaveData() {
+        if (!leaveStaffId.value || !leaveTypeSelect.value || !leaveStartDateInput.value || !leaveEndDateInput.value) {
+            showToast("Staff, jenis izin, dan tanggal wajib diisi", "error");
+            return;
+        }
+
+        if (parseDateInput(leaveEndDateInput.value) < parseDateInput(leaveStartDateInput.value)) {
+            showToast("Tanggal selesai tidak boleh sebelum tanggal mulai", "error");
+            return;
+        }
+
+        saveLeave.disabled = true;
+        try {
+            const response = await apiRequest("/api/staff/leave-request", {
+                method: "POST",
+                body: JSON.stringify({
+                    staff_id: Number(leaveStaffId.value),
+                    leave_type: leaveTypeSelect.value,
+                    start_date: leaveStartDateInput.value,
+                    end_date: leaveEndDateInput.value,
+                    reason: leaveReasonInput.value.trim(),
+                    auto_approve: leaveAutoApprove.checked
+                })
+            });
+
+            selectedAttendanceDate = leaveStartDateInput.value;
+            if (attendanceDateInput) {
+                attendanceDateInput.value = selectedAttendanceDate;
+            }
+            showToast(response.message || "Izin/Sakit berhasil disimpan");
+            closeLeave();
+            await loadStatistics();
+            await loadMonthStatistics();
+            await loadAttendance(selectedAttendanceDate);
+            await loadLeaveRequests();
+        } finally {
+            saveLeave.disabled = false;
+        }
+    }
 
     // =====================================
     // LOAD SHIFT DATA
@@ -391,24 +646,38 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             const response = await apiRequest("/api/staff/shift");
             if (response.success && response.data.length > 0) {
+                shiftData = response.data || [];
                 const today = new Date();
                 const dayNames = ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"];
                 const dayName = dayNames[today.getDay()];
                 
-                shiftContainer.innerHTML = response.data.map(shift => `
-                    <div class="shift-item">
-                        <div class="shift-date">
-                            <span>${dayName}</span>
-                            <strong>${today.getDate()}</strong>
+                shiftContainer.innerHTML = `
+                    <div class="shift-table">
+                        <div class="shift-table-head">
+                            <span>Shift</span>
+                            <span>Jam</span>
+                            <span>Toleransi</span>
+                            <span>Aksi</span>
                         </div>
-                        <div class="shift-detail">
-                            <h4>${escapeHtml(shift.shift_name)}</h4>
-                            <span>${shift.start_time} - ${shift.end_time}</span>
-                        </div>
-                        <i class="bi bi-chevron-right"></i>
+                        ${shiftData.map(shift => `
+                            <div class="shift-table-row">
+                                <div class="shift-name-cell">
+                                    <span class="shift-day-pill">${dayName} ${today.getDate()}</span>
+                                    <strong>${escapeHtml(shift.shift_name)}</strong>
+                                </div>
+                                <span>${shift.start_time} - ${shift.end_time}</span>
+                                <span>${escapeHtml(shift.tolerance_minutes)} menit</span>
+                                <div class="shift-action">
+                                    <button class="edit-btn shift-edit-btn" type="button" data-shift-id="${shift.id}">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </button>
+                                </div>
+                            </div>
+                        `).join("")}
                     </div>
-                `).join("");
+                `;
             } else {
+                shiftData = [];
                 shiftContainer.innerHTML = `
                     <div style="padding: 20px; text-align: center; color: var(--text-light);">
                         <p>Tidak ada shift yang terdaftar</p>
@@ -428,6 +697,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             const response = await apiRequest("/api/staff/leave-request");
             if (response.success && response.data.length > 0) {
+                if (statApproval) {
+                    statApproval.textContent = `${response.data.length} perlu approval`;
+                }
                 const leaveTypeMap = {
                     "SICK": { icon: "file-earmark-medical", label: "Izin Sakit" },
                     "LEAVE": { icon: "calendar", label: "Cuti" },
@@ -466,6 +738,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                     });
                 });
             } else {
+                if (statApproval) {
+                    statApproval.textContent = "Tidak ada approval";
+                }
                 approvalContainer.innerHTML = `
                     <div style="padding: 20px; text-align: center; color: var(--text-light);">
                         <p>Tidak ada permohonan menunggu persetujuan</p>
@@ -552,6 +827,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 showToast("Permohonan disetujui");
                 close();
                 await loadLeaveRequests();
+                await loadStatistics();
+                await loadMonthStatistics();
                 await loadAttendance();
             } catch (error) {
                 console.error("Error approving leave:", error);
@@ -564,6 +841,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 showToast("Permohonan ditolak");
                 close();
                 await loadLeaveRequests();
+                await loadStatistics();
             } catch (error) {
                 console.error("Error rejecting leave:", error);
             }
@@ -631,7 +909,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     // SCHEDULE MODAL
     // =====================================
 
-    async function openScheduleModal() {
+    async function openScheduleModal(record = null) {
+        selectedScheduleId = record?.schedule_id ? Number(record.schedule_id) : null;
+
         const [staffResponse, shiftResponse] = await Promise.all([
             apiRequest("/api/staff"),
             apiRequest("/api/staff/shift")
@@ -640,8 +920,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         const activeStaff = staffResponse.data || [];
         const shifts = shiftResponse.data || [];
 
+        const allStaffOption = !selectedScheduleId && activeStaff.length
+            ? `<option value="all">Semua Karyawan Aktif</option>`
+            : "";
+
         scheduleStaffSelect.innerHTML = activeStaff.length
-            ? activeStaff.map(staff => `
+            ? allStaffOption + activeStaff.map(staff => `
                 <option value="${staff.id}">
                     ${escapeHtml(staff.employee_code)} - ${escapeHtml(staff.full_name)}
                 </option>
@@ -656,37 +940,154 @@ document.addEventListener("DOMContentLoaded", async () => {
             `).join("")
             : `<option value="">Belum ada Shift</option>`;
 
-        scheduleDateInput.value = new Date().toISOString().split("T")[0];
+        if (scheduleModalTitle) {
+            scheduleModalTitle.textContent = selectedScheduleId ? "Edit Penjadwalan" : "Tambah Penjadwalan";
+        }
+        if (saveSchedule) {
+            saveSchedule.textContent = selectedScheduleId ? "Simpan Perubahan" : "Simpan Jadwal";
+        }
+
+        scheduleStaffSelect.value = record?.id
+            ? String(record.id)
+            : (activeStaff.length ? "all" : "");
+        scheduleShiftSelect.value = record?.shift_id ? String(record.shift_id) : (shifts[0]?.id ? String(shifts[0].id) : "");
+        scheduleDateInput.value = record?.schedule_date || getTomorrowInputValue();
+        if (scheduleEndDateInput) {
+            scheduleEndDateInput.value = record?.schedule_date || getTomorrowInputValue();
+        }
+        if (scheduleRangeSelect) {
+            scheduleRangeSelect.value = selectedScheduleId ? "single" : "tomorrow";
+        }
+        setScheduleRangeVisibility(Boolean(selectedScheduleId));
+        updateScheduleRangeByPreset();
         scheduleModal.classList.remove("hidden");
     }
 
     function closeSchedule() {
         scheduleModal?.classList.add("hidden");
+        selectedScheduleId = null;
+        if (scheduleModalTitle) {
+            scheduleModalTitle.textContent = "Tambah Penjadwalan";
+        }
+        if (saveSchedule) {
+            saveSchedule.textContent = "Simpan Jadwal";
+        }
+        setScheduleRangeVisibility(false);
     }
 
     async function saveScheduleData() {
-        if (!scheduleStaffSelect.value || !scheduleShiftSelect.value || !scheduleDateInput.value) {
-            showToast("Staff, Shift, dan tanggal wajib diisi", "error");
+        if (!scheduleStaffSelect.value || !scheduleShiftSelect.value || !scheduleDateInput.value || (!selectedScheduleId && !scheduleEndDateInput.value)) {
+            showToast("Staff, Shift, dan tanggal jadwal wajib diisi", "error");
+            return;
+        }
+
+        if (!selectedScheduleId && parseDateInput(scheduleEndDateInput.value) < parseDateInput(scheduleDateInput.value)) {
+            showToast("Tanggal selesai tidak boleh sebelum tanggal mulai", "error");
             return;
         }
 
         saveSchedule.disabled = true;
         try {
-            await apiRequest("/api/staff/schedule", {
-                method: "POST",
-                body: JSON.stringify({
-                    staff_id: Number(scheduleStaffSelect.value),
-                    shift_id: Number(scheduleShiftSelect.value),
-                    schedule_date: scheduleDateInput.value
-                })
+            const endpoint = selectedScheduleId
+                ? `/api/staff/schedule/${selectedScheduleId}`
+                : "/api/staff/schedule";
+            const method = selectedScheduleId ? "PATCH" : "POST";
+
+            const staffValue = scheduleStaffSelect.value === "all"
+                ? "all"
+                : Number(scheduleStaffSelect.value);
+
+            const payload = {
+                staff_id: staffValue,
+                shift_id: Number(scheduleShiftSelect.value),
+                schedule_date: scheduleDateInput.value
+            };
+            if (!selectedScheduleId) {
+                payload.end_date = scheduleEndDateInput.value;
+            }
+
+            const response = await apiRequest(endpoint, {
+                method,
+                body: JSON.stringify(payload)
             });
-            showToast("Jadwal berhasil ditambahkan");
+            showToast(response.message || (selectedScheduleId ? "Jadwal berhasil diperbarui" : "Jadwal berhasil ditambahkan"));
+            selectedAttendanceDate = scheduleDateInput.value;
+            if (attendanceDateInput) {
+                attendanceDateInput.value = selectedAttendanceDate;
+            }
             closeSchedule();
             await loadStatistics();
             await loadMonthStatistics();
-            await loadAttendance();
+            await loadAttendance(selectedAttendanceDate);
+            await loadShiftData();
         } finally {
             saveSchedule.disabled = false;
+        }
+    }
+
+    shiftContainer?.addEventListener("click", event => {
+        const button = event.target.closest(".shift-edit-btn");
+        if (!button) return;
+        openShiftModal(button.dataset.shiftId);
+    });
+
+    // =====================================
+    // SHIFT EDIT MODAL
+    // =====================================
+
+    function openShiftModal(shiftId) {
+        const shift = shiftData.find(item => String(item.id) === String(shiftId));
+        if (!shift) {
+            showToast("Shift tidak ditemukan", "error");
+            return;
+        }
+
+        selectedShiftId = Number(shift.id);
+        shiftNameInput.value = shift.shift_name || "";
+        shiftStartInput.value = toTimeInputValue(shift.start_time);
+        shiftEndInput.value = toTimeInputValue(shift.end_time);
+        shiftToleranceInput.value = shift.tolerance_minutes ?? 0;
+        shiftModal?.classList.remove("hidden");
+        shiftNameInput?.focus();
+    }
+
+    function closeShift() {
+        shiftModal?.classList.add("hidden");
+        selectedShiftId = null;
+        if (shiftNameInput) shiftNameInput.value = "";
+        if (shiftStartInput) shiftStartInput.value = "";
+        if (shiftEndInput) shiftEndInput.value = "";
+        if (shiftToleranceInput) shiftToleranceInput.value = "";
+    }
+
+    async function saveShiftData() {
+        if (!selectedShiftId) {
+            showToast("Shift belum dipilih", "error");
+            return;
+        }
+        if (!shiftNameInput.value.trim() || !shiftStartInput.value || !shiftEndInput.value) {
+            showToast("Nama shift, jam mulai, dan jam selesai wajib diisi", "error");
+            return;
+        }
+
+        saveShift.disabled = true;
+        try {
+            const response = await apiRequest(`/api/staff/shift/${selectedShiftId}`, {
+                method: "PATCH",
+                body: JSON.stringify({
+                    shift_name: shiftNameInput.value.trim(),
+                    start_time: shiftStartInput.value,
+                    end_time: shiftEndInput.value,
+                    tolerance_minutes: Number(shiftToleranceInput.value || 0)
+                })
+            });
+            showToast(response.message || "Shift berhasil diperbarui");
+            closeShift();
+            await loadShiftData();
+            await loadAttendance();
+            await loadStatistics();
+        } finally {
+            saveShift.disabled = false;
         }
     }
 
@@ -774,7 +1175,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =====================================
 
     function updateTodayDate() {
-        todayDateEl.textContent = formatDate(new Date().toISOString().split('T')[0]);
+        selectedAttendanceDate = selectedAttendanceDate || getTodayInputValue();
+        updateAttendanceDateLabel();
     }
 
     // =====================================
@@ -836,6 +1238,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     closeAllStaffModal?.addEventListener("click", closeAllStaff);
     allStaffSearch?.addEventListener("input", renderAllStaffList);
 
+    attendanceDateInput?.addEventListener("change", event => {
+        const selectedDate = event.target.value || getTodayInputValue();
+        loadAttendance(selectedDate).catch(error => console.error(error));
+    });
+
     scheduleButtons.forEach(button => {
         button.addEventListener("click", () => {
             openScheduleModal().catch(error => console.error(error));
@@ -847,12 +1254,49 @@ document.addEventListener("DOMContentLoaded", async () => {
     saveSchedule?.addEventListener("click", () => {
         saveScheduleData().catch(error => console.error(error));
     });
+    scheduleRangeSelect?.addEventListener("change", updateScheduleRangeByPreset);
+    scheduleDateInput?.addEventListener("change", updateScheduleRangeByPreset);
+    scheduleEndDateInput?.addEventListener("change", () => {
+        if (scheduleRangeSelect?.value === "custom") {
+            updateScheduleRangeByPreset();
+        }
+    });
 
-    [staffImportModal, importResultModal, allStaffModal, scheduleModal].forEach(modal => {
+    closeShiftModal?.addEventListener("click", closeShift);
+    cancelShift?.addEventListener("click", closeShift);
+    saveShift?.addEventListener("click", () => {
+        saveShiftData().catch(error => console.error(error));
+    });
+
+    closeLeaveModal?.addEventListener("click", closeLeave);
+    cancelLeave?.addEventListener("click", closeLeave);
+    saveLeave?.addEventListener("click", () => {
+        saveLeaveData().catch(error => console.error(error));
+    });
+
+    [staffImportModal, importResultModal, allStaffModal].forEach(modal => {
         modal?.addEventListener("click", event => {
             if (event.target !== modal) return;
             modal.classList.add("hidden");
         });
+    });
+
+    scheduleModal?.addEventListener("click", event => {
+        if (event.target === scheduleModal) {
+            closeSchedule();
+        }
+    });
+
+    shiftModal?.addEventListener("click", event => {
+        if (event.target === shiftModal) {
+            closeShift();
+        }
+    });
+
+    leaveModal?.addEventListener("click", event => {
+        if (event.target === leaveModal) {
+            closeLeave();
+        }
     });
 
     // =====================================
@@ -860,11 +1304,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =====================================
 
     async function init() {
+        selectedAttendanceDate = getTodayInputValue();
+        if (attendanceDateInput) {
+            attendanceDateInput.value = selectedAttendanceDate;
+        }
         updateTodayDate();
         await initUser();
         await loadStatistics();
         await loadMonthStatistics();
-        await loadAttendance();
+        await loadAttendance(selectedAttendanceDate);
         await loadShiftData();
         await loadLeaveRequests();
         setupSearch();
@@ -876,7 +1324,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setInterval(async () => {
         await loadStatistics();
         await loadMonthStatistics();
-        await loadAttendance();
+        await loadAttendance(selectedAttendanceDate);
     }, 30000);
 
 });

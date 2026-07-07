@@ -32,6 +32,9 @@
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/owner_staff.css') }}">
 
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/owner_account_controls.css') }}">
+
 </head>
 
 <body>
@@ -74,19 +77,16 @@
         <span>Staff</span>
     </a>
 
+    {% if current_user_role == "OWNER" %}
     <a href="{{ url_for('owner.owner_menu') }}">
         <i class="bi bi-tools"></i>
         <span>Menu Management</span>
     </a>
+    {% endif %}
 
 </nav>
 
 <div class="sidebar-footer">
-
-    <a href="#">
-        <i class="bi bi-question-circle"></i>
-        <span>Help Center</span>
-    </a>
 
 <a href="{{ url_for('auth.logout_page') }}" class="logout">
     <i class="bi bi-box-arrow-right"></i>
@@ -124,35 +124,6 @@
                     <i class="bi bi-bell-fill"></i>
 
                 </button>
-
-                <button class="icon-button">
-
-                    <i class="bi bi-gear-fill"></i>
-
-                </button>
-
-                <div class="profile">
-
-                    <div class="profile-info">
-
-                        <h4 id="fullname">
-
-                            Loading...
-
-                        </h4>
-
-                        <span id="role">
-
-                            Loading...
-
-                        </span>
-
-                    </div>
-
-                    <img src="{{ url_for('static', filename='images/profile.png') }}"
-                         alt="Profile">
-
-                </div>
 
             </div>
 
@@ -282,13 +253,22 @@
 
                     <div class="attendance-title">
 
-                        <h2>Daftar Kehadiran Hari Ini</h2>
+                        <h2 id="attendanceTitle">Daftar Kehadiran Hari Ini</h2>
 
                         <span id="today-date">Memuat tanggal...</span>
 
                     </div>
 
                     <div class="attendance-action">
+
+                        <label class="attendance-date-filter">
+
+                            <i class="bi bi-calendar-event"></i>
+
+                            <input id="attendanceDateInput"
+                                   type="date">
+
+                        </label>
 
                         <div class="attendance-search">
 
@@ -513,10 +493,6 @@
                         <i class="bi bi-download"></i>
                         Download Template Excel
                     </a>
-                    <a class="template-link" href="/api/staff/dummy-excel">
-                        <i class="bi bi-file-earmark-arrow-down"></i>
-                        Download Data Dummy
-                    </a>
                 </div>
                 <div class="menu-form-actions">
                     <button class="cancel-btn" id="cancelImport" type="button">Batal</button>
@@ -573,7 +549,7 @@
     <div class="menu-modal-backdrop hidden" id="scheduleModal">
         <div class="menu-modal" role="dialog" aria-modal="true">
             <div class="menu-modal-header">
-                <h2>Tambah Penjadwalan</h2>
+                <h2 id="scheduleModalTitle">Tambah Penjadwalan</h2>
                 <button class="modal-close" id="closeScheduleModal" type="button" aria-label="Tutup">
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -587,10 +563,30 @@
                     Shift
                     <select id="scheduleShiftSelect"></select>
                 </label>
-                <label>
-                    Tanggal
-                    <input id="scheduleDateInput" type="date">
+                <label id="scheduleRangeLabel">
+                    Rentang Jadwal
+                    <select id="scheduleRangeSelect">
+                        <option value="single">Satu tanggal</option>
+                        <option value="tomorrow">Besok</option>
+                        <option value="week">1 minggu ke depan</option>
+                        <option value="month">1 bulan ke depan</option>
+                        <option value="year">1 tahun ke depan</option>
+                        <option value="custom">Custom</option>
+                    </select>
                 </label>
+                <div class="form-row" id="scheduleDateRange">
+                    <label>
+                        Tanggal Mulai
+                        <input id="scheduleDateInput" type="date">
+                    </label>
+                    <label>
+                        Tanggal Selesai
+                        <input id="scheduleEndDateInput" type="date">
+                    </label>
+                </div>
+                <p class="modal-help schedule-range-help" id="scheduleRangeHelp">
+                    Pilih rentang jadwal sesuai kebutuhan owner.
+                </p>
                 <div class="menu-form-actions">
                     <button class="cancel-btn" id="cancelSchedule" type="button">Batal</button>
                     <button class="save-btn" id="saveSchedule" type="button">Simpan Jadwal</button>
@@ -599,7 +595,94 @@
         </div>
     </div>
 
+    <!-- LEAVE / SICK MODAL -->
+    <div class="menu-modal-backdrop hidden" id="leaveModal">
+        <div class="menu-modal" role="dialog" aria-modal="true">
+            <div class="menu-modal-header">
+                <h2>Izin / Sakit</h2>
+                <button class="modal-close" id="closeLeaveModal" type="button" aria-label="Tutup">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="menu-form">
+                <input id="leaveStaffId" type="hidden">
+                <div>
+                    <label><strong>Karyawan</strong></label>
+                    <p class="modal-readonly-value" id="leaveStaffName">-</p>
+                </div>
+                <label>
+                    Jenis
+                    <select id="leaveTypeSelect">
+                        <option value="PERMISSION">Izin</option>
+                        <option value="SICK">Sakit</option>
+                        <option value="LEAVE">Cuti</option>
+                    </select>
+                </label>
+                <div class="form-row">
+                    <label>
+                        Tanggal Mulai
+                        <input id="leaveStartDateInput" type="date">
+                    </label>
+                    <label>
+                        Tanggal Selesai
+                        <input id="leaveEndDateInput" type="date">
+                    </label>
+                </div>
+                <label>
+                    Alasan
+                    <textarea id="leaveReasonInput" rows="4" placeholder="Contoh: sakit demam / izin keluarga"></textarea>
+                </label>
+                <label class="inline-check">
+                    <input id="leaveAutoApprove" type="checkbox" checked>
+                    <span>Langsung setujui dan ubah status kehadiran</span>
+                </label>
+                <div class="menu-form-actions">
+                    <button class="cancel-btn" id="cancelLeave" type="button">Batal</button>
+                    <button class="save-btn" id="saveLeave" type="button">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHIFT MODAL -->
+    <div class="menu-modal-backdrop hidden" id="shiftModal">
+        <div class="menu-modal" role="dialog" aria-modal="true">
+            <div class="menu-modal-header">
+                <h2>Edit Shift</h2>
+                <button class="modal-close" id="closeShiftModal" type="button" aria-label="Tutup">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="menu-form">
+                <label>
+                    Nama Shift
+                    <input id="shiftNameInput" type="text" placeholder="Contoh: Morning Shift">
+                </label>
+                <div class="form-row">
+                    <label>
+                        Jam Mulai
+                        <input id="shiftStartInput" type="time">
+                    </label>
+                    <label>
+                        Jam Selesai
+                        <input id="shiftEndInput" type="time">
+                    </label>
+                </div>
+                <label>
+                    Toleransi Terlambat (menit)
+                    <input id="shiftToleranceInput" type="number" min="0" step="1" placeholder="10">
+                </label>
+                <div class="menu-form-actions">
+                    <button class="cancel-btn" id="cancelShift" type="button">Batal</button>
+                    <button class="save-btn" id="saveShift" type="button">Simpan Shift</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/role_access_ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/owner_staff.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/owner_account_controls.js') }}"></script>
 
 </body>
 

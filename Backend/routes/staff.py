@@ -113,6 +113,98 @@ def parse_joined_at(value):
         raise ValueError("joined_at harus berformat YYYY-MM-DD") from exc
 
 
+def parse_shift_time(value, field_label):
+    value = normalize_cell(value)
+    for fmt in ("%H:%M", "%H:%M:%S"):
+        try:
+            return datetime.strptime(value, fmt).time()
+        except ValueError:
+            continue
+    raise ValueError(f"{field_label} harus berformat HH:MM")
+
+
+def serialize_shift(shift):
+    return {
+        "id": shift.id,
+        "shift_name": shift.shift_name,
+        "start_time": shift.start_time.isoformat(),
+        "end_time": shift.end_time.isoformat(),
+        "tolerance_minutes": shift.tolerance_minutes
+    }
+
+
+def sync_attendance_with_schedule(schedule, attendance=None):
+    attendance = attendance or Attendance.query.filter_by(schedule_id=schedule.id).first()
+    if not attendance:
+        attendance = Attendance(
+            staff_id=schedule.staff_id,
+            schedule_id=schedule.id,
+            attendance_date=schedule.schedule_date,
+            status="NOT_CHECKED_IN"
+        )
+        db.session.add(attendance)
+        return attendance
+
+    attendance.staff_id = schedule.staff_id
+    attendance.attendance_date = schedule.schedule_date
+
+    if attendance.status in ["LEAVE", "SICK", "ABSENT"]:
+        return attendance
+
+    if not attendance.clock_in:
+        attendance.status = "NOT_CHECKED_IN"
+        attendance.late_minutes = 0
+        attendance.work_minutes = attendance.work_minutes or 0
+        return attendance
+
+    shift_start = datetime.combine(schedule.schedule_date, schedule.shift.start_time)
+    tolerance_limit = shift_start + timedelta(minutes=schedule.shift.tolerance_minutes or 0)
+    late_minutes = max(int((attendance.clock_in - tolerance_limit).total_seconds() // 60), 0)
+    attendance.late_minutes = late_minutes
+
+    if not attendance.clock_out:
+        attendance.status = "LATE" if late_minutes else "PRESENT"
+
+    return attendance
+
+
+def leave_attendance_status(leave_type):
+    return "SICK" if leave_type == "SICK" else "LEAVE"
+
+
+def apply_leave_request_to_attendance(leave_req):
+    attendance_status = leave_attendance_status(leave_req.leave_type)
+    current_date = leave_req.start_date
+    applied_count = 0
+
+    while current_date <= leave_req.end_date:
+        schedules = StaffSchedule.query.filter_by(
+            staff_id=leave_req.staff_id,
+            schedule_date=current_date
+        ).all()
+
+        for schedule in schedules:
+            attendance = Attendance.query.filter_by(schedule_id=schedule.id).first()
+            if not attendance:
+                attendance = Attendance(
+                    staff_id=leave_req.staff_id,
+                    schedule_id=schedule.id,
+                    attendance_date=current_date
+                )
+                db.session.add(attendance)
+
+            attendance.status = attendance_status
+            attendance.clock_in = None
+            attendance.clock_out = None
+            attendance.late_minutes = 0
+            attendance.work_minutes = 0
+            applied_count += 1
+
+        current_date += timedelta(days=1)
+
+    return applied_count
+
+
 def format_staff_import_sheet(workbook, sheet_name):
     sheet = workbook.active
     sheet.title = sheet_name
@@ -252,14 +344,14 @@ def row_is_empty(row_values):
 # ====================================================
 
 @staff_bp.route("/import-template", methods=["GET"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def download_import_template(user):
     workbook = build_staff_template_workbook()
     return workbook_response(workbook, "template_import_staff.xlsx")
 
 
 @staff_bp.route("/dummy-excel", methods=["GET"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def download_dummy_staff_excel(user):
     if DUMMY_STAFF_FILE.exists():
         return send_file(
@@ -274,7 +366,7 @@ def download_dummy_staff_excel(user):
 
 
 @staff_bp.route("/import-excel", methods=["POST"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def import_staff_excel(user):
     file_storage = request.files.get("file")
     validation_error = validate_import_file(file_storage)
@@ -446,7 +538,7 @@ def import_staff_excel(user):
 # ====================================================
 
 @staff_bp.route("", methods=["GET"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def get_staff(user):
     """Get all active staff"""
     try:
@@ -482,7 +574,7 @@ def get_staff(user):
         }), 500
 
 @staff_bp.route("", methods=["POST"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def create_staff(user):
     """Create new staff"""
     try:
@@ -551,7 +643,7 @@ def create_staff(user):
         }), 500
 
 @staff_bp.route("/<int:staff_id>", methods=["PUT"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def update_staff(user, staff_id):
     """Update staff"""
     try:
@@ -596,7 +688,7 @@ def update_staff(user, staff_id):
         }), 500
 
 @staff_bp.route("/<int:staff_id>/deactivate", methods=["PATCH"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def deactivate_staff(user, staff_id):
     """Deactivate staff (soft delete)"""
     try:
@@ -626,25 +718,101 @@ def deactivate_staff(user, staff_id):
 # ====================================================
 
 @staff_bp.route("/shift", methods=["GET"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def get_shifts(user):
     """Get all active shifts"""
     try:
-        shifts = Shift.query.filter_by(status="ACTIVE").all()
-        
-        data = [{
-            "id": s.id,
-            "shift_name": s.shift_name,
-            "start_time": s.start_time.isoformat(),
-            "end_time": s.end_time.isoformat(),
-            "tolerance_minutes": s.tolerance_minutes
-        } for s in shifts]
+        shifts = Shift.query.filter_by(status="ACTIVE").order_by(Shift.start_time.asc()).all()
         
         return jsonify({
             "success": True,
-            "data": data
+            "data": [serialize_shift(shift) for shift in shifts]
         }), 200
     except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@staff_bp.route("/shift/<int:shift_id>", methods=["PATCH"])
+@check_authorization("OWNER", "FINANCE", "HRD")
+def update_shift(user, shift_id):
+    """Update shift name and working hours"""
+    try:
+        shift = Shift.query.get(shift_id)
+        if not shift or shift.status != "ACTIVE":
+            return jsonify({
+                "success": False,
+                "message": "Shift tidak ditemukan"
+            }), 404
+
+        data = request.get_json(silent=True) or {}
+
+        if "shift_name" in data:
+            shift_name = normalize_cell(data.get("shift_name"))
+            if not shift_name:
+                return jsonify({
+                    "success": False,
+                    "message": "Nama shift wajib diisi"
+                }), 400
+            shift.shift_name = shift_name
+
+        if "start_time" in data:
+            shift.start_time = parse_shift_time(data.get("start_time"), "Jam mulai")
+
+        if "end_time" in data:
+            shift.end_time = parse_shift_time(data.get("end_time"), "Jam selesai")
+
+        if shift.start_time == shift.end_time:
+            return jsonify({
+                "success": False,
+                "message": "Jam mulai dan jam selesai tidak boleh sama"
+            }), 400
+
+        if "tolerance_minutes" in data:
+            try:
+                tolerance_minutes = int(data.get("tolerance_minutes") or 0)
+            except (TypeError, ValueError):
+                return jsonify({
+                    "success": False,
+                    "message": "Toleransi harus berupa angka"
+                }), 400
+
+            if tolerance_minutes < 0:
+                return jsonify({
+                    "success": False,
+                    "message": "Toleransi tidak boleh kurang dari 0"
+                }), 400
+
+            shift.tolerance_minutes = tolerance_minutes
+
+        today = waktu_wib().date()
+        today_schedules = StaffSchedule.query.filter_by(
+            shift_id=shift.id,
+            schedule_date=today
+        ).all()
+        for schedule in today_schedules:
+            schedule.shift = shift
+            attendance = Attendance.query.filter_by(schedule_id=schedule.id).first()
+            if attendance:
+                sync_attendance_with_schedule(schedule, attendance)
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Shift berhasil diperbarui",
+            "data": serialize_shift(shift)
+        }), 200
+    except ValueError as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 400
+    except Exception as e:
+        db.session.rollback()
         return jsonify({
             "success": False,
             "message": str(e)
@@ -655,60 +823,227 @@ def get_shifts(user):
 # ====================================================
 
 @staff_bp.route("/schedule", methods=["POST"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def create_schedule(user):
     """Create staff schedule"""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         
         if not data.get("staff_id") or not data.get("shift_id"):
             return jsonify({
                 "success": False,
                 "message": "Staff dan Shift wajib dipilih"
             }), 400
-        
-        schedule_date = datetime.fromisoformat(data.get("schedule_date")).date()
-        
-        # Cek apakah staff sudah punya jadwal di tanggal tersebut
-        existing = StaffSchedule.query.filter_by(
-            staff_id=data["staff_id"],
-            schedule_date=schedule_date
-        ).first()
-        
-        if existing:
+
+        if not data.get("schedule_date"):
             return jsonify({
                 "success": False,
-                "message": "Staff sudah memiliki jadwal pada tanggal tersebut"
-            }), 409
-        
-        schedule = StaffSchedule(
-            staff_id=data["staff_id"],
-            shift_id=data["shift_id"],
-            schedule_date=schedule_date
+                "message": "Tanggal mulai wajib diisi"
+            }), 400
+
+        staff_id_value = str(data.get("staff_id")).strip()
+        shift_id = int(data.get("shift_id"))
+        schedule_date = datetime.fromisoformat(data.get("schedule_date")).date()
+        end_date_value = data.get("end_date") or data.get("schedule_end_date")
+        end_date = (
+            datetime.fromisoformat(end_date_value).date()
+            if end_date_value
+            else schedule_date
         )
-        
-        db.session.add(schedule)
+
+        if end_date < schedule_date:
+            return jsonify({
+                "success": False,
+                "message": "Tanggal selesai tidak boleh sebelum tanggal mulai"
+            }), 400
+
+        total_days = (end_date - schedule_date).days + 1
+        if total_days > 366:
+            return jsonify({
+                "success": False,
+                "message": "Rentang jadwal maksimal 1 tahun"
+            }), 400
+
+        if staff_id_value.lower() == "all":
+            staff_ids = [
+                staff.id
+                for staff in Staff.query.filter_by(status="ACTIVE").order_by(Staff.full_name.asc()).all()
+            ]
+            if not staff_ids:
+                return jsonify({
+                    "success": False,
+                    "message": "Belum ada Staff aktif"
+                }), 404
+        else:
+            staff_id = int(staff_id_value)
+            staff = Staff.query.get(staff_id)
+            if not staff or staff.status != "ACTIVE":
+                return jsonify({
+                    "success": False,
+                    "message": "Staff tidak ditemukan atau tidak aktif"
+                }), 404
+            staff_ids = [staff_id]
+
+        shift = Shift.query.get(shift_id)
+        if not shift or shift.status != "ACTIVE":
+            return jsonify({
+                "success": False,
+                "message": "Shift tidak ditemukan"
+            }), 404
+
+        created = 0
+        first_schedule = None
+
+        for staff_id in staff_ids:
+            for offset in range(total_days):
+                current_date = schedule_date + timedelta(days=offset)
+                schedule = StaffSchedule(
+                    staff_id=staff_id,
+                    shift_id=shift_id,
+                    schedule_date=current_date
+                )
+                db.session.add(schedule)
+                db.session.flush()
+
+                db.session.add(Attendance(
+                    staff_id=staff_id,
+                    schedule_id=schedule.id,
+                    attendance_date=current_date,
+                    status="NOT_CHECKED_IN"
+                ))
+
+                first_schedule = first_schedule or schedule
+                created += 1
+
+        if created == 0:
+            return jsonify({
+                "success": False,
+                "message": "Tidak ada jadwal yang dibuat"
+            }), 400
+
         db.session.commit()
-        
-        # Buat Attendance record
-        attendance = Attendance(
-            staff_id=data["staff_id"],
-            schedule_id=schedule.id,
-            attendance_date=schedule_date,
-            status="NOT_CHECKED_IN"
-        )
-        
-        db.session.add(attendance)
-        db.session.commit()
-        
+
+        if len(staff_ids) == 1 and total_days == 1:
+            message = "Jadwal berhasil ditambahkan"
+        else:
+            message = f"{created} jadwal berhasil dibuat"
+
         return jsonify({
             "success": True,
-            "message": "Jadwal berhasil ditambahkan",
+            "message": message,
             "data": {
-                "id": schedule.id,
-                "schedule_date": schedule_date.isoformat()
+                "id": first_schedule.id if first_schedule else None,
+                "schedule_date": schedule_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "created": created,
+                "staff_count": len(staff_ids),
+                "total_days": total_days
             }
         }), 201
+    except ValueError:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": "Data jadwal tidak valid"
+        }), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@staff_bp.route("/schedule/<int:schedule_id>", methods=["PATCH", "PUT"])
+@check_authorization("OWNER", "FINANCE", "HRD")
+def update_schedule(user, schedule_id):
+    """Update a staff schedule"""
+    try:
+        schedule = StaffSchedule.query.get(schedule_id)
+        if not schedule:
+            return jsonify({
+                "success": False,
+                "message": "Jadwal tidak ditemukan"
+            }), 404
+
+        data = request.get_json(silent=True) or {}
+
+        staff_id = int(data.get("staff_id") or schedule.staff_id)
+        shift_id = int(data.get("shift_id") or schedule.shift_id)
+        schedule_date_value = data.get("schedule_date")
+        schedule_date = (
+            datetime.fromisoformat(schedule_date_value).date()
+            if schedule_date_value
+            else schedule.schedule_date
+        )
+
+        staff = Staff.query.get(staff_id)
+        if not staff or staff.status != "ACTIVE":
+            return jsonify({
+                "success": False,
+                "message": "Staff tidak ditemukan atau tidak aktif"
+            }), 404
+
+        shift = Shift.query.get(shift_id)
+        if not shift or shift.status != "ACTIVE":
+            return jsonify({
+                "success": False,
+                "message": "Shift tidak ditemukan"
+            }), 404
+
+        schedule.staff_id = staff_id
+        schedule.shift_id = shift_id
+        schedule.shift = shift
+        schedule.schedule_date = schedule_date
+
+        attendance = Attendance.query.filter_by(schedule_id=schedule.id).first()
+        sync_attendance_with_schedule(schedule, attendance)
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Jadwal berhasil diperbarui",
+            "data": {
+                "id": schedule.id,
+                "staff_id": schedule.staff_id,
+                "shift_id": schedule.shift_id,
+                "schedule_date": schedule.schedule_date.isoformat()
+            }
+        }), 200
+    except ValueError:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": "Data jadwal tidak valid"
+        }), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@staff_bp.route("/schedule/<int:schedule_id>", methods=["DELETE"])
+@check_authorization("OWNER", "FINANCE", "HRD")
+def delete_schedule(user, schedule_id):
+    """Delete a staff schedule and its attendance record"""
+    try:
+        schedule = StaffSchedule.query.get(schedule_id)
+        if not schedule:
+            return jsonify({
+                "success": False,
+                "message": "Jadwal tidak ditemukan"
+            }), 404
+
+        db.session.delete(schedule)
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Jadwal berhasil dihapus"
+        }), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({
@@ -720,12 +1055,18 @@ def create_schedule(user):
 # ATTENDANCE - GET TODAY'S ATTENDANCE WITH SCHEDULE
 # ====================================================
 
+@staff_bp.route("/attendance", methods=["GET"])
 @staff_bp.route("/attendance/today", methods=["GET"])
-@check_authorization("OWNER", "HRD", "CASHIER")
-def get_today_attendance(user):
-    """Get today's attendance data (includes scheduled staff not checked in yet)"""
+@check_authorization("OWNER", "FINANCE", "HRD", "CASHIER")
+def get_attendance(user):
+    """Get attendance data for a selected date (includes scheduled staff not checked in yet)"""
     try:
-        today = waktu_wib().date()
+        date_param = request.args.get("date")
+        selected_date = (
+            datetime.fromisoformat(date_param).date()
+            if date_param
+            else waktu_wib().date()
+        )
         
         # Query: Staff Schedule + Staff + Shift + LEFT JOIN Attendance
         query = db.session.query(
@@ -743,7 +1084,9 @@ def get_today_attendance(user):
             Attendance.status,
             Attendance.late_minutes,
             Attendance.work_minutes,
-            StaffSchedule.id.label("schedule_id")
+            StaffSchedule.id.label("schedule_id"),
+            StaffSchedule.shift_id,
+            StaffSchedule.schedule_date
         ).join(
             StaffSchedule, Staff.id == StaffSchedule.staff_id
         ).join(
@@ -751,8 +1094,12 @@ def get_today_attendance(user):
         ).outerjoin(
             Attendance, StaffSchedule.id == Attendance.schedule_id
         ).filter(
-            StaffSchedule.schedule_date == today,
+            StaffSchedule.schedule_date == selected_date,
             Staff.status == "ACTIVE"
+        ).order_by(
+            Shift.start_time.asc(),
+            Staff.full_name.asc(),
+            StaffSchedule.id.asc()
         ).all()
         
         data = []
@@ -760,6 +1107,8 @@ def get_today_attendance(user):
             data.append({
                 "id": row.id,
                 "schedule_id": row.schedule_id,
+                "shift_id": row.shift_id,
+                "schedule_date": row.schedule_date.isoformat(),
                 "employee_code": row.employee_code,
                 "full_name": row.full_name,
                 "department": row.department,
@@ -778,8 +1127,14 @@ def get_today_attendance(user):
         return jsonify({
             "success": True,
             "data": data,
+            "schedule_date": selected_date.isoformat(),
             "total_scheduled": len(data)
         }), 200
+    except ValueError:
+        return jsonify({
+            "success": False,
+            "message": "Tanggal jadwal tidak valid"
+        }), 400
     except Exception as e:
         return jsonify({
             "success": False,
@@ -788,7 +1143,7 @@ def get_today_attendance(user):
 
 
 @staff_bp.route("/attendance/<int:schedule_id>/clock-in", methods=["PATCH"])
-@check_authorization("OWNER", "HRD", "KASIR")
+@check_authorization("OWNER", "FINANCE", "HRD", "KASIR")
 def clock_in(user, schedule_id):
     """Clock in for a scheduled staff member"""
     try:
@@ -853,7 +1208,7 @@ def clock_in(user, schedule_id):
 
 
 @staff_bp.route("/attendance/<int:schedule_id>/clock-out", methods=["PATCH"])
-@check_authorization("OWNER", "HRD", "KASIR")
+@check_authorization("OWNER", "FINANCE", "HRD", "KASIR")
 def clock_out(user, schedule_id):
     """Clock out for a scheduled staff member"""
     try:
@@ -914,25 +1269,29 @@ def clock_out(user, schedule_id):
 # ====================================================
 
 @staff_bp.route("/statistics/today", methods=["GET"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def get_today_statistics(user):
     """Get today's statistics"""
     try:
         today = waktu_wib().date()
         
+        total_staff = db.session.query(func.count(Staff.id)).filter(
+            Staff.status == "ACTIVE"
+        ).scalar() or 0
+
         # Total scheduled
         total_scheduled = db.session.query(func.count(StaffSchedule.id)).filter(
             StaffSchedule.schedule_date == today
         ).scalar() or 0
         
         # Present count (PRESENT, LATE, COMPLETED)
-        present_count = db.session.query(func.count(Attendance.id)).filter(
+        present_count = db.session.query(func.count(func.distinct(Attendance.staff_id))).filter(
             Attendance.attendance_date == today,
             Attendance.status.in_(["PRESENT", "LATE", "COMPLETED"])
         ).scalar() or 0
         
         # Late count
-        late_count = db.session.query(func.count(Attendance.id)).filter(
+        late_count = db.session.query(func.count(func.distinct(Attendance.staff_id))).filter(
             Attendance.attendance_date == today,
             Attendance.late_minutes > 0
         ).scalar() or 0
@@ -944,22 +1303,18 @@ def get_today_statistics(user):
         ).scalar() or 0
         
         # Leave/Sick count
-        leave_count = db.session.query(func.count(Attendance.id)).filter(
+        leave_count = db.session.query(func.count(func.distinct(Attendance.staff_id))).filter(
             Attendance.attendance_date == today,
             Attendance.status.in_(["LEAVE", "SICK"])
         ).scalar() or 0
         
-        # Calculate attendance rate
-        attendance_rate = 0
-        if total_scheduled > 0:
-            attendance_rate = round((present_count / total_scheduled) * 100, 1)
-        
         return jsonify({
             "success": True,
             "data": {
+                "total_staff": total_staff,
                 "total_scheduled": total_scheduled,
                 "present_count": present_count,
-                "attendance_rate": attendance_rate,
+                "attendance_rate": round((present_count / total_staff) * 100, 1) if total_staff else 0,
                 "late_count": late_count,
                 "avg_late_minutes": round(avg_late, 0) if avg_late else 0,
                 "leave_count": leave_count
@@ -972,7 +1327,7 @@ def get_today_statistics(user):
         }), 500
 
 @staff_bp.route("/statistics/month", methods=["GET"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def get_month_statistics(user):
     """Get this month's statistics"""
     try:
@@ -1029,7 +1384,7 @@ def get_month_statistics(user):
 # ====================================================
 
 @staff_bp.route("/leave-request", methods=["GET"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def get_leave_requests(user):
     """Get pending leave requests"""
     try:
@@ -1058,8 +1413,113 @@ def get_leave_requests(user):
             "message": str(e)
         }), 500
 
+
+@staff_bp.route("/leave-request", methods=["POST"])
+@check_authorization("OWNER", "FINANCE", "HRD")
+def create_leave_request(user):
+    """Create leave/sick request for a staff member"""
+    try:
+        data = request.get_json(silent=True) or {}
+
+        if not data.get("staff_id") or not data.get("leave_type"):
+            return jsonify({
+                "success": False,
+                "message": "Staff dan jenis izin wajib dipilih"
+            }), 400
+
+        leave_type = normalize_cell(data.get("leave_type")).upper()
+        if leave_type not in {"SICK", "LEAVE", "PERMISSION"}:
+            return jsonify({
+                "success": False,
+                "message": "Jenis izin tidak valid"
+            }), 400
+
+        staff = Staff.query.get(int(data.get("staff_id")))
+        if not staff or staff.status != "ACTIVE":
+            return jsonify({
+                "success": False,
+                "message": "Staff tidak ditemukan atau tidak aktif"
+            }), 404
+
+        start_date_value = data.get("start_date") or data.get("schedule_date")
+        end_date_value = data.get("end_date") or start_date_value
+        if not start_date_value:
+            return jsonify({
+                "success": False,
+                "message": "Tanggal mulai wajib diisi"
+            }), 400
+
+        start_date = datetime.fromisoformat(start_date_value).date()
+        end_date = datetime.fromisoformat(end_date_value).date()
+        if end_date < start_date:
+            return jsonify({
+                "success": False,
+                "message": "Tanggal selesai tidak boleh sebelum tanggal mulai"
+            }), 400
+
+        if (end_date - start_date).days > 366:
+            return jsonify({
+                "success": False,
+                "message": "Rentang izin maksimal 1 tahun"
+            }), 400
+
+        auto_approve = bool(data.get("auto_approve"))
+        leave_req = LeaveRequest(
+            staff_id=staff.id,
+            leave_type=leave_type,
+            start_date=start_date,
+            end_date=end_date,
+            reason=normalize_cell(data.get("reason")) or None,
+            document_url=normalize_cell(data.get("document_url")) or None,
+            status="APPROVED" if auto_approve else "PENDING",
+            reviewed_by=user.id if auto_approve else None,
+            reviewed_at=waktu_wib() if auto_approve else None
+        )
+        db.session.add(leave_req)
+        db.session.flush()
+
+        applied_count = 0
+        if auto_approve:
+            applied_count = apply_leave_request_to_attendance(leave_req)
+
+        db.session.commit()
+
+        if auto_approve:
+            message = "Izin/Sakit berhasil disetujui"
+            if applied_count == 0:
+                message += ", tetapi belum ada jadwal pada rentang tanggal tersebut"
+        else:
+            message = "Pengajuan izin/sakit berhasil dibuat"
+
+        return jsonify({
+            "success": True,
+            "message": message,
+            "data": {
+                "id": leave_req.id,
+                "staff_id": leave_req.staff_id,
+                "leave_type": leave_req.leave_type,
+                "start_date": leave_req.start_date.isoformat(),
+                "end_date": leave_req.end_date.isoformat(),
+                "status": leave_req.status,
+                "applied_count": applied_count
+            }
+        }), 201
+    except ValueError:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": "Data izin/sakit tidak valid"
+        }), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
 @staff_bp.route("/leave-request/<int:request_id>/approve", methods=["PATCH"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def approve_leave(user, request_id):
     """Approve leave request"""
     try:
@@ -1080,39 +1540,16 @@ def approve_leave(user, request_id):
         leave_req.reviewed_by = user.id
         leave_req.reviewed_at = waktu_wib()
 
-        attendance_status = "SICK" if leave_req.leave_type == "SICK" else "LEAVE"
-
-        # Create/Update Attendance for each day
-        current_date = leave_req.start_date
-        while current_date <= leave_req.end_date:
-            schedule = StaffSchedule.query.filter_by(
-                staff_id=leave_req.staff_id,
-                schedule_date=current_date
-            ).first()
-            
-            if schedule:
-                attendance = Attendance.query.filter_by(schedule_id=schedule.id).first()
-                if not attendance:
-                    attendance = Attendance(
-                        staff_id=leave_req.staff_id,
-                        schedule_id=schedule.id,
-                        attendance_date=current_date
-                    )
-                    db.session.add(attendance)
-
-                attendance.status = attendance_status
-                attendance.clock_in = None
-                attendance.clock_out = None
-                attendance.late_minutes = 0
-                attendance.work_minutes = 0
-            
-            current_date += timedelta(days=1)
+        applied_count = apply_leave_request_to_attendance(leave_req)
         
         db.session.commit()
         
         return jsonify({
             "success": True,
-            "message": "Permintaan berhasil disetujui"
+            "message": "Permintaan berhasil disetujui",
+            "data": {
+                "applied_count": applied_count
+            }
         }), 200
     except Exception as e:
         db.session.rollback()
@@ -1122,7 +1559,7 @@ def approve_leave(user, request_id):
         }), 500
 
 @staff_bp.route("/leave-request/<int:request_id>/reject", methods=["PATCH"])
-@check_authorization("OWNER", "HRD")
+@check_authorization("OWNER", "FINANCE", "HRD")
 def reject_leave(user, request_id):
     """Reject leave request"""
     try:

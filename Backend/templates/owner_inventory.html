@@ -69,10 +69,12 @@
                 <span>Staff</span>
             </a>
 
+            {% if current_user_role == "OWNER" %}
             <a href="{{ url_for('owner.owner_menu') }}">
                 <i class="bi bi-tools"></i>
                 <span>Menu Management</span>
             </a>
+            {% endif %}
 
         </nav>
 
@@ -279,6 +281,7 @@
             </div>
 
             <img
+                id="profileImage"
                 src="{{ url_for('static', filename='images/profile.png') }}"
                 alt="Profile">
 
@@ -717,8 +720,7 @@
 
                 <input
                     type="text"
-                    id="editUsername"
-                    readonly>
+                    id="editUsername">
 
             </div>
 
@@ -1427,7 +1429,8 @@
 
 </div>
 
-<script src="{{ url_for('static', filename='js/owner_inventory.js') }}"></script>
+<script src="{{ url_for('static', filename='js/role_access_ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/owner_inventory_logic.js') }}"></script>
 </body>
 
 </html>

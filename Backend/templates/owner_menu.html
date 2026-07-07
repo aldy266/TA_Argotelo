@@ -32,6 +32,9 @@
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/owner_menu.css') }}">
 
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/owner_account_controls.css') }}">
+
 </head>
 
 <body>
@@ -85,18 +88,10 @@
 
                 <div class="sidebar-footer">
 
-                    <a href="#">
-
-                        <i class="bi bi-question-circle"></i>
-
-                        <span>Help Center</span>
-
+                    <a href="{{ url_for('auth.logout_page') }}" class="logout" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Sign Out</span>
                     </a>
-
-<a href="{{ url_for('auth.logout_page') }}" class="logout" id="logoutBtn">
-    <i class="bi bi-box-arrow-right"></i>
-    <span>Sign Out</span>
-</a>
 
                 </div>
 
@@ -141,13 +136,13 @@
 
             </button>
 
-            <button class="icon-button">
+            <button class="icon-button" hidden>
 
                 <i class="bi bi-gear-fill"></i>
 
             </button>
 
-            <div class="profile">
+            <div class="profile" hidden>
 
                 <div class="profile-info">
 
@@ -203,6 +198,26 @@
         Tambah Menu Baru
 
     </button>
+
+</section>
+
+<section class="menu-tools" aria-label="Filter menu">
+
+    <label>
+        Kategori
+        <select id="menuCategoryFilter">
+            <option value="ALL">Semua Kategori</option>
+        </select>
+    </label>
+
+    <label>
+        Status
+        <select id="menuStatusFilter">
+            <option value="ACTIVE">Aktif</option>
+            <option value="INACTIVE">Nonaktif</option>
+            <option value="ALL">Semua Status</option>
+        </select>
+    </label>
 
 </section>
 
@@ -445,7 +460,9 @@
 
     </div>
 
-    <script src="{{ url_for('static', filename='js/owner_menu_api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/role_access_ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/owner_menu_logic.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/owner_account_controls.js') }}"></script>
 
 </body>
 

@@ -3,6 +3,7 @@ from decimal import Decimal, InvalidOperation
 from flask import Blueprint, jsonify, request, send_file, session
 
 from model import db, Inventory, PurchaseOrder, StockMovement
+from utils.auth import role_name_required
 
 from openpyxl import Workbook
 
@@ -41,6 +42,7 @@ def decimal_value(value, field_name):
     "/api/purchase-orders",
     methods=["GET"]
 )
+@role_name_required("OWNER", "FINANCE")
 def get_purchase_orders():
 
 
@@ -90,6 +92,7 @@ def get_purchase_orders():
     "/api/purchase-orders/pending",
     methods=["GET"]
 )
+@role_name_required("OWNER", "FINANCE")
 def pending_order():
 
 
@@ -114,6 +117,7 @@ def pending_order():
     "/api/purchase-orders",
     methods=["POST"]
 )
+@role_name_required("OWNER", "FINANCE")
 def create_purchase_order():
 
 
@@ -202,6 +206,7 @@ def create_purchase_order():
     "/api/purchase-orders/<int:id>/status",
     methods=["PUT"]
 )
+@role_name_required("OWNER", "FINANCE")
 def update_status_po(id):
 
 
@@ -305,6 +310,7 @@ def update_status_po(id):
     "/api/purchase-orders/history",
     methods=["GET"]
 )
+@role_name_required("OWNER", "FINANCE")
 def history_po():
 
 
@@ -415,6 +421,7 @@ def history_po():
     "/api/purchase-orders/export-history",
     methods=["GET"]
 )
+@role_name_required("OWNER", "FINANCE")
 def export_history_stock():
 
 

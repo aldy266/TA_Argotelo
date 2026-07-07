@@ -633,7 +633,33 @@ body{
 .attendance-action{
     display:flex;
     align-items:center;
+    flex-wrap:wrap;
+    justify-content:flex-end;
     gap:12px;
+}
+
+.attendance-date-filter{
+    width:170px;
+    height:46px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:#fff;
+    display:flex !important;
+    align-items:center;
+    gap:10px !important;
+    padding:0 12px;
+    color:#5A3718;
+}
+
+.attendance-date-filter input{
+    flex:1;
+    min-width:0;
+    border:none;
+    outline:none;
+    background:transparent;
+    font:inherit;
+    font-size:13px;
+    color:var(--text);
 }
 
 .attendance-search{
@@ -775,16 +801,30 @@ body{
 
 }
 
+.staff-name-only{
+
+    display:inline-block;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    color:var(--text);
+
+    white-space:nowrap;
+
+}
+
 /* =====================================================
                     SHIFT
 ===================================================== */
 
 .shift-badge{
-    display:flex;
+    display:inline-flex;
     align-items:center;
     justify-content:center;
 
-    width:80px;
+    min-width:112px;
     height:34px;
 
     background:#F7E7DD;
@@ -795,9 +835,17 @@ body{
     font-size:13px;
     font-weight:600;
 
-    padding:0;
+    padding:0 14px;
     line-height:34px;
     text-align:center;
+    white-space:nowrap;
+}
+
+.attendance-table th:nth-child(3),
+.attendance-table td:nth-child(3){
+
+    text-align:center;
+
 }
 
 /* =====================================================
@@ -843,6 +891,22 @@ body{
     background:#FFE6E6;
 
     color:var(--danger);
+
+}
+
+.badge.info{
+
+    background:#E7F0FF;
+
+    color:#2962FF;
+
+}
+
+.badge.secondary{
+
+    background:#F2F2F2;
+
+    color:#666;
 
 }
 
@@ -1102,6 +1166,123 @@ body{
 
 }
 
+.shift-table{
+
+    border:1px solid #EFE7E0;
+
+    border-radius:14px;
+
+    overflow:hidden;
+
+    background:#FFFDFB;
+
+}
+
+.shift-table-head,
+.shift-table-row{
+
+    display:grid;
+
+    grid-template-columns:1.15fr 1fr .75fr auto;
+
+    gap:12px;
+
+    align-items:center;
+
+}
+
+.shift-table-head{
+
+    padding:12px 14px;
+
+    background:#F8F4F1;
+
+    color:#7B7B7B;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+}
+
+.shift-table-row{
+
+    padding:14px;
+
+    border-top:1px solid #EFE7E0;
+
+    font-size:13px;
+
+    color:#5E554E;
+
+}
+
+.shift-table-row:hover{
+
+    background:#FCFAF8;
+
+}
+
+.shift-name-cell{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    min-width:0;
+
+}
+
+.shift-name-cell strong{
+
+    color:var(--text);
+
+    font-size:14px;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+}
+
+.shift-day-pill{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-width:58px;
+
+    height:30px;
+
+    border-radius:10px;
+
+    background:#F7ECE4;
+
+    color:var(--primary);
+
+    font-size:11px;
+
+    font-weight:700;
+
+}
+
+.shift-action{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+}
+
 .add-schedule{
 
     width:100%;
@@ -1353,6 +1534,29 @@ button:hover{
     transform: translateY(-2px) !important;
 }
 
+.attendance-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.attendance-row-actions .edit-btn,
+.attendance-row-actions .delete-btn,
+.attendance-row-actions .secondary-button,
+.shift-action .edit-btn {
+    min-height: 34px;
+    padding: 8px 10px !important;
+    white-space: nowrap;
+}
+
+.attendance-row-actions .secondary-button {
+    font-size: 12px !important;
+    border-radius: 8px !important;
+    gap: 6px !important;
+}
+
 .primary-button {
     background: #5A3718 !important;
     color: white !important;
@@ -1461,6 +1665,12 @@ button:hover{
     gap: 16px;
 }
 
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
 .menu-form label {
     display: grid;
     gap: 8px;
@@ -1470,7 +1680,8 @@ button:hover{
 }
 
 .menu-form input,
-.menu-form select {
+.menu-form select,
+.menu-form textarea {
     height: 46px;
     border: 1px solid #E9DDD5;
     border-radius: 12px;
@@ -1481,10 +1692,41 @@ button:hover{
     font-size: 14px;
 }
 
+.menu-form textarea {
+    height: auto;
+    min-height: 108px;
+    padding: 12px 14px;
+    resize: vertical;
+}
+
 .menu-form input:focus,
-.menu-form select:focus {
+.menu-form select:focus,
+.menu-form textarea:focus {
     border-color: #5A3718;
     box-shadow: 0 0 0 4px rgba(90, 55, 24, 0.08);
+}
+
+.modal-readonly-value {
+    margin: 8px 0 0;
+    padding: 12px 14px;
+    border: 1px solid #E9DDD5;
+    border-radius: 12px;
+    background: #FBF8F6;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.inline-check {
+    display: flex !important;
+    grid-template-columns: none !important;
+    align-items: center;
+    gap: 10px !important;
+}
+
+.inline-check input {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
 }
 
 .menu-form-actions {
@@ -1542,6 +1784,11 @@ button:hover{
     line-height: 1.6;
 }
 
+.schedule-range-help {
+    margin-top: -6px;
+    font-size: 13px;
+}
+
 .upload-box {
     min-height: 150px;
     border: 1.5px dashed #CDBBAF;
@@ -1568,7 +1815,7 @@ button:hover{
 
 .template-actions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 10px;
 }
 
@@ -1891,6 +2138,10 @@ html{
     .staff-list-row {
         grid-template-columns: 1fr;
         gap: 6px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
     }
 
 }

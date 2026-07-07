@@ -65,4 +65,4 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = _engine_options(SQLALCHEMY_DATABASE_URI)
     MAX_CONTENT_LENGTH = int(_env("MAX_UPLOAD_SIZE", 5 * 1024 * 1024))
-    POS_TAX_RATE = float(_env("POS_TAX_RATE", 0))
+    POS_TAX_RATE = float(_env("POS_TAX_RATE", 0.10))

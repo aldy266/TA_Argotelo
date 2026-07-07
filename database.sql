@@ -1,7 +1,7 @@
 -- Active: 1782482181680@@gateway01.ap-southeast-1.prod.aws.tidbcloud.com@4000@db_argotelo
-CREATE DATABASE db_argotelo;
+CREATE DATABASE Argotelo;
 
-USE db_argotelo;
+USE Argotelo;
 
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS staff_schedules (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_schedule_staff FOREIGN KEY (staff_id) REFERENCES staff (id) ON DELETE CASCADE,
     CONSTRAINT fk_schedule_shift FOREIGN KEY (shift_id) REFERENCES shifts (id) ON DELETE CASCADE,
-    UNIQUE KEY uq_staff_schedule_date (staff_id, schedule_date),
+    INDEX idx_schedule_staff_date (staff_id, schedule_date),
     INDEX idx_schedule_date (schedule_date)
 );
 
@@ -196,6 +196,18 @@ CREATE TABLE IF NOT EXISTS menu_items (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_menu_status (status),
     INDEX idx_menu_category (category)
+);
+
+CREATE TABLE IF NOT EXISTS menu_recipes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    menu_item_id INT NOT NULL,
+    id_inventory INT NOT NULL,
+    quantity DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_menu_recipe_menu FOREIGN KEY (menu_item_id) REFERENCES menu_items (id) ON DELETE CASCADE,
+    CONSTRAINT fk_menu_recipe_inventory FOREIGN KEY (id_inventory) REFERENCES inventory (id_inventory),
+    CONSTRAINT uq_menu_recipe_inventory UNIQUE (menu_item_id, id_inventory)
 );
 
 CREATE TABLE IF NOT EXISTS transactions (

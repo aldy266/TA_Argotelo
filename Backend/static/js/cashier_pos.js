@@ -4,18 +4,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     const menuGrid = document.getElementById("menuGrid");
     const cartList = document.getElementById("cartList");
     const menuSearch = document.getElementById("menuSearch");
-    const paymentMethod = document.getElementById("paymentMethod");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const paymentOptions = document.getElementById("paymentOptions");
     const customerName = document.getElementById("customerName");
     const subtotalEl = document.getElementById("subtotal");
     const taxEl = document.getElementById("tax");
     const totalEl = document.getElementById("total");
     const checkoutBtn = document.getElementById("checkoutBtn");
     const resetCartBtn = document.getElementById("resetCartBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const cashierName = document.getElementById("cashierName");
+    const cashierRole = document.getElementById("cashierRole");
+    const profileImage = document.getElementById("profileImage");
+    const stockAlertText = document.getElementById("stockAlertText");
     const checkoutMessage = document.getElementById("checkoutMessage");
+    const menuCount = document.getElementById("menuCount");
 
     let menus = [];
+    let paymentMethod = "CASH";
     const cart = new Map();
 
     function rupiah(value) {
@@ -54,38 +61,76 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function loadUser() {
         const result = await api("/api/me");
         cashierName.textContent = result.user.fullname || result.user.username || "Kasir";
+        if (cashierRole) cashierRole.textContent = result.user.role || "KASIR";
+        if (profileImage) profileImage.src = result.user.photo || "/static/images/profile.png";
     }
 
     async function loadMenus() {
         const result = await api("/api/pos/menu");
         menus = result.data || [];
+        renderCategoryOptions();
         renderMenus();
+    }
+
+    async function loadNotifications() {
+        try {
+            const result = await api("/api/notification");
+            const notifications = result.data || [];
+            stockAlertText.textContent = notifications.length
+                ? `${notifications.length} Stok Menipis`
+                : "Semua stok aman";
+        } catch {
+            stockAlertText.textContent = "Status stok tidak tersedia";
+        }
+    }
+
+    function renderCategoryOptions() {
+        if (!categoryFilter) return;
+        const selected = categoryFilter.value || "ALL";
+        const categories = [...new Set(menus.map(menu => menu.category).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b));
+        categoryFilter.innerHTML = `
+            <option value="ALL">Semua Kategori</option>
+            ${categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join("")}
+        `;
+        categoryFilter.value = categories.includes(selected) ? selected : "ALL";
     }
 
     function renderMenus() {
         const keyword = menuSearch.value.trim().toLowerCase();
+        const category = categoryFilter?.value || "ALL";
         const data = menus.filter(menu =>
-            !keyword ||
-            menu.name.toLowerCase().includes(keyword) ||
-            menu.category.toLowerCase().includes(keyword)
+            (category === "ALL" || menu.category === category) &&
+            (!keyword ||
+                String(menu.name || "").toLowerCase().includes(keyword) ||
+                String(menu.category || "").toLowerCase().includes(keyword))
         );
+        if (menuCount) menuCount.textContent = data.length;
 
         if (!data.length) {
-            menuGrid.innerHTML = "<div class=\"empty\">Menu belum tersedia.</div>";
+            menuGrid.innerHTML = "<div class=\"empty\"><i class=\"bi bi-search\"></i>Menu tidak ditemukan.</div>";
             return;
         }
 
-        menuGrid.innerHTML = data.map(menu => `
-            <article class="menu-card">
-                ${menu.image_url ? `<img src="${escapeHtml(menu.image_url)}" alt="${escapeHtml(menu.name)}">` : "<div class=\"menu-placeholder\"><i class=\"bi bi-image\"></i></div>"}
-                <div class="menu-body">
-                    <h3>${escapeHtml(menu.name)}</h3>
-                    <span>${escapeHtml(menu.category)}</span>
-                    <strong>${rupiah(menu.price)}</strong>
-                    <button type="button" data-id="${menu.id}">Tambah</button>
-                </div>
-            </article>
-        `).join("");
+        menuGrid.innerHTML = data.map(menu => {
+            const recipeReady = menu.recipe_configured === true;
+            return `
+                <article class="menu-card ${recipeReady ? "" : "recipe-missing"}">
+                    ${menu.image_url ? `<img src="${escapeHtml(menu.image_url)}" alt="${escapeHtml(menu.name)}">` : "<div class=\"menu-placeholder\"><i class=\"bi bi-image\"></i></div>"}
+                    <div class="menu-body">
+                        <h3>${escapeHtml(menu.name)}</h3>
+                        <div>
+                            <p>${escapeHtml(menu.category)}</p>
+                            <strong>${rupiah(menu.price)}</strong>
+                        </div>
+                        ${recipeReady ? "" : "<small class=\"recipe-warning\"><i class=\"bi bi-exclamation-circle\"></i> Resep belum diatur</small>"}
+                        <button class="add-btn" type="button" data-id="${menu.id}" aria-label="Tambah ${escapeHtml(menu.name)}" ${recipeReady ? "" : "disabled"}>
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
+                </article>
+            `;
+        }).join("");
     }
 
     function addToCart(menuId) {
@@ -112,13 +157,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     function renderCart() {
         const items = Array.from(cart.values());
         if (!items.length) {
-            cartList.innerHTML = "<div class=\"empty\">Keranjang masih kosong.</div>";
+            cartList.innerHTML = "<div class=\"empty\"><i class=\"bi bi-cart-x\"></i>Keranjang masih kosong.<br>Pilih menu untuk memulai.</div>";
         } else {
             cartList.innerHTML = items.map(({ menu, quantity }) => `
                 <div class="cart-item">
                     <div class="cart-row">
-                        <strong>${escapeHtml(menu.name)}</strong>
-                        <span>${rupiah(menu.price * quantity)}</span>
+                        <div>
+                            <h4>${escapeHtml(menu.name)}</h4>
+                            <small>${quantity} x ${rupiah(menu.price)}</small>
+                        </div>
+                        <strong>${rupiah(menu.price * quantity)}</strong>
                     </div>
                     <div class="cart-row">
                         <div class="qty-group">
@@ -133,17 +181,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const subtotal = items.reduce((sum, item) => sum + Number(item.menu.price) * item.quantity, 0);
+        const tax = Math.round(subtotal * 0.10);
         subtotalEl.textContent = rupiah(subtotal);
-        taxEl.textContent = rupiah(0);
-        totalEl.textContent = rupiah(subtotal);
+        taxEl.textContent = rupiah(tax);
+        totalEl.textContent = rupiah(subtotal + tax);
+        checkoutBtn.disabled = !items.length;
+    }
+
+    function setCheckoutMessage(message, isError = false) {
+        checkoutMessage.classList.toggle("error", isError);
+        checkoutMessage.innerHTML = message;
     }
 
     async function checkout() {
-        checkoutMessage.textContent = "";
+        setCheckoutMessage("");
         const items = Array.from(cart.values()).map(item => ({
             menu_item_id: item.menu.id,
             quantity: item.quantity
         }));
+
+        if (!items.length) {
+            setCheckoutMessage("Keranjang masih kosong", true);
+            return;
+        }
+        if (!paymentMethod) {
+            setCheckoutMessage("Pilih metode pembayaran", true);
+            return;
+        }
 
         checkoutBtn.disabled = true;
         try {
@@ -151,17 +215,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                 method: "POST",
                 body: JSON.stringify({
                     items,
-                    payment_method: paymentMethod.value,
+                    payment_method: paymentMethod,
                     customer_name: customerName.value
                 })
             });
             cart.clear();
             renderCart();
-            checkoutMessage.innerHTML = `Checkout berhasil. <a href="/receipt/${result.data.id}" target="_blank">Buka struk</a>`;
+            customerName.value = "";
+            setCheckoutMessage(`Pembayaran berhasil. <a href="/receipt/${result.data.id}" target="_blank">Buka struk</a>`);
+            window.open(`/receipt/${result.data.id}`, "_blank");
         } catch (error) {
-            checkoutMessage.textContent = error.message;
+            setCheckoutMessage(error.message, true);
         } finally {
-            checkoutBtn.disabled = false;
+            renderCart();
         }
     }
 
@@ -180,9 +246,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
     menuSearch.addEventListener("input", renderMenus);
+    categoryFilter?.addEventListener("change", renderMenus);
+    refreshBtn?.addEventListener("click", () => {
+        Promise.all([loadMenus(), loadNotifications()]).catch(error => setCheckoutMessage(error.message, true));
+    });
+    paymentOptions?.addEventListener("click", event => {
+        const button = event.target.closest("[data-method]");
+        if (!button) return;
+        paymentMethod = button.dataset.method;
+        paymentOptions.querySelectorAll(".payment-option").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+    });
     resetCartBtn.addEventListener("click", () => {
         cart.clear();
         renderCart();
+        setCheckoutMessage("");
     });
     checkoutBtn.addEventListener("click", checkout);
     logoutBtn.addEventListener("click", async () => {
@@ -191,6 +269,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     await loadUser();
-    await loadMenus();
+    await Promise.all([loadMenus(), loadNotifications()]);
     renderCart();
+    setInterval(loadNotifications, 30000);
 });

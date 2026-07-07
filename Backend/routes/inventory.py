@@ -3,6 +3,7 @@ from decimal import Decimal, InvalidOperation
 from flask import Blueprint, request, jsonify, send_file, session
 
 from model import db, Inventory, PurchaseOrder, StockMovement
+from utils.auth import role_name_required
 
 from openpyxl import Workbook
 
@@ -57,6 +58,7 @@ def create_stock_movement(item, movement_type, quantity, reference_type, referen
     "/api/inventory",
     methods=["GET"]
 )
+@role_name_required("OWNER", "FINANCE", "KASIR")
 def get_inventory():
 
 
@@ -148,6 +150,7 @@ def get_inventory():
     "/api/inventory",
     methods=["POST"]
 )
+@role_name_required("OWNER", "FINANCE")
 def add_inventory():
 
 
@@ -230,6 +233,7 @@ def add_inventory():
     "/api/inventory/<int:id>",
     methods=["PUT"]
 )
+@role_name_required("OWNER", "FINANCE")
 def update_inventory(id):
 
 
@@ -332,6 +336,7 @@ def update_inventory(id):
     "/api/inventory/<int:id>",
     methods=["DELETE"]
 )
+@role_name_required("OWNER", "FINANCE")
 def delete_inventory(id):
 
 
@@ -385,6 +390,7 @@ def delete_inventory(id):
     "/api/inventory/export",
     methods=["GET"]
 )
+@role_name_required("OWNER", "FINANCE")
 def export_inventory():
 
 

@@ -1,10 +1,11 @@
 from datetime import datetime, time, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 import io
+import json
 import os
 
 import cloudinary.uploader
-from flask import Blueprint, current_app, jsonify, render_template, request, send_file, session
+from flask import Blueprint, current_app, jsonify, redirect, render_template, request, send_file, session, url_for
 from openpyxl import Workbook
 from sqlalchemy import func, or_
 
@@ -12,7 +13,10 @@ from model import (
     Attendance,
     Inventory,
     MenuItem,
+    MenuRecipe,
+    Staff,
     StaffSchedule,
+    StockMovement,
     Transaction,
     TransactionItem,
     User,
@@ -82,8 +86,20 @@ def rupiah_value(value):
     return float(value or 0)
 
 
-def serialize_menu_item(item):
+def serialize_recipe_item(recipe):
+    inventory = recipe.inventory
     return {
+        "id": recipe.id,
+        "id_inventory": recipe.id_inventory,
+        "nama_bahan": inventory.nama_bahan if inventory else "-",
+        "satuan": inventory.satuan if inventory else "",
+        "stock": rupiah_value(inventory.stok) if inventory else 0,
+        "quantity": rupiah_value(recipe.quantity),
+    }
+
+
+def serialize_menu_item(item, include_recipe=False):
+    data = {
         "id": item.id,
         "name": item.name,
         "category": item.category,
@@ -91,7 +107,94 @@ def serialize_menu_item(item):
         "image_url": item.image_url,
         "status": item.status,
         "created_at": item.created_at.isoformat() if item.created_at else None,
+        "recipe_count": len(item.recipes or []),
+        "recipe_configured": bool(item.recipes),
     }
+
+    if include_recipe:
+        data["recipe"] = [
+            serialize_recipe_item(recipe)
+            for recipe in sorted(
+                item.recipes,
+                key=lambda recipe: recipe.inventory.nama_bahan.lower()
+                if recipe.inventory and recipe.inventory.nama_bahan else "",
+            )
+        ]
+
+    return data
+
+
+def decimal_quantity(value, field_name):
+    try:
+        result = Decimal(str(value).replace(",", "."))
+    except (InvalidOperation, TypeError):
+        raise ValueError(f"{field_name} tidak valid")
+
+    if result <= 0:
+        raise ValueError(f"{field_name} harus lebih dari 0")
+
+    return result
+
+
+def format_quantity(value):
+    value = Decimal(value or 0)
+    normalized = value.normalize()
+    if normalized == normalized.to_integral():
+        return str(normalized.quantize(Decimal("1")))
+    return format(normalized, "f")
+
+
+def has_recipe_payload(data):
+    return "recipe" in data or "recipes" in data
+
+
+def parse_recipe_payload(data):
+    raw_recipe = data.get("recipe") if "recipe" in data else data.get("recipes")
+    if raw_recipe in (None, ""):
+        return []
+
+    if isinstance(raw_recipe, str):
+        try:
+            raw_recipe = json.loads(raw_recipe)
+        except json.JSONDecodeError:
+            raise ValueError("Format resep tidak valid")
+
+    if not isinstance(raw_recipe, list):
+        raise ValueError("Format resep tidak valid")
+
+    recipe_items = []
+    used_inventory = set()
+
+    for index, raw_item in enumerate(raw_recipe, start=1):
+        if not isinstance(raw_item, dict):
+            raise ValueError(f"Resep baris {index} tidak valid")
+
+        try:
+            inventory_id = int(raw_item.get("id_inventory") or raw_item.get("inventory_id"))
+        except (TypeError, ValueError):
+            raise ValueError(f"Bahan resep baris {index} wajib dipilih")
+
+        if inventory_id in used_inventory:
+            raise ValueError("Bahan resep tidak boleh duplikat")
+
+        quantity = decimal_quantity(raw_item.get("quantity"), f"Jumlah resep baris {index}")
+        inventory = Inventory.query.get(inventory_id)
+        if not inventory:
+            raise ValueError(f"Bahan resep baris {index} tidak ditemukan")
+
+        used_inventory.add(inventory_id)
+        recipe_items.append((inventory, quantity))
+
+    return recipe_items
+
+
+def sync_menu_recipe(menu_item, recipe_items):
+    menu_item.recipes.clear()
+    for inventory, quantity in recipe_items:
+        menu_item.recipes.append(MenuRecipe(
+            inventory=inventory,
+            quantity=quantity,
+        ))
 
 
 def serialize_transaction(transaction, include_items=False):
@@ -179,19 +282,22 @@ def upload_menu_image(file_storage):
 
 
 @owner_bp.route("/owner/dashboard")
-@role_name_required("OWNER")
+@role_name_required("OWNER", "FINANCE")
 def owner_dashboard():
     return render_template("owner_dashboard.html")
 
 
 @owner_bp.route("/owner/inventory")
-@role_name_required("OWNER")
+@role_name_required("OWNER", "FINANCE", "KASIR")
 def owner_inventory():
+    user = User.query.get(session.get("user_id"))
+    if user and user.role and user.role.role_name.upper() == "KASIR":
+        return redirect(url_for("cashier.inventory"))
     return render_template("owner_inventory.html")
 
 
 @owner_bp.route("/owner/staff")
-@role_name_required("OWNER", "HRD")
+@role_name_required("OWNER", "FINANCE", "HRD")
 def owner_staff():
     return render_template("owner_staff.html")
 
@@ -242,11 +348,12 @@ def dashboard_api():
     ).scalar()
 
     today = waktu_wib().date()
+    total_staff = Staff.query.filter_by(status="ACTIVE").count()
     total_scheduled = StaffSchedule.query.filter_by(schedule_date=today).count()
-    present_count = Attendance.query.filter(
+    present_count = db.session.query(func.count(func.distinct(Attendance.staff_id))).filter(
         Attendance.attendance_date == today,
         Attendance.status.in_(["PRESENT", "LATE", "COMPLETED"]),
-    ).count()
+    ).scalar() or 0
 
     weekly_sales = []
     max_sales = Decimal("0")
@@ -293,8 +400,10 @@ def dashboard_api():
         func.sum(TransactionItem.quantity).desc()
     ).limit(5).all()
 
-    recent_transactions = Transaction.query.filter_by(
-        status="COMPLETED"
+    recent_transactions = Transaction.query.filter(
+        Transaction.created_at >= start_dt,
+        Transaction.created_at <= end_dt,
+        Transaction.status == "COMPLETED",
     ).order_by(Transaction.created_at.desc()).limit(5).all()
 
     return api_success({
@@ -303,8 +412,9 @@ def dashboard_api():
             "transaction_count": transaction_count,
             "monthly_income": rupiah_value(monthly_income),
             "present_count": present_count,
+            "total_staff": total_staff,
             "total_scheduled": total_scheduled,
-            "attendance_rate": round((present_count / total_scheduled) * 100, 1) if total_scheduled else 0,
+            "attendance_rate": round((present_count / total_staff) * 100, 1) if total_staff else 0,
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat(),
         },
@@ -342,7 +452,7 @@ def get_menu_items():
         query = query.filter_by(status="ACTIVE")
 
     items = query.order_by(MenuItem.name.asc()).all()
-    return api_success([serialize_menu_item(item) for item in items])
+    return api_success([serialize_menu_item(item, include_recipe=True) for item in items])
 
 
 @owner_bp.route("/api/menu-items", methods=["POST"])
@@ -353,9 +463,12 @@ def create_menu_item():
     name = (data.get("name") or "").strip()
     category = (data.get("category") or "").strip()
     price = data.get("price")
+    status = (data.get("status") or "ACTIVE").strip().upper()
 
     if not name or not category:
         return api_error("Nama menu dan kategori wajib diisi", 400)
+    if status not in {"ACTIVE", "INACTIVE"}:
+        return api_error("Status menu tidak valid", 400)
 
     try:
         price = Decimal(str(price))
@@ -364,6 +477,11 @@ def create_menu_item():
 
     if price < 0:
         return api_error("Harga tidak boleh negatif", 400)
+
+    try:
+        recipe_items = parse_recipe_payload(data) if has_recipe_payload(data) else []
+    except ValueError as error:
+        return api_error(str(error), 400)
 
     try:
         image_url = upload_menu_image(request.files.get("image_file"))
@@ -375,13 +493,18 @@ def create_menu_item():
         category=category,
         price=price,
         image_url=image_url or data.get("image_url"),
-        status="ACTIVE",
+        status=status,
     )
 
     try:
         db.session.add(item)
+        sync_menu_recipe(item, recipe_items)
         db.session.commit()
-        return api_success(serialize_menu_item(item), "Menu berhasil ditambahkan", 201)
+        return api_success(
+            serialize_menu_item(item, include_recipe=True),
+            "Menu berhasil ditambahkan",
+            201,
+        )
     except Exception:
         db.session.rollback()
         return api_error("Menu gagal ditambahkan", 500)
@@ -399,9 +522,12 @@ def update_menu_item(item_id):
     name = (data.get("name") or "").strip()
     category = (data.get("category") or "").strip()
     price = data.get("price")
+    status = (data.get("status") or item.status).strip().upper()
 
     if not name or not category:
         return api_error("Nama menu dan kategori wajib diisi", 400)
+    if status not in {"ACTIVE", "INACTIVE"}:
+        return api_error("Status menu tidak valid", 400)
 
     try:
         price = Decimal(str(price))
@@ -410,6 +536,12 @@ def update_menu_item(item_id):
 
     if price < 0:
         return api_error("Harga tidak boleh negatif", 400)
+
+    recipe_was_sent = has_recipe_payload(data)
+    try:
+        recipe_items = parse_recipe_payload(data) if recipe_was_sent else None
+    except ValueError as error:
+        return api_error(str(error), 400)
 
     try:
         image_url = upload_menu_image(request.files.get("image_file"))
@@ -423,11 +555,16 @@ def update_menu_item(item_id):
         item.image_url = image_url
     elif data.get("image_url"):
         item.image_url = data.get("image_url")
-    item.status = data.get("status") or item.status
+    item.status = status
+    if recipe_was_sent:
+        sync_menu_recipe(item, recipe_items)
 
     try:
         db.session.commit()
-        return api_success(serialize_menu_item(item), "Menu berhasil diperbarui")
+        return api_success(
+            serialize_menu_item(item, include_recipe=True),
+            "Menu berhasil diperbarui",
+        )
     except Exception:
         db.session.rollback()
         return api_error("Menu gagal diperbarui", 500)
@@ -560,6 +697,32 @@ def pos_menu():
     return api_success([serialize_menu_item(item) for item in items])
 
 
+def build_stock_requirements(prepared_items):
+    requirements = {}
+
+    for menu_item, quantity, _ in prepared_items:
+        for recipe in menu_item.recipes:
+            if not recipe.inventory:
+                continue
+
+            needed = Decimal(recipe.quantity) * Decimal(quantity)
+            if needed <= 0:
+                continue
+
+            current = requirements.setdefault(
+                recipe.id_inventory,
+                {
+                    "inventory": recipe.inventory,
+                    "quantity": Decimal("0"),
+                    "menus": set(),
+                }
+            )
+            current["quantity"] += needed
+            current["menus"].add(menu_item.name)
+
+    return requirements
+
+
 @owner_bp.route("/api/pos/checkout", methods=["POST"])
 @role_name_required("OWNER", "KASIR")
 def pos_checkout():
@@ -572,6 +735,8 @@ def pos_checkout():
         return api_error("Keranjang masih kosong", 400)
     if not payment_method:
         return api_error("Metode pembayaran wajib dipilih", 400)
+    if payment_method not in {"CASH", "QRIS", "EWALLET", "DEBIT"}:
+        return api_error("Metode pembayaran tidak valid", 400)
 
     subtotal = Decimal("0")
     prepared_items = []
@@ -589,10 +754,30 @@ def pos_checkout():
         menu_item = MenuItem.query.get(menu_item_id)
         if not menu_item or menu_item.status != "ACTIVE":
             return api_error("Menu tidak aktif atau tidak ditemukan", 400)
+        if not menu_item.recipes:
+            return api_error(
+                f"Resep untuk menu {menu_item.name} belum diatur. "
+                "Lengkapi resep di Menu Management dulu.",
+                400,
+            )
 
         item_subtotal = Decimal(menu_item.price) * Decimal(quantity)
         subtotal += item_subtotal
         prepared_items.append((menu_item, quantity, item_subtotal))
+
+    stock_requirements = build_stock_requirements(prepared_items)
+    for requirement in stock_requirements.values():
+        inventory = requirement["inventory"]
+        required_quantity = requirement["quantity"]
+        available_stock = Decimal(inventory.stok or 0)
+        if available_stock < required_quantity:
+            return api_error(
+                "Stok "
+                f"{inventory.nama_bahan} tidak cukup. "
+                f"Butuh {format_quantity(required_quantity)} {inventory.satuan}, "
+                f"tersedia {format_quantity(available_stock)} {inventory.satuan}.",
+                400,
+            )
 
     tax_rate = Decimal(str(current_app.config.get("POS_TAX_RATE", 0)))
     tax = (subtotal * tax_rate).quantize(Decimal("1")) if tax_rate else Decimal("0")
@@ -620,6 +805,23 @@ def pos_checkout():
                 quantity=quantity,
                 unit_price=menu_item.price,
                 subtotal=item_subtotal,
+            ))
+
+        for requirement in stock_requirements.values():
+            inventory = requirement["inventory"]
+            used_quantity = requirement["quantity"]
+            inventory.stok = Decimal(inventory.stok or 0) - used_quantity
+            db.session.add(StockMovement(
+                id_inventory=inventory.id_inventory,
+                movement_type="OUT",
+                quantity=used_quantity,
+                reference_type="POS_SALE",
+                reference_id=transaction.id,
+                notes=(
+                    f"Penjualan {transaction.transaction_number}: "
+                    f"{', '.join(sorted(requirement['menus']))}"
+                ),
+                created_by=session.get("user_id"),
             ))
 
         db.session.commit()

@@ -5,77 +5,151 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt {{ transaction.transaction_number }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; background: #f4f1ed; color: #222; }
-        .receipt { width: min(380px, 100%); margin: 24px auto; background: #fff; padding: 24px; border: 1px solid #ddd; }
-        h1, p { margin: 0; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:"Poppins",sans-serif; background:#FBF3EE; color:#2F1D0F; }
+        .page { min-height:100vh; display:grid; place-items:center; padding:48px 20px; }
+        .receipt { width:min(600px,100%); background:#fff; border-radius:12px; padding:46px 48px; box-shadow:0 20px 60px rgba(75,46,19,.08); }
+        h1, h2, h3, p { margin:0; }
         .center { text-align: center; }
-        .muted { color: #666; font-size: 13px; }
-        .line { border-top: 1px dashed #aaa; margin: 16px 0; }
-        .row { display: flex; justify-content: space-between; gap: 12px; margin: 8px 0; }
-        .total { font-size: 18px; font-weight: 700; }
-        button { width: 100%; padding: 12px; border: 0; border-radius: 8px; background: #5a3718; color: #fff; font-weight: 700; cursor: pointer; margin-top: 16px; }
+        .logo { width:92px; height:92px; object-fit:contain; margin:0 auto 22px; }
+        .title { font-size:26px; font-weight:800; margin-bottom:8px; }
+        .muted { color:#6F6259; font-size:14px; line-height:1.5; }
+        .meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:38px; }
+        .meta-box:nth-child(even) { text-align:right; }
+        .label { display:block; color:#6F6259; text-transform:uppercase; letter-spacing:.08em; font-size:12px; margin-bottom:8px; }
+        .value { font-size:16px; font-weight:700; }
+        .badge { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:7px 12px; background:#E6E2CD; color:#56553B; font-size:13px; font-weight:600; }
+        .line { border-top:1px solid #E4D8CF; margin:34px 0; }
+        .items-head, .row { display:flex; justify-content:space-between; gap:16px; }
+        .items-head { color:#4F453E; text-transform:uppercase; letter-spacing:.12em; font-size:13px; margin-bottom:20px; }
+        .item { margin-bottom:22px; }
+        .item h3 { font-size:16px; margin-bottom:4px; }
+        .item small { color:#6F6259; }
+        .row { align-items:flex-start; margin:10px 0; }
+        .summary .row { color:#5C514A; }
+        .grand-total { display:flex; justify-content:space-between; align-items:flex-end; margin-top:26px; }
+        .grand-total span { font-size:20px; font-weight:800; }
+        .grand-total strong { font-size:38px; line-height:1; }
+        .payment-box { margin-top:42px; background:#F8E8DE; border:1px solid #ECD8CA; border-radius:8px; padding:24px; display:flex; justify-content:space-between; align-items:center; gap:20px; }
+        .qr { width:64px; height:64px; border:4px solid #fff; border-radius:8px; display:grid; place-items:center; background:#fff; font-size:28px; }
+        .thanks { margin-top:46px; text-align:center; color:#5C514A; font-size:14px; }
+        .actions { width:min(600px,100%); display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:28px; }
+        .actions button { height:48px; border-radius:8px; font:inherit; font-weight:700; cursor:pointer; }
+        .print { border:0; background:#4B2E13; color:#fff; }
+        .share { border:2px solid #4B2E13; background:transparent; color:#4B2E13; }
         @media print {
-            body { background: #fff; }
-            .receipt { margin: 0; border: 0; width: 100%; }
-            button { display: none; }
+            body { background:#fff; }
+            .page { padding:0; display:block; }
+            .receipt { width:100%; box-shadow:none; border-radius:0; }
+            .actions { display:none; }
+        }
+        @media (max-width:560px) {
+            .receipt { padding:34px 24px; }
+            .meta-grid { grid-template-columns:1fr; }
+            .meta-box:nth-child(even) { text-align:left; }
+            .grand-total strong { font-size:30px; }
+            .actions { grid-template-columns:1fr; }
         }
     </style>
 </head>
 
 <body>
-    <main class="receipt">
-        <div class="center">
-            <h1>ARGOTELO</h1>
-            <p class="muted">Salatiga</p>
-            <p class="muted">{{ transaction.transaction_number }}</p>
-            <p class="muted">{{ transaction.created_at.strftime("%d-%m-%Y %H:%M") }}</p>
-        </div>
+    <div class="page">
+        <main>
+            <section class="receipt" id="receipt">
+                <div class="center">
+                    <img class="logo" src="{{ url_for('static', filename='images/logo RB.png') }}" alt="Argotelo">
+                    <h1 class="title">ARGOTELO SALATIGA</h1>
+                    <p class="muted">Jl. Lingkar Selatan, Blotongan, Sidorejo, Kota<br>Salatiga, Jawa Tengah 50715</p>
+                </div>
 
-        <div class="line"></div>
+                <div class="meta-grid">
+                    <div class="meta-box">
+                        <span class="label">Date & Time</span>
+                        <strong class="value">{{ transaction.created_at.strftime("%d %b %Y - %H:%M") if transaction.created_at else "-" }}</strong>
+                    </div>
+                    <div class="meta-box">
+                        <span class="label">Receipt No.</span>
+                        <strong class="value">#{{ transaction.transaction_number }}</strong>
+                    </div>
+                    <div class="meta-box">
+                        <span class="label">Cashier</span>
+                        <strong class="value">{{ transaction.cashier.fullname if transaction.cashier else "-" }}</strong>
+                    </div>
+                    <div class="meta-box">
+                        <span class="label">Status</span>
+                        <span class="badge"><i class="bi bi-check-circle-fill"></i> Paid via {{ transaction.payment_method }}</span>
+                    </div>
+                </div>
 
-        <div class="row">
-            <span>Kasir</span>
-            <strong>{{ transaction.cashier.fullname if transaction.cashier else "-" }}</strong>
-        </div>
-        <div class="row">
-            <span>Pelanggan</span>
-            <strong>{{ transaction.customer_name or "Umum" }}</strong>
-        </div>
-        <div class="row">
-            <span>Pembayaran</span>
-            <strong>{{ transaction.payment_method }}</strong>
-        </div>
+                <div class="line"></div>
 
-        <div class="line"></div>
+                <div class="items-head">
+                    <span>Items</span>
+                    <span>Total</span>
+                </div>
 
-        {% for item in transaction.items %}
-        <div>
-            <div class="row">
-                <span>{{ item.quantity }}x {{ item.menu_item.name }}</span>
-                <strong>Rp {{ "{:,.0f}".format(item.subtotal).replace(",", ".") }}</strong>
+                {% for item in transaction.items %}
+                <div class="item row">
+                    <div>
+                        <h3>{{ item.menu_item.name }}</h3>
+                        <small>{{ item.quantity }} x Rp {{ "{:,.0f}".format(item.unit_price).replace(",", ".") }}</small>
+                    </div>
+                    <strong>Rp {{ "{:,.0f}".format(item.subtotal).replace(",", ".") }}</strong>
+                </div>
+                {% endfor %}
+
+                <div class="line"></div>
+
+                <div class="summary">
+                    <div class="row">
+                        <span>Subtotal</span>
+                        <strong>Rp {{ "{:,.0f}".format(transaction.subtotal).replace(",", ".") }}</strong>
+                    </div>
+                    <div class="row">
+                        <span>Tax</span>
+                        <strong>Rp {{ "{:,.0f}".format(transaction.tax).replace(",", ".") }}</strong>
+                    </div>
+                    <div class="grand-total">
+                        <span>Total</span>
+                        <strong>Rp {{ "{:,.0f}".format(transaction.total).replace(",", ".") }}</strong>
+                    </div>
+                </div>
+
+                <div class="payment-box">
+                    <div>
+                        <strong>Payment Confirmed</strong>
+                        <p class="muted">Transaction ref: #{{ transaction.transaction_number }}</p>
+                    </div>
+                    <div class="qr"><i class="bi bi-qr-code"></i></div>
+                </div>
+
+                <p class="thanks">Thank you for visiting Argotelo.<br>WWW.ARGOTELO.ID</p>
+            </section>
+
+            <div class="actions">
+                <button class="print" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print Receipt</button>
+                <button class="share" type="button" id="shareReceipt"><i class="bi bi-share"></i> Share</button>
             </div>
-            <p class="muted">Rp {{ "{:,.0f}".format(item.unit_price).replace(",", ".") }} / item</p>
-        </div>
-        {% endfor %}
+        </main>
+    </div>
 
-        <div class="line"></div>
-
-        <div class="row">
-            <span>Subtotal</span>
-            <strong>Rp {{ "{:,.0f}".format(transaction.subtotal).replace(",", ".") }}</strong>
-        </div>
-        <div class="row">
-            <span>Pajak</span>
-            <strong>Rp {{ "{:,.0f}".format(transaction.tax).replace(",", ".") }}</strong>
-        </div>
-        <div class="row total">
-            <span>Total</span>
-            <strong>Rp {{ "{:,.0f}".format(transaction.total).replace(",", ".") }}</strong>
-        </div>
-
-        <button type="button" onclick="window.print()">Print Receipt</button>
-    </main>
+    <script>
+        document.getElementById("shareReceipt")?.addEventListener("click", async () => {
+            const text = "Struk Argotelo #{{ transaction.transaction_number }} - Total Rp {{ '{:,.0f}'.format(transaction.total).replace(',', '.') }}";
+            if (navigator.share) {
+                await navigator.share({ title: "Struk Argotelo", text, url: window.location.href });
+            } else {
+                await navigator.clipboard.writeText(`${text} ${window.location.href}`);
+                alert("Link struk disalin");
+            }
+        });
+    </script>
 </body>
 
 </html>

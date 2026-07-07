@@ -1,7 +1,7 @@
 from datetime import datetime, time
 import io
 
-from flask import Blueprint, jsonify, render_template, request, send_file
+from flask import Blueprint, jsonify, redirect, render_template, request, send_file, url_for
 from openpyxl import Workbook
 from sqlalchemy import func
 
@@ -22,8 +22,7 @@ finance_bp = Blueprint(
 @finance_bp.route("/dashboard")
 @role_name_required("FINANCE")
 def dashboard():
-
-    return render_template("finance_dashboard.html")
+    return redirect(url_for("owner.owner_dashboard"))
 
 
 def api_error(message, status=400):

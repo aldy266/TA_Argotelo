@@ -22,8 +22,10 @@ from utils.email_service import send_reset_email
 from datetime import datetime
 
 from cloudinary_config import *
+from utils.auth import role_name_required
 
 ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+MANAGED_ACCOUNT_ROLES = {"FINANCE", "KASIR"}
 
 auth_bp = Blueprint(
     "auth",
@@ -86,6 +88,27 @@ def verify_password(password, stored_hash):
         )
     except ValueError:
         return False
+
+
+def serialize_user_account(user):
+    return {
+        "id": user.id,
+        "fullname": user.fullname,
+        "username": user.username,
+        "email": user.email,
+        "phone": user.phone,
+        "photo": user.photo,
+        "role": user.role.role_name if user.role else "-",
+        "is_active": bool(user.is_active),
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+    }
+
+
+def hashed_password(password):
+    return bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt()
+    ).decode("utf-8")
 
 
 @auth_bp.route("/api/test")
@@ -438,6 +461,149 @@ def me():
 
     })
 
+
+# ==========================
+# OWNER MANAGED ACCOUNTS
+# ==========================
+
+@auth_bp.route("/api/accounts", methods=["GET"])
+@role_name_required("OWNER")
+def list_accounts():
+    role_filter = (request.args.get("role") or "").strip().upper()
+
+    query = User.query.join(Role).filter(Role.role_name.in_(MANAGED_ACCOUNT_ROLES))
+    if role_filter in MANAGED_ACCOUNT_ROLES:
+        query = query.filter(Role.role_name == role_filter)
+
+    users = query.order_by(Role.role_name.asc(), User.fullname.asc()).all()
+    return jsonify({
+        "success": True,
+        "data": [serialize_user_account(user) for user in users]
+    })
+
+
+@auth_bp.route("/api/accounts", methods=["POST"])
+@role_name_required("OWNER")
+def create_account():
+    data = request.get_json(silent=True) or {}
+    fullname = (data.get("fullname") or "").strip()
+    username = (data.get("username") or "").strip()
+    email = (data.get("email") or "").strip() or None
+    phone = (data.get("phone") or "").strip() or None
+    password = data.get("password") or ""
+    role_name = (data.get("role") or "").strip().upper()
+
+    if not fullname or not username or not password or role_name not in MANAGED_ACCOUNT_ROLES:
+        return api_error("Nama, username, password, dan role wajib diisi", 400)
+    if len(password) < 6:
+        return api_error("Password minimal 6 karakter", 400)
+    if User.query.filter_by(username=username).first():
+        return api_error("Username sudah digunakan", 409)
+    if email and User.query.filter_by(email=email).first():
+        return api_error("Email sudah digunakan", 409)
+
+    role = Role.query.filter_by(role_name=role_name).first()
+    if not role:
+        return api_error(f"Role {role_name} belum tersedia", 500)
+
+    user = User(
+        role_id=role.id,
+        fullname=fullname,
+        username=username,
+        password=hashed_password(password),
+        email=email,
+        phone=phone,
+        is_active=True,
+    )
+
+    try:
+        db.session.add(user)
+        db.session.commit()
+        return api_success("Akun berhasil dibuat", serialize_user_account(user), 201)
+    except Exception:
+        db.session.rollback()
+        return api_error("Akun gagal dibuat", 500)
+
+
+@auth_bp.route("/api/accounts/<int:user_id>", methods=["PUT"])
+@role_name_required("OWNER")
+def update_account(user_id):
+    user = User.query.get(user_id)
+    if not user or not user.role or user.role.role_name not in MANAGED_ACCOUNT_ROLES:
+        return api_error("Akun tidak ditemukan", 404)
+
+    data = request.get_json(silent=True) or {}
+    fullname = (data.get("fullname") or "").strip()
+    username = (data.get("username") or "").strip()
+    email = (data.get("email") or "").strip() or None
+    phone = (data.get("phone") or "").strip() or None
+    role_name = (data.get("role") or user.role.role_name).strip().upper()
+    password = data.get("password") or ""
+    is_active = data.get("is_active")
+
+    if not fullname or not username or role_name not in MANAGED_ACCOUNT_ROLES:
+        return api_error("Nama, username, dan role wajib diisi", 400)
+    if password and len(password) < 6:
+        return api_error("Password minimal 6 karakter", 400)
+
+    username_exists = User.query.filter(
+        User.username == username,
+        User.id != user.id
+    ).first()
+    if username_exists:
+        return api_error("Username sudah digunakan", 409)
+
+    if email:
+        email_exists = User.query.filter(
+            User.email == email,
+            User.id != user.id
+        ).first()
+        if email_exists:
+            return api_error("Email sudah digunakan", 409)
+
+    role = Role.query.filter_by(role_name=role_name).first()
+    if not role:
+        return api_error(f"Role {role_name} belum tersedia", 500)
+
+    user.fullname = fullname
+    user.username = username
+    user.email = email
+    user.phone = phone
+    user.role_id = role.id
+    if password:
+        user.password = hashed_password(password)
+    if is_active is not None:
+        user.is_active = bool(is_active)
+
+    try:
+        db.session.commit()
+        return api_success("Akun berhasil diperbarui", serialize_user_account(user))
+    except Exception:
+        db.session.rollback()
+        return api_error("Akun gagal diperbarui", 500)
+
+
+@auth_bp.route("/api/accounts/<int:user_id>/toggle", methods=["PATCH"])
+@role_name_required("OWNER")
+def toggle_account(user_id):
+    user = User.query.get(user_id)
+    if not user or not user.role or user.role.role_name not in MANAGED_ACCOUNT_ROLES:
+        return api_error("Akun tidak ditemukan", 404)
+
+    data = request.get_json(silent=True) or {}
+    if "is_active" in data:
+        user.is_active = bool(data.get("is_active"))
+    else:
+        user.is_active = not bool(user.is_active)
+
+    try:
+        db.session.commit()
+        status_text = "diaktifkan" if user.is_active else "dinonaktifkan"
+        return api_success(f"Akun berhasil {status_text}", serialize_user_account(user))
+    except Exception:
+        db.session.rollback()
+        return api_error("Status akun gagal diperbarui", 500)
+
 # ==========================
 # UPDATE PROFILE
 # ==========================
@@ -721,18 +887,23 @@ def forgot_password():
 
 
 
-    token = secrets.token_urlsafe(
-        32
-    )
+    now = datetime.now()
+
+    if user.reset_token and user.reset_expired and user.reset_expired > now:
+        token = user.reset_token
+    else:
+        token = secrets.token_urlsafe(
+            32
+        )
 
 
 
-    user.reset_token = token
+        user.reset_token = token
 
 
     user.reset_expired = (
 
-        datetime.now()
+        now
 
         +
 
@@ -746,13 +917,16 @@ def forgot_password():
 
 
 
-    send_reset_email(
-
-        user.email,
-
-        token
-
-    )
+    try:
+        send_reset_email(
+            user.email,
+            token
+        )
+    except Exception as error:
+        return api_error(
+            f"Link reset password gagal dikirim: {error}",
+            502
+        )
 
 
 
@@ -805,6 +979,39 @@ def reset_password():
 
             "message":
             "Token tidak valid"
+
+        }),400
+
+    if user.reset_expired and user.reset_expired < datetime.now():
+
+        user.reset_token = None
+
+
+        user.reset_expired = None
+
+
+        db.session.commit()
+
+
+        return jsonify({
+
+            "success":False,
+
+            "message":
+            "Token sudah expired"
+
+        }),400
+
+
+    if not password:
+
+
+        return jsonify({
+
+            "success":False,
+
+            "message":
+            "Password wajib diisi"
 
         }),400
 

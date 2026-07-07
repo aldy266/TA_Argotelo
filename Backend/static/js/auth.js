@@ -148,7 +148,7 @@ if (loginForm) {
 
 
                         window.location.href =
-                        "/finance/dashboard";
+                        "/owner/dashboard";
 
 
                         break;
@@ -160,7 +160,7 @@ if (loginForm) {
 
 
                         window.location.href =
-                        "/cashier/dashboard";
+                        "/cashier/pos";
 
 
                         break;

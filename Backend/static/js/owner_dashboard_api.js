@@ -4,7 +4,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const state = {
         user: null,
         filter: "today",
-        notifications: []
+        notifications: [],
+        dashboardData: null,
+        search: "",
+        accounts: []
     };
 
     const el = {
@@ -17,6 +20,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         startDate: document.getElementById("startDate"),
         endDate: document.getElementById("endDate"),
         filterBtn: document.getElementById("filterBtn"),
+        dashboardSearch: document.getElementById("dashboardSearch"),
+        clearSearch: document.getElementById("clearSearch"),
         dashboardPeriod: document.getElementById("dashboard-period"),
         salesValue: document.getElementById("salesValue"),
         salesInfo: document.getElementById("salesInfo"),
@@ -48,12 +53,35 @@ document.addEventListener("DOMContentLoaded", async () => {
         closeProfileModal: document.getElementById("closeProfileModal"),
         cancelProfile: document.getElementById("cancelProfile"),
         saveProfile: document.getElementById("saveProfile"),
+        editFullname: document.getElementById("editFullname"),
+        editUsername: document.getElementById("editUsername"),
+        editEmail: document.getElementById("editEmail"),
+        editPhone: document.getElementById("editPhone"),
+        photoInput: document.getElementById("photoInput"),
+        previewPhoto: document.getElementById("previewPhoto"),
         passwordModal: document.getElementById("passwordModal"),
         changePasswordBtn: document.getElementById("changePasswordBtn"),
         closePasswordModal: document.getElementById("closePasswordModal"),
         cancelPassword: document.getElementById("cancelPassword"),
         savePassword: document.getElementById("savePassword"),
-        downloadReportBtn: document.getElementById("downloadReportBtn")
+        oldPassword: document.getElementById("oldPassword"),
+        newPassword: document.getElementById("newPassword"),
+        confirmPassword: document.getElementById("confirmPassword"),
+        downloadReportBtn: document.getElementById("downloadReportBtn"),
+        manageAccountsBtn: document.getElementById("manageAccountsBtn"),
+        accountsModal: document.getElementById("accountsModal"),
+        closeAccountsModal: document.getElementById("closeAccountsModal"),
+        accountId: document.getElementById("accountId"),
+        accountFullname: document.getElementById("accountFullname"),
+        accountUsername: document.getElementById("accountUsername"),
+        accountEmail: document.getElementById("accountEmail"),
+        accountPhone: document.getElementById("accountPhone"),
+        accountRole: document.getElementById("accountRole"),
+        accountPassword: document.getElementById("accountPassword"),
+        resetAccountForm: document.getElementById("resetAccountForm"),
+        saveAccount: document.getElementById("saveAccount"),
+        accountList: document.getElementById("accountList"),
+        accountCount: document.getElementById("accountCount")
     };
 
     function rupiah(value) {
@@ -71,6 +99,61 @@ document.addEventListener("DOMContentLoaded", async () => {
             .replaceAll(">", "&gt;")
             .replaceAll("\"", "&quot;")
             .replaceAll("'", "&#039;");
+    }
+
+    function formatDate(value) {
+        if (!value) return "";
+        const date = new Date(`${value}T00:00:00`);
+        return date.toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric"
+        });
+    }
+
+    function setActiveFilter(button) {
+        [el.todayBtn, el.weekBtn, el.monthBtn].forEach(btn => btn?.classList.remove("active"));
+        button?.classList.add("active");
+    }
+
+    function selectedPeriodParams() {
+        const stats = state.dashboardData?.statistics;
+        const params = new URLSearchParams();
+        if (stats?.period_start) params.set("start", stats.period_start);
+        if (stats?.period_end) params.set("end", stats.period_end);
+        return params;
+    }
+
+    function validateCustomDate() {
+        const start = el.startDate?.value || "";
+        const end = el.endDate?.value || "";
+        if (!start || !end) {
+            throw new Error("Tanggal awal dan akhir wajib diisi");
+        }
+        if (start > end) {
+            throw new Error("Tanggal awal tidak boleh melewati tanggal akhir");
+        }
+        return { start, end };
+    }
+
+    function profilePhoto() {
+        return state.user?.photo || "/static/images/profile.png";
+    }
+
+    function renderUser() {
+        if (!state.user) return;
+        if (el.fullname) {
+            el.fullname.textContent = state.user.fullname || state.user.username || "User";
+        }
+        if (el.role) {
+            el.role.textContent = state.user.role || "User";
+        }
+        if (el.profileImage) {
+            el.profileImage.src = profilePhoto();
+        }
+        if (el.previewPhoto) {
+            el.previewPhoto.src = profilePhoto();
+        }
     }
 
     async function api(url, options = {}) {
@@ -93,11 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             const result = await api("/api/me");
             state.user = result.user;
-            el.fullname.textContent = result.user.fullname || result.user.username || "User";
-            el.role.textContent = result.user.role || "User";
-            if (el.profileImage) {
-                el.profileImage.src = result.user.photo || "/static/images/logo.png";
-            }
+            renderUser();
         } catch (error) {
             window.location.href = "/";
         }
@@ -110,7 +189,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.transactionInfo.textContent = "Transaksi selesai";
         el.incomeValue.textContent = rupiah(stats.monthly_income);
         el.incomeInfo.textContent = "Pendapatan bulan berjalan";
-        el.attendanceValue.textContent = `${stats.present_count} / ${stats.total_scheduled}`;
+        const totalStaff = Number.isFinite(Number(stats.total_staff))
+            ? Number(stats.total_staff)
+            : Number(stats.total_scheduled || 0);
+        el.attendanceValue.textContent = `${stats.present_count} / ${totalStaff}`;
         el.attendanceInfo.textContent = `${stats.attendance_rate}% Kehadiran`;
     }
 
@@ -125,10 +207,40 @@ document.addEventListener("DOMContentLoaded", async () => {
         `).join("");
     }
 
+    function matchesSearch(values) {
+        const keyword = state.search.trim().toLowerCase();
+        if (!keyword) return true;
+        return values.some(value => String(value ?? "").toLowerCase().includes(keyword));
+    }
+
+    function filteredTopProducts() {
+        const products = state.dashboardData?.top_products || [];
+        return products.filter(item => matchesSearch([
+            item.name,
+            item.variant,
+            item.total
+        ]));
+    }
+
+    function filteredTransactions() {
+        const transactions = state.dashboardData?.recent_transactions || [];
+        return transactions.filter(item => matchesSearch([
+            item.transaction_number,
+            item.customer_name,
+            item.items_summary,
+            item.status,
+            item.total,
+            item.time
+        ]));
+    }
+
     function renderTopProducts(products) {
         if (!el.topProductList) return;
         if (!products.length) {
-            el.topProductList.innerHTML = "<div class=\"empty-state\"><p>Belum ada penjualan produk pada periode ini.</p></div>";
+            const message = state.search.trim()
+                ? "Tidak ada produk yang cocok dengan pencarian."
+                : "Belum ada penjualan produk pada periode ini.";
+            el.topProductList.innerHTML = `<div class="empty-state"><p>${message}</p></div>`;
             return;
         }
         el.topProductList.innerHTML = products.map(item => `
@@ -149,7 +261,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     function renderTransactions(transactions) {
         if (!el.transactionTableBody) return;
         if (!transactions.length) {
-            el.transactionTableBody.innerHTML = "<tr><td colspan=\"6\" style=\"text-align:center;padding:32px;\">Belum ada transaksi.</td></tr>";
+            const message = state.search.trim()
+                ? "Tidak ada transaksi yang cocok dengan pencarian."
+                : "Belum ada transaksi pada periode ini.";
+            el.transactionTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;">${message}</td></tr>`;
             return;
         }
         el.transactionTableBody.innerHTML = transactions.map(item => `
@@ -167,6 +282,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <td>${escapeHtml(item.time)}</td>
             </tr>
         `).join("");
+    }
+
+    function renderFilteredDashboard() {
+        renderTopProducts(filteredTopProducts());
+        renderTransactions(filteredTransactions());
+        el.clearSearch?.classList.toggle("show", Boolean(state.search.trim()));
     }
 
     function renderNotifications() {
@@ -233,37 +354,260 @@ document.addEventListener("DOMContentLoaded", async () => {
             })
         });
         const data = result.data;
+        state.dashboardData = data;
         updateStatistics(data.statistics);
         renderChart(data.weekly_sales || []);
-        renderTopProducts(data.top_products || []);
-        renderTransactions(data.recent_transactions || []);
+        renderFilteredDashboard();
         state.notifications = data.notifications || [];
         renderNotifications();
         updateTransactionTime();
     }
 
+    function closeProfileModal() {
+        el.editProfileModal?.classList.remove("show");
+        if (el.photoInput) {
+            el.photoInput.value = "";
+        }
+        if (el.previewPhoto) {
+            el.previewPhoto.src = profilePhoto();
+        }
+    }
+
+    function openProfileModal() {
+        if (!state.user) return;
+        if (el.editFullname) el.editFullname.value = state.user.fullname || "";
+        if (el.editUsername) el.editUsername.value = state.user.username || "";
+        if (el.editEmail) el.editEmail.value = state.user.email || "";
+        if (el.editPhone) el.editPhone.value = state.user.phone || "";
+        if (el.previewPhoto) el.previewPhoto.src = profilePhoto();
+        el.settingsMenu?.classList.remove("active");
+        el.editProfileModal?.classList.add("show");
+    }
+
+    async function saveProfile() {
+        const fullname = el.editFullname?.value.trim() || "";
+        const username = el.editUsername?.value.trim() || "";
+
+        if (!fullname || !username) {
+            alert("Nama lengkap dan username wajib diisi");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("fullname", fullname);
+        formData.append("username", username);
+        formData.append("email", el.editEmail?.value.trim() || "");
+        formData.append("phone", el.editPhone?.value.trim() || "");
+
+        if (el.photoInput?.files?.[0]) {
+            formData.append("photo", el.photoInput.files[0]);
+        }
+
+        const result = await api("/api/update-profile", {
+            method: "POST",
+            body: formData
+        });
+
+        state.user = {
+            ...state.user,
+            ...result.user,
+            role: state.user?.role
+        };
+        renderUser();
+        closeProfileModal();
+        alert(result.message || "Profil berhasil diperbarui");
+    }
+
+    function closePasswordModal() {
+        el.passwordModal?.classList.remove("show");
+        if (el.oldPassword) el.oldPassword.value = "";
+        if (el.newPassword) el.newPassword.value = "";
+        if (el.confirmPassword) el.confirmPassword.value = "";
+    }
+
+    function openPasswordModal() {
+        el.settingsMenu?.classList.remove("active");
+        el.passwordModal?.classList.add("show");
+    }
+
+    async function savePassword() {
+        const oldPassword = el.oldPassword?.value || "";
+        const newPassword = el.newPassword?.value || "";
+        const confirmPassword = el.confirmPassword?.value || "";
+
+        if (!oldPassword || !newPassword) {
+            alert("Password lama dan password baru wajib diisi");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            alert("Konfirmasi password tidak sama");
+            return;
+        }
+
+        const result = await api("/api/change-password", {
+            method: "POST",
+            body: JSON.stringify({
+                old_password: oldPassword,
+                new_password: newPassword
+            })
+        });
+
+        closePasswordModal();
+        alert(result.message || "Password berhasil diperbarui");
+    }
+
+    function canManageAccounts() {
+        return String(state.user?.role || "").toUpperCase() === "OWNER";
+    }
+
+    function resetAccountForm() {
+        if (el.accountId) el.accountId.value = "";
+        if (el.accountFullname) el.accountFullname.value = "";
+        if (el.accountUsername) el.accountUsername.value = "";
+        if (el.accountEmail) el.accountEmail.value = "";
+        if (el.accountPhone) el.accountPhone.value = "";
+        if (el.accountRole) el.accountRole.value = "FINANCE";
+        if (el.accountPassword) {
+            el.accountPassword.value = "";
+            el.accountPassword.placeholder = "Wajib saat tambah akun";
+        }
+        if (el.saveAccount) el.saveAccount.textContent = "Simpan Akun";
+    }
+
+    function renderAccounts() {
+        if (!el.accountList) return;
+        if (el.accountCount) el.accountCount.textContent = `${state.accounts.length} akun`;
+
+        if (!state.accounts.length) {
+            el.accountList.innerHTML = "<p>Belum ada akun finance atau kasir.</p>";
+            return;
+        }
+
+        el.accountList.innerHTML = state.accounts.map(account => `
+            <div class="account-item" data-id="${account.id}">
+                <div class="account-info">
+                    <h5>${escapeHtml(account.fullname)}</h5>
+                    <p>@${escapeHtml(account.username)} &bull; ${escapeHtml(account.email || "-")}</p>
+                    <span class="account-badge ${account.is_active ? "" : "inactive"}">
+                        ${escapeHtml(account.role)} - ${account.is_active ? "Aktif" : "Nonaktif"}
+                    </span>
+                </div>
+                <div class="account-actions">
+                    <button class="edit-account" type="button" data-action="edit">Edit</button>
+                    <button class="toggle-account" type="button" data-action="toggle">
+                        ${account.is_active ? "Nonaktifkan" : "Aktifkan"}
+                    </button>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    async function loadAccounts() {
+        if (!canManageAccounts()) return;
+        const result = await api("/api/accounts");
+        state.accounts = result.data || [];
+        renderAccounts();
+    }
+
+    function openAccountsModal() {
+        if (!canManageAccounts()) return;
+        el.settingsMenu?.classList.remove("active");
+        resetAccountForm();
+        el.accountsModal?.classList.add("show");
+        loadAccounts().catch(error => alert(error.message));
+    }
+
+    function closeAccountsModal() {
+        el.accountsModal?.classList.remove("show");
+        resetAccountForm();
+    }
+
+    function fillAccountForm(account) {
+        if (el.accountId) el.accountId.value = account.id;
+        if (el.accountFullname) el.accountFullname.value = account.fullname || "";
+        if (el.accountUsername) el.accountUsername.value = account.username || "";
+        if (el.accountEmail) el.accountEmail.value = account.email || "";
+        if (el.accountPhone) el.accountPhone.value = account.phone || "";
+        if (el.accountRole) el.accountRole.value = account.role || "FINANCE";
+        if (el.accountPassword) {
+            el.accountPassword.value = "";
+            el.accountPassword.placeholder = "Kosongkan jika tidak diganti";
+        }
+        if (el.saveAccount) el.saveAccount.textContent = "Update Akun";
+    }
+
+    async function saveManagedAccount() {
+        const accountId = el.accountId?.value || "";
+        const payload = {
+            fullname: el.accountFullname?.value.trim() || "",
+            username: el.accountUsername?.value.trim() || "",
+            email: el.accountEmail?.value.trim() || "",
+            phone: el.accountPhone?.value.trim() || "",
+            role: el.accountRole?.value || "FINANCE",
+            password: el.accountPassword?.value || ""
+        };
+
+        if (!payload.fullname || !payload.username || (!accountId && !payload.password)) {
+            alert("Nama, username, dan password wajib diisi untuk akun baru");
+            return;
+        }
+
+        const url = accountId ? `/api/accounts/${accountId}` : "/api/accounts";
+        const method = accountId ? "PUT" : "POST";
+        const result = await api(url, {
+            method,
+            body: JSON.stringify(payload)
+        });
+        alert(result.message || "Akun berhasil disimpan");
+        resetAccountForm();
+        await loadAccounts();
+    }
+
+    async function toggleManagedAccount(account) {
+        const action = account.is_active ? "menonaktifkan" : "mengaktifkan";
+        if (!confirm(`Yakin ${action} akun ${account.fullname}?`)) return;
+        const result = await api(`/api/accounts/${account.id}/toggle`, {
+            method: "PATCH",
+            body: JSON.stringify({ is_active: !account.is_active })
+        });
+        alert(result.message || "Status akun berhasil diperbarui");
+        await loadAccounts();
+    }
+
     function bindInteractions() {
         el.todayBtn?.addEventListener("click", () => {
-            [el.todayBtn, el.weekBtn, el.monthBtn].forEach(btn => btn?.classList.remove("active"));
-            el.todayBtn.classList.add("active");
+            setActiveFilter(el.todayBtn);
             el.dashboardPeriod.textContent = "Selamat datang kembali. Berikut adalah performa kedai hari ini.";
             loadDashboard("today").catch(error => alert(error.message));
         });
         el.weekBtn?.addEventListener("click", () => {
-            [el.todayBtn, el.weekBtn, el.monthBtn].forEach(btn => btn?.classList.remove("active"));
-            el.weekBtn.classList.add("active");
+            setActiveFilter(el.weekBtn);
             el.dashboardPeriod.textContent = "Berikut performa operasional selama minggu ini.";
             loadDashboard("week").catch(error => alert(error.message));
         });
         el.monthBtn?.addEventListener("click", () => {
-            [el.todayBtn, el.weekBtn, el.monthBtn].forEach(btn => btn?.classList.remove("active"));
-            el.monthBtn.classList.add("active");
+            setActiveFilter(el.monthBtn);
             el.dashboardPeriod.textContent = "Berikut performa operasional selama bulan ini.";
             loadDashboard("month").catch(error => alert(error.message));
         });
         el.filterBtn?.addEventListener("click", () => {
-            el.dashboardPeriod.textContent = `Periode ${el.startDate.value} sampai ${el.endDate.value}`;
-            loadDashboard("custom").catch(error => alert(error.message));
+            try {
+                const { start, end } = validateCustomDate();
+                setActiveFilter(null);
+                el.dashboardPeriod.textContent = `Periode ${formatDate(start)} sampai ${formatDate(end)}`;
+                loadDashboard("custom").catch(error => alert(error.message));
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+        el.dashboardSearch?.addEventListener("input", event => {
+            state.search = event.target.value;
+            renderFilteredDashboard();
+        });
+        el.clearSearch?.addEventListener("click", () => {
+            state.search = "";
+            if (el.dashboardSearch) el.dashboardSearch.value = "";
+            renderFilteredDashboard();
         });
         el.notificationBtn?.addEventListener("click", event => {
             event.stopPropagation();
@@ -281,6 +625,68 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
         el.settingsMenu?.addEventListener("click", event => event.stopPropagation());
         el.notificationMenu?.addEventListener("click", event => event.stopPropagation());
+        el.editProfileBtn?.addEventListener("click", event => {
+            event.preventDefault();
+            openProfileModal();
+        });
+        el.closeProfileModal?.addEventListener("click", closeProfileModal);
+        el.cancelProfile?.addEventListener("click", closeProfileModal);
+        el.saveProfile?.addEventListener("click", () => {
+            saveProfile().catch(error => alert(error.message));
+        });
+        el.photoInput?.addEventListener("change", () => {
+            const file = el.photoInput.files?.[0];
+            if (file && el.previewPhoto) {
+                el.previewPhoto.src = URL.createObjectURL(file);
+            }
+        });
+        el.changePasswordBtn?.addEventListener("click", event => {
+            event.preventDefault();
+            openPasswordModal();
+        });
+        el.closePasswordModal?.addEventListener("click", closePasswordModal);
+        el.cancelPassword?.addEventListener("click", closePasswordModal);
+        el.savePassword?.addEventListener("click", () => {
+            savePassword().catch(error => alert(error.message));
+        });
+        el.manageAccountsBtn?.addEventListener("click", event => {
+            event.preventDefault();
+            openAccountsModal();
+        });
+        el.closeAccountsModal?.addEventListener("click", closeAccountsModal);
+        el.resetAccountForm?.addEventListener("click", resetAccountForm);
+        el.saveAccount?.addEventListener("click", () => {
+            saveManagedAccount().catch(error => alert(error.message));
+        });
+        el.accountList?.addEventListener("click", event => {
+            const button = event.target.closest("[data-action]");
+            if (!button) return;
+            const row = button.closest(".account-item");
+            const account = state.accounts.find(item => String(item.id) === row?.dataset.id);
+            if (!account) return;
+            if (button.dataset.action === "edit") {
+                fillAccountForm(account);
+                return;
+            }
+            if (button.dataset.action === "toggle") {
+                toggleManagedAccount(account).catch(error => alert(error.message));
+            }
+        });
+        el.editProfileModal?.addEventListener("click", event => {
+            if (event.target === el.editProfileModal) {
+                closeProfileModal();
+            }
+        });
+        el.passwordModal?.addEventListener("click", event => {
+            if (event.target === el.passwordModal) {
+                closePasswordModal();
+            }
+        });
+        el.accountsModal?.addEventListener("click", event => {
+            if (event.target === el.accountsModal) {
+                closeAccountsModal();
+            }
+        });
         document.getElementById("viewAllNotification")?.addEventListener("click", event => {
             event.preventDefault();
             renderAllNotifications();
@@ -291,7 +697,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.closeNotificationModal?.addEventListener("click", closeNotification);
         el.closeNotificationButton?.addEventListener("click", closeNotification);
         el.downloadReportBtn?.addEventListener("click", () => {
-            window.location.href = "/api/transaction/export-excel";
+            const params = selectedPeriodParams();
+            window.location.href = `/api/transaction/export-excel${params.toString() ? `?${params}` : ""}`;
+        });
+        document.querySelector(".detail-link")?.addEventListener("click", event => {
+            event.preventDefault();
+            const params = selectedPeriodParams();
+            window.location.href = `/owner/transaction${params.toString() ? `?${params}` : ""}`;
         });
         document.querySelectorAll(".logout, .logout-setting").forEach(button => {
             button.addEventListener("click", async event => {

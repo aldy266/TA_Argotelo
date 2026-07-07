@@ -13,6 +13,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const fullname = document.getElementById("fullname");
     const role = document.getElementById("role");
+    const profileImage = document.getElementById("profileImage");
+
+    let loginUser = null;
 
 
     const searchBox = document.querySelector(".search-box");
@@ -350,27 +353,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 console.log("Login belum terdeteksi");
 
+                return;
+
             }
+
+            loginUser = result.user;
             
             fullname.textContent =
-                result.user.fullname;
+                result.user.fullname || result.user.username || "User";
 
-            switch(result.user.role_id){
+            role.textContent =
+                result.user.role || "User";
 
-                case 1:
-                    role.textContent="Owner";
-                break;
+            if(profileImage){
 
-                case 2:
-                    role.textContent="Finance";
-                break;
-
-                case 3:
-                    role.textContent="Kasir";
-                break;
-
-                default:
-                    role.textContent="User";
+                profileImage.src =
+                    result.user.photo || "/static/images/profile.png";
 
             }
 
@@ -2844,6 +2842,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             settingsMenu.classList.remove("active");
 
+            if(loginUser){
+
+                document.getElementById("editFullname").value =
+                    loginUser.fullname || "";
+
+                document.getElementById("editUsername").value =
+                    loginUser.username || "";
+
+                document.getElementById("editEmail").value =
+                    loginUser.email || "";
+
+                document.getElementById("editPhone").value =
+                    loginUser.phone || "";
+
+                if(previewPhoto){
+
+                    previewPhoto.src =
+                        loginUser.photo || "/static/images/profile.png";
+
+                }
+
+            }
+
             editProfileModal.classList.add("show");
 
         });
@@ -2856,11 +2877,92 @@ document.addEventListener("DOMContentLoaded", async () => {
     cancelProfile?.addEventListener("click",closeProfile);
 
 
-    saveProfile?.addEventListener("click",()=>{
+    saveProfile?.addEventListener("click",async()=>{
 
-        alert("Profil berhasil diperbarui.");
+        const formData = new FormData();
 
-        closeProfile();
+        const editFullname =
+            document.getElementById("editFullname").value.trim();
+
+        const editUsername =
+            document.getElementById("editUsername").value.trim();
+
+        if(!editFullname || !editUsername){
+
+            alert("Nama lengkap dan username wajib diisi");
+
+            return;
+
+        }
+
+        formData.append("fullname", editFullname);
+        formData.append("username", editUsername);
+        formData.append(
+            "email",
+            document.getElementById("editEmail").value.trim()
+        );
+        formData.append(
+            "phone",
+            document.getElementById("editPhone").value.trim()
+        );
+
+        if(photoInput?.files?.[0]){
+
+            formData.append("photo", photoInput.files[0]);
+
+        }
+
+        try{
+
+            const response = await fetch("/api/update-profile",{
+                method:"POST",
+                credentials:"include",
+                body:formData
+            });
+
+            const result = await response.json();
+
+            alert(result.message);
+
+            if(!result.success){
+
+                return;
+
+            }
+
+            loginUser = {
+                ...loginUser,
+                ...result.user,
+                role: loginUser?.role
+            };
+
+            fullname.textContent =
+                loginUser.fullname || loginUser.username || "User";
+
+            role.textContent =
+                loginUser.role || "User";
+
+            if(profileImage){
+
+                profileImage.src =
+                    loginUser.photo || "/static/images/profile.png";
+
+            }
+
+            if(previewPhoto){
+
+                previewPhoto.src =
+                    loginUser.photo || "/static/images/profile.png";
+
+            }
+
+            closeProfile();
+
+        }catch(error){
+
+            alert("Profil gagal diperbarui");
+
+        }
 
     });
 
@@ -2908,11 +3010,66 @@ document.addEventListener("DOMContentLoaded", async () => {
     cancelPassword?.addEventListener("click",closePassword);
 
 
-    savePassword?.addEventListener("click",()=>{
+    savePassword?.addEventListener("click",async()=>{
 
-        alert("Password berhasil diperbarui.");
+        const oldPassword =
+            document.getElementById("oldPassword").value;
 
-        closePassword();
+        const newPassword =
+            document.getElementById("newPassword").value;
+
+        const confirmPassword =
+            document.getElementById("confirmPassword").value;
+
+        if(!oldPassword || !newPassword){
+
+            alert("Password lama dan password baru wajib diisi");
+
+            return;
+
+        }
+
+        if(newPassword !== confirmPassword){
+
+            alert("Konfirmasi password tidak sama");
+
+            return;
+
+        }
+
+        try{
+
+            const response = await fetch("/api/change-password",{
+                method:"POST",
+                credentials:"include",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+                    old_password:oldPassword,
+                    new_password:newPassword
+                })
+            });
+
+            const result = await response.json();
+
+            alert(result.message);
+
+            if(result.success){
+
+                document.getElementById("oldPassword").value = "";
+                document.getElementById("newPassword").value = "";
+                document.getElementById("confirmPassword").value = "";
+
+                closePassword();
+
+            }
+
+        }catch(error){
+
+            alert("Password gagal diperbarui");
+
+        }
 
     });
 

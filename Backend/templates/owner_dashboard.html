@@ -69,10 +69,12 @@
         <span>Staff</span>
     </a>
 
+    {% if current_user_role == "OWNER" %}
     <a href="{{ url_for('owner.owner_menu') }}">
         <i class="bi bi-tools"></i>
         <span>Menu Management</span>
     </a>
+    {% endif %}
 
 </nav>
 
@@ -219,6 +221,14 @@
                             <i class="bi bi-key"></i>
 
                             <span>Ubah Password</span>
+
+                        </a>
+
+                        <a href="#" id="manageAccountsBtn" class="owner-only">
+
+                            <i class="bi bi-people"></i>
+
+                            <span>Kelola Akun</span>
 
                         </a>
 
@@ -846,6 +856,89 @@
 
 </div>
 
+<!-- ==========================
+      MANAGE ACCOUNTS MODAL
+========================== -->
+
+<div class="modal" id="accountsModal">
+
+    <div class="modal-content account-modal-content">
+
+        <div class="modal-header">
+
+            <h3>Kelola Akun Finance & Kasir</h3>
+
+            <button
+                class="close-modal"
+                id="closeAccountsModal">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+
+        <div class="modal-body account-manager">
+
+            <div class="account-form-grid">
+
+                <input type="hidden" id="accountId">
+
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="accountFullname" placeholder="Nama akun">
+                </div>
+
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="accountUsername" placeholder="username">
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="accountEmail" placeholder="email opsional">
+                </div>
+
+                <div class="form-group">
+                    <label>No. HP</label>
+                    <input type="text" id="accountPhone" placeholder="nomor hp opsional">
+                </div>
+
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="accountRole">
+                        <option value="FINANCE">Finance</option>
+                        <option value="KASIR">Kasir</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="accountPassword" placeholder="Wajib saat tambah akun">
+                </div>
+
+            </div>
+
+            <div class="account-form-actions">
+                <button class="btn-cancel" id="resetAccountForm" type="button">Form Baru</button>
+                <button class="btn-save" id="saveAccount" type="button">Simpan Akun</button>
+            </div>
+
+            <div class="account-list-header">
+                <h4>Daftar Akun</h4>
+                <span id="accountCount">0 akun</span>
+            </div>
+
+            <div class="account-list" id="accountList">
+                <p>Memuat akun...</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
 <!-- ===================================== -->
 <!-- ALL NOTIFICATION MODAL -->
 <!-- ===================================== -->
@@ -906,6 +999,7 @@
 
 </div>
 
+    <script src="{{ url_for('static', filename='js/role_access_ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/owner_dashboard_api.js') }}"></script>
 
 </body>

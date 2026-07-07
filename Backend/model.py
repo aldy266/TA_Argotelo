@@ -335,6 +335,59 @@ class MenuItem(db.Model):
     )
 
 
+class MenuRecipe(db.Model):
+
+    __tablename__ = "menu_recipes"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    menu_item_id = db.Column(
+        db.Integer,
+        db.ForeignKey("menu_items.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    id_inventory = db.Column(
+        db.Integer,
+        db.ForeignKey("inventory.id_inventory"),
+        nullable=False
+    )
+
+    quantity = db.Column(
+        db.Numeric(10, 2),
+        nullable=False
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=waktu_wib
+    )
+
+    updated_at = db.Column(
+        db.DateTime,
+        default=waktu_wib,
+        onupdate=waktu_wib
+    )
+
+    menu_item = db.relationship(
+        "MenuItem",
+        backref=db.backref("recipes", cascade="all, delete-orphan")
+    )
+
+    inventory = db.relationship(
+        "Inventory",
+        backref="menu_recipes"
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "menu_item_id",
+            "id_inventory",
+            name="uq_menu_recipe_inventory"
+        ),
+    )
+
+
 # ==========================
 # TRANSACTION
 # ==========================
@@ -608,7 +661,7 @@ class StaffSchedule(db.Model):
     attendance = db.relationship("Attendance", backref="schedule", uselist=False, cascade="all, delete-orphan")
 
     __table_args__ = (
-        db.UniqueConstraint("staff_id", "schedule_date", name="uq_staff_schedule_date"),
+        db.Index("idx_schedule_staff_date", "staff_id", "schedule_date"),
     )
 
 

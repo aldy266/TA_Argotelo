@@ -1,12 +1,12 @@
 from pathlib import Path
 from datetime import time
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, session
 from flask_cors import CORS
 from sqlalchemy import text
 
 from config import Config
-from model import Role, Shift, db
+from model import Role, Shift, User, db
 
 from routes.auth import auth_bp
 from routes.owner import owner_bp
@@ -48,6 +48,20 @@ CORS(
 db.init_app(app)
 
 
+@app.context_processor
+def inject_current_user_role():
+    user_id = session.get("user_id")
+    if not user_id:
+        return {
+            "current_user_role": None
+        }
+
+    user = User.query.get(user_id)
+    return {
+        "current_user_role": user.role.role_name.upper() if user and user.role else None
+    }
+
+
 def seed_default_roles():
     default_roles = [
         ("OWNER", "Pemilik Sistem"),
@@ -84,8 +98,105 @@ def seed_default_shifts():
     db.session.commit()
 
 
+def remove_legacy_staff_schedule_unique_constraint():
+    dialect = db.engine.dialect.name
+
+    try:
+        if dialect in {"mysql", "mariadb"}:
+            exists = db.session.execute(text("""
+                SELECT COUNT(1)
+                FROM INFORMATION_SCHEMA.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'staff_schedules'
+                  AND INDEX_NAME = 'uq_staff_schedule_date'
+            """)).scalar()
+
+            if exists:
+                replacement_exists = db.session.execute(text("""
+                    SELECT COUNT(1)
+                    FROM INFORMATION_SCHEMA.STATISTICS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = 'staff_schedules'
+                      AND INDEX_NAME = 'idx_schedule_staff_date'
+                """)).scalar()
+
+                if not replacement_exists:
+                    db.session.execute(text(
+                        "CREATE INDEX idx_schedule_staff_date ON staff_schedules (staff_id, schedule_date)"
+                    ))
+
+                db.session.execute(text(
+                    "ALTER TABLE staff_schedules DROP INDEX uq_staff_schedule_date"
+                ))
+                db.session.commit()
+            return
+
+        if dialect == "sqlite":
+            index_rows = db.session.execute(text(
+                "PRAGMA index_list('staff_schedules')"
+            )).fetchall()
+            has_legacy_unique = False
+
+            for row in index_rows:
+                index_name = row[1]
+                is_unique = bool(row[2])
+                if not is_unique:
+                    continue
+
+                columns = [
+                    info_row[2]
+                    for info_row in db.session.execute(text(
+                        f"PRAGMA index_info('{index_name}')"
+                    )).fetchall()
+                ]
+                if columns == ["staff_id", "schedule_date"]:
+                    has_legacy_unique = True
+                    break
+
+            if not has_legacy_unique:
+                return
+
+            db.session.rollback()
+            with db.engine.begin() as connection:
+                connection.execute(text("PRAGMA foreign_keys=OFF"))
+                connection.execute(text("""
+                    CREATE TABLE staff_schedules_new (
+                        id INTEGER NOT NULL PRIMARY KEY,
+                        staff_id INTEGER NOT NULL,
+                        shift_id INTEGER NOT NULL,
+                        schedule_date DATE NOT NULL,
+                        created_at DATETIME,
+                        updated_at DATETIME,
+                        FOREIGN KEY(staff_id) REFERENCES staff (id) ON DELETE CASCADE,
+                        FOREIGN KEY(shift_id) REFERENCES shifts (id) ON DELETE CASCADE
+                    )
+                """))
+                connection.execute(text("""
+                    INSERT INTO staff_schedules_new (
+                        id, staff_id, shift_id, schedule_date, created_at, updated_at
+                    )
+                    SELECT id, staff_id, shift_id, schedule_date, created_at, updated_at
+                    FROM staff_schedules
+                """))
+                connection.execute(text("DROP TABLE staff_schedules"))
+                connection.execute(text(
+                    "ALTER TABLE staff_schedules_new RENAME TO staff_schedules"
+                ))
+                connection.execute(text(
+                    "CREATE INDEX IF NOT EXISTS idx_schedule_date ON staff_schedules (schedule_date)"
+                ))
+                connection.execute(text(
+                    "CREATE INDEX IF NOT EXISTS idx_schedule_staff_date ON staff_schedules (staff_id, schedule_date)"
+                ))
+                connection.execute(text("PRAGMA foreign_keys=ON"))
+    except Exception as error:
+        db.session.rollback()
+        print(f"Skip staff schedule constraint migration: {error}")
+
+
 def initialize_database():
     db.create_all()
+    remove_legacy_staff_schedule_unique_constraint()
     seed_default_roles()
     seed_default_shifts()
 
