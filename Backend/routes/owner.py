@@ -189,11 +189,27 @@ def parse_recipe_payload(data):
 
 
 def sync_menu_recipe(menu_item, recipe_items):
-    menu_item.recipes.clear()
+
+    # hapus resep lama dari database
+    MenuRecipe.query.filter_by(
+        menu_item_id=menu_item.id
+    ).delete()
+
+
+    db.session.flush()
+
+
+    # tambah resep baru
     for inventory, quantity in recipe_items:
-        menu_item.recipes.append(MenuRecipe(
-            inventory=inventory,
-            quantity=quantity,
+
+        db.session.add(MenuRecipe(
+
+            menu_item_id=menu_item.id,
+
+            id_inventory=inventory.id_inventory,
+
+            quantity=quantity
+
         ))
 
 

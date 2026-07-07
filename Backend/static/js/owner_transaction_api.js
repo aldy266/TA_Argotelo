@@ -52,12 +52,53 @@ document.addEventListener("DOMContentLoaded", async () => {
         savePassword: document.getElementById("savePassword"),
         oldPassword: document.getElementById("oldPassword"),
         newPassword: document.getElementById("newPassword"),
-        confirmPassword: document.getElementById("confirmPassword")
+        confirmPassword: document.getElementById("confirmPassword"),
+
+        notificationBtn:
+            document.getElementById("notificationBtn"),
+
+        notificationMenu:
+            document.getElementById("notificationMenu"),
+
+        notificationBadge:
+            document.getElementById("notificationBadge"),
+
+        notificationSubtitle:
+            document.getElementById("notificationSubtitle"),
+
+        notificationList:
+            document.getElementById("notificationList"),
+
+        stockAlertText:
+            document.getElementById("stockAlertText"),
+
+
+        // LIHAT SEMUA
+        viewAllNotification:
+            document.getElementById("viewAllNotification"),
+
+        notificationModal:
+            document.getElementById("notificationModal"),
+
+        allNotificationList:
+            document.getElementById("allNotificationList"),
+
+        allNotificationCount:
+            document.getElementById("allNotificationCount"),
+
+        closeNotificationModal:
+            document.getElementById("closeNotificationModal"),
+
+        closeNotificationButton:
+            document.getElementById("closeNotificationButton"),
+
     };
 
     let transactions = [];
     let loginUser = null;
     let notifications = [];
+    let stockAlertIndex = 0;
+    let stockAlertTimer = null;
 
     function rupiah(value) {
         return new Intl.NumberFormat("id-ID", {
@@ -151,37 +192,162 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderNotifications() {
-        if (el.notificationBadge) el.notificationBadge.textContent = notifications.length;
+
+
+        if (el.notificationBadge) {
+
+            el.notificationBadge.textContent = notifications.length;
+
+        }
+
+
         if (el.notificationSubtitle) {
-            el.notificationSubtitle.textContent = `${notifications.length} Notifikasi Aktif`;
+
+            el.notificationSubtitle.textContent =
+                `${notifications.length} Notifikasi Aktif`;
+
         }
+
+
+        // =========================
+        // ALERT MERAH MUTER
+        // =========================
+
         if (el.stockAlertText) {
-            el.stockAlertText.textContent = notifications.length
-                ? `Stok ${notifications[0].product} menipis`
-                : "Semua stok aman";
+
+
+            if (!notifications.length) {
+
+
+                el.stockAlertText.textContent =
+                    "Semua stok aman";
+
+
+            } else {
+
+
+                let index = 0;
+
+
+                el.stockAlertText.textContent =
+                    `Stok ${notifications[index].product} menipis`;
+
+
+
+                setInterval(() => {
+
+
+                    index++;
+
+
+                    if (index >= notifications.length) {
+
+                        index = 0;
+
+                    }
+
+
+                    el.stockAlertText.textContent =
+                        `Stok ${notifications[index].product} menipis`;
+
+
+                }, 3000);
+
+
+            }
+
         }
+
+
+        // =========================
+        // DROPDOWN BELL
+        // =========================
+
         if (!el.notificationList) return;
+
+
         if (!notifications.length) {
+
+
             el.notificationList.innerHTML = `
+
                 <div class="notification-empty">
+
                     <i class="bi bi-check-circle-fill"></i>
+
                     <span>Tidak ada notifikasi.</span>
+
                 </div>
+
             `;
-            if (el.notificationFooter) el.notificationFooter.style.display = "none";
+
+
+            if (el.notificationFooter) {
+
+                el.notificationFooter.style.display = "none";
+
+            }
+
+
             return;
+
         }
-        el.notificationList.innerHTML = notifications.slice(0, 3).map(item => `
+
+
+
+        el.notificationList.innerHTML =
+            notifications.slice(0,3).map(item => `
+
             <div class="notification-item">
-                <div class="notification-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                <div class="notification-info">
-                    <h5>Stok ${escapeHtml(item.product)} Menipis</h5>
-                    <span>Sisa: ${escapeHtml(item.stock)}</span>
-                    <small>${escapeHtml(item.time || "")}</small>
+
+
+                <div class="notification-icon">
+
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
                 </div>
+
+
+                <div class="notification-info">
+
+                    <h5>
+
+                        Stok ${escapeHtml(item.product)} Menipis
+
+                    </h5>
+
+
+                    <span>
+
+                        Sisa: ${escapeHtml(item.stock)}
+
+                    </span>
+
+
+                    <small>
+
+                        ${escapeHtml(item.time || "")}
+
+                    </small>
+
+
+                </div>
+
+
             </div>
+
         `).join("");
-        if (el.notificationFooter) el.notificationFooter.style.display = notifications.length > 3 ? "block" : "none";
+
+
+
+        if (el.notificationFooter) {
+
+            el.notificationFooter.style.display =
+                notifications.length > 3 ? "block" : "none";
+
+        }
+
+
     }
 
     async function loadNotifications() {
@@ -343,6 +509,58 @@ document.addEventListener("DOMContentLoaded", async () => {
         alert(result.message || "Password berhasil diperbarui");
     }
 
+    function renderAllNotifications(){
+
+        if(!el.allNotificationList) return;
+
+
+        el.allNotificationCount.textContent =
+            `${notifications.length} Notifikasi`;
+
+
+        if(!notifications.length){
+
+            el.allNotificationList.innerHTML =
+                "<p>Tidak ada stok menipis.</p>";
+
+            return;
+        }
+
+
+        el.allNotificationList.innerHTML =
+            notifications.map(item => `
+
+            <div class="notification-item">
+
+                <div class="notification-icon">
+
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                </div>
+
+
+                <div class="notification-info">
+
+                    <h5>
+                        Stok ${escapeHtml(item.product)} Menipis
+                    </h5>
+
+                    <span>
+                        Sisa : ${escapeHtml(item.stock)}
+                    </span>
+
+                    <small>
+                        ${escapeHtml(item.time || "Real-time")}
+                    </small>
+
+                </div>
+
+            </div>
+
+        `).join("");
+
+    }
+
     function bindEvents() {
         el.searchTransaction.addEventListener("input", () => loadTransactions().catch(error => alert(error.message)));
         el.filterBtn.addEventListener("click", () => loadTransactions().catch(error => alert(error.message)));
@@ -389,6 +607,58 @@ document.addEventListener("DOMContentLoaded", async () => {
             event.preventDefault();
             openProfileModal();
         });
+
+       document.addEventListener("click", function(event){
+
+            const btn = event.target.closest("#viewAllNotification");
+
+            if(!btn) return;
+
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+
+            console.log("LIHAT SEMUA KLIK");
+
+
+            renderAllNotifications();
+
+
+            document
+            .getElementById("notificationMenu")
+            ?.classList.remove("active");
+
+
+            document
+            .getElementById("notificationModal")
+            ?.classList.add("show");
+
+
+        });
+
+       document
+        .getElementById("closeNotificationModal")
+        ?.addEventListener("click",()=>{
+
+            document
+            .getElementById("notificationModal")
+            ?.classList.remove("show");
+
+        });
+
+
+        document
+        .getElementById("closeNotificationButton")
+        ?.addEventListener("click",()=>{
+
+            document
+            .getElementById("notificationModal")
+            ?.classList.remove("show");
+
+        });
+
         el.closeProfileModal?.addEventListener("click", closeProfileModal);
         el.cancelProfile?.addEventListener("click", closeProfileModal);
         el.saveProfile?.addEventListener("click", () => {
@@ -427,9 +697,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     await loadUser();
+
     hydrateFiltersFromUrl();
-    bindEvents();
+
     await loadTransactions();
+
     await loadNotifications();
+
+    bindEvents();
+
     setInterval(loadNotifications, 30000);
 });

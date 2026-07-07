@@ -2445,6 +2445,64 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let notifications=[];
 
+
+    // =====================================================
+    // MANAGE ACCOUNT MODAL
+    // =====================================================
+
+    const manageAccountsBtn =
+        document.getElementById("manageAccountsBtn");
+
+
+    const accountsModal =
+        document.getElementById("accountsModal");
+
+
+    const closeAccountsModal =
+        document.getElementById("closeAccountsModal");
+
+
+
+    if(manageAccountsBtn){
+
+        manageAccountsBtn.addEventListener(
+            "click",
+            function(e){
+
+                e.preventDefault();
+
+
+                settingsMenu.classList.remove(
+                    "active"
+                );
+
+
+                accountsModal.classList.add(
+                    "show"
+                );
+
+            }
+        );
+
+    }
+
+
+
+    if(closeAccountsModal){
+
+        closeAccountsModal.addEventListener(
+            "click",
+            function(){
+
+                accountsModal.classList.remove(
+                    "show"
+                );
+
+            }
+        );
+
+    }
+
         // =====================================================
         // RENDER NOTIFICATION
         // =====================================================

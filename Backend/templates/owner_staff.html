@@ -292,7 +292,7 @@
 
                             <i class="bi bi-plus-lg"></i>
 
-                            Tambah Penjadwalan
+                            Tambah Jadwal Kerja
 
                         </button>
 
@@ -304,13 +304,13 @@
 
                 <table class="attendance-table">
 
-                    <thead>
-
+                   <thead>
                         <tr>
-
                             <th>Karyawan</th>
 
-                            <th>Waktu Clock-In</th>
+                            <th>Masuk</th>
+
+                            <th>Pulang</th>
 
                             <th>Shift</th>
 
@@ -319,9 +319,7 @@
                             <th>Jam Kerja</th>
 
                             <th>Aksi</th>
-
                         </tr>
-
                     </thead>
 
                     <tbody>
@@ -408,12 +406,6 @@
 
                             <h3>Manajemen Shift</h3>
 
-                            <button class="icon-button" id="btn-add-schedule">
-
-                                <i class="bi bi-calendar-plus"></i>
-
-                            </button>
-
                         </div>
 
                         <div id="shift-container">
@@ -430,7 +422,7 @@
 
                             <i class="bi bi-plus-lg"></i>
 
-                            Tambah Penjadwalan
+                            Tambah Jadwal Kerja
 
                         </button>
 
@@ -448,25 +440,68 @@
 
                         </div>
 
+
                         <div id="approval-container">
 
-                            <div style="padding: 20px; text-align: center; color: var(--text-light);">
 
-                                <p>Tidak ada permohonan menunggu persetujuan</p>
+                            <div class="approval-item">
+
+                                <div class="approval-icon sick">
+
+                                    <i class="bi bi-clipboard2-pulse"></i>
+
+                                </div>
+
+
+                                <div class="approval-info">
+
+                                    <strong>Izin Sakit - Maya Putri</strong>
+
+                                    <span>2 jam yang lalu</span>
+
+                                </div>
+
+
+                                <button class="review-btn">
+
+                                    Review
+
+                                </button>
 
                             </div>
+
+
+
+                            <div class="approval-item">
+
+                                <div class="approval-icon leave">
+
+                                    <i class="bi bi-calendar-check"></i>
+
+                                </div>
+
+
+                                <div class="approval-info">
+
+                                    <strong>Pengajuan Cuti - Danu</strong>
+
+                                    <span>5 jam yang lalu</span>
+
+                                </div>
+
+
+                                <button class="review-btn">
+
+                                    Review
+
+                                </button>
+
+                            </div>
+
 
                         </div>
 
                     </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
 
     <!-- IMPORT STAFF MODAL -->
     <div class="menu-modal-backdrop hidden" id="staffImportModal">
@@ -549,7 +584,7 @@
     <div class="menu-modal-backdrop hidden" id="scheduleModal">
         <div class="menu-modal" role="dialog" aria-modal="true">
             <div class="menu-modal-header">
-                <h2 id="scheduleModalTitle">Tambah Penjadwalan</h2>
+                <h2 id="scheduleModalTitle">Tambah Jadwal Kerja</h2>
                 <button class="modal-close" id="closeScheduleModal" type="button" aria-label="Tutup">
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -557,7 +592,10 @@
             <div class="menu-form">
                 <label>
                     Staff
-                    <select id="scheduleStaffSelect"></select>
+                    <select 
+                        id="scheduleStaffSelect"
+                        class="scroll-select">
+                    </select>
                 </label>
                 <label>
                     Shift
@@ -565,13 +603,17 @@
                 </label>
                 <label id="scheduleRangeLabel">
                     Rentang Jadwal
-                    <select id="scheduleRangeSelect">
+                    <select 
+                        id="scheduleRangeSelect"
+                        class="scroll-select">
+
                         <option value="single">Satu tanggal</option>
                         <option value="tomorrow">Besok</option>
                         <option value="week">1 minggu ke depan</option>
                         <option value="month">1 bulan ke depan</option>
                         <option value="year">1 tahun ke depan</option>
                         <option value="custom">Custom</option>
+
                     </select>
                 </label>
                 <div class="form-row" id="scheduleDateRange">
@@ -647,9 +689,9 @@
     <!-- SHIFT MODAL -->
     <div class="menu-modal-backdrop hidden" id="shiftModal">
         <div class="menu-modal" role="dialog" aria-modal="true">
-            <div class="menu-modal-header">
-                <h2>Edit Shift</h2>
-                <button class="modal-close" id="closeShiftModal" type="button" aria-label="Tutup">
+           <div class="menu-modal-header">
+                <h2 id="shiftModalTitle">Edit Shift</h2>
+                <button class="modal-close" id="closeShiftModal" type="button">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
@@ -678,6 +720,86 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- ===============================
+        REVIEW IZIN MODAL
+    ================================ -->
+
+    <div id="reviewModal" class="menu-modal-backdrop hidden">
+
+        <div class="menu-modal">
+
+            <div class="menu-modal-header">
+
+                <h2>Detail Pengajuan</h2>
+
+                <button 
+                    id="closeReviewModal"
+                    class="modal-close">
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="menu-form">
+
+
+                <label>
+                    Nama Karyawan
+                    <input 
+                        id="reviewName"
+                        readonly>
+                </label>
+
+
+                <label>
+                    Jenis Pengajuan
+                    <input 
+                        id="reviewType"
+                        readonly>
+                </label>
+
+
+                <label>
+                    Keterangan
+
+                    <textarea 
+                        id="reviewReason"
+                        readonly>
+                    </textarea>
+
+                </label>
+
+
+                <div class="modal-action">
+
+                    <button 
+                        class="delete-btn"
+                        id="rejectRequest">
+
+                        Tolak
+
+                    </button>
+
+
+                    <button 
+                        class="primary-button"
+                        id="approveRequest">
+
+                        Setujui
+
+                    </button>
+
+
+                </div>
+
+
+            </div>
+
+        </div>
+
     </div>
 
     <script src="{{ url_for('static', filename='js/role_access_ui.js') }}"></script>

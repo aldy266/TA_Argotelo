@@ -217,28 +217,62 @@ document.addEventListener("DOMContentLoaded", async () => {
         return button;
     }
 
-    function closeMenuForm(modal) {
-        modal.remove();
-    }
-
     function inventoryOptions(selectedId) {
+
         if (!state.inventory.length) {
-            return "<option value=\"\">Belum ada inventory</option>";
+
+            return `<option value="">Belum ada inventory</option>`;
+
         }
 
+
         return `
+
             <option value="">Pilih bahan</option>
+
             ${state.inventory.map(item => `
-                <option value="${item.id_inventory}" ${String(selectedId || "") === String(item.id_inventory) ? "selected" : ""}>
-                    ${escapeHtml(item.nama_bahan)} (${formatQuantity(item.stok)} ${escapeHtml(item.satuan)})
+
+                <option 
+                    value="${item.id_inventory}"
+                    ${String(selectedId || "") === String(item.id_inventory) ? "selected" : ""}
+                >
+
+                    ${escapeHtml(item.nama_bahan)}
+
                 </option>
+
             `).join("")}
+
         `;
+
+    }
+
+
+    function stockForInventory(inventoryId) {
+
+        const item = state.inventory.find(row =>
+            String(row.id_inventory) === String(inventoryId)
+        );
+
+
+        if (!item) {
+
+            return "-";
+
+        }
+
+
+        return `${formatQuantity(item.stok)} ${item.satuan}`;
+
     }
 
     function unitForInventory(inventoryId) {
         const item = state.inventory.find(row => String(row.id_inventory) === String(inventoryId));
         return item?.satuan || "unit";
+    }
+
+    function closeMenuForm(modal){
+        modal.remove();
     }
 
     function openMenuForm(menu = null) {
@@ -311,14 +345,46 @@ document.addEventListener("DOMContentLoaded", async () => {
         `;
 
         document.body.appendChild(modal);
-        const close = () => closeMenuForm(modal);
-        modal.querySelector(".modal-close").addEventListener("click", close);
-        modal.querySelector(".cancel-btn").addEventListener("click", close);
-        modal.addEventListener("click", event => {
-            if (event.target === modal) close();
+
+
+        // =========================
+        // CLOSE MODAL
+        // =========================
+
+        const close = () => {
+
+            closeMenuForm(modal);
+
+        };
+
+
+        const closeBtn = modal.querySelector(".modal-close");
+
+        const cancelBtn = modal.querySelector(".cancel-btn");
+
+
+        closeBtn?.addEventListener("click", close);
+
+        cancelBtn?.addEventListener("click", close);
+
+
+        modal.addEventListener("click", (event) => {
+
+            if (event.target === modal) {
+
+                close();
+
+            }
+
         });
 
+
+        // =========================
+        // RECIPE ELEMENT
+        // =========================
+
         const recipeContainer = modal.querySelector("#recipeRows");
+
         const addRecipeBtn = modal.querySelector("#addRecipeRow");
 
         function renderRecipeRows() {
@@ -346,9 +412,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="recipe-row" data-index="${index}">
                     <label>
                         Bahan
-                        <select data-field="id_inventory" required>
+                      <select data-field="id_inventory" required>
                             ${inventoryOptions(row.id_inventory)}
                         </select>
+                        <small class="recipe-stock">
+                            Stok tersedia : ${stockForInventory(row.id_inventory)}
+                        </small>
                     </label>
                     <label>
                         Jumlah / porsi
@@ -369,7 +438,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             recipeRows.push({
                 id_inventory: firstInventory ? String(firstInventory.id_inventory) : "",
-                quantity: "1"
+                quantity: ""
             });
             renderRecipeRows();
         });

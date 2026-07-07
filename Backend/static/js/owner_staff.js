@@ -41,7 +41,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const allStaffList = document.getElementById("allStaffList");
     const scheduleButtons = [
         document.getElementById("btn-top-schedule"),
-        document.getElementById("btn-add-schedule"),
         document.getElementById("btn-new-schedule")
     ].filter(Boolean);
     const scheduleModal = document.getElementById("scheduleModal");
@@ -57,6 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const scheduleRangeHelp = document.getElementById("scheduleRangeHelp");
     const scheduleDateInput = document.getElementById("scheduleDateInput");
     const shiftModal = document.getElementById("shiftModal");
+    const shiftModalTitle = document.getElementById("shiftModalTitle");
     const closeShiftModal = document.getElementById("closeShiftModal");
     const cancelShift = document.getElementById("cancelShift");
     const saveShift = document.getElementById("saveShift");
@@ -413,70 +413,121 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderAttendanceTable() {
+
         if (filteredData.length === 0) {
-            const emptyText = isTodayValue(selectedAttendanceDate)
-                ? "Belum ada staff yang dijadwalkan hari ini."
-                : "Belum ada staff yang dijadwalkan pada tanggal ini.";
+
             attendanceTable.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 40px 20px; color: var(--text-light);">
-                        <i class="bi bi-inbox" style="font-size: 32px; display: block; margin-bottom: 12px;"></i>
-                        <p>${emptyText}</p>
+                    <td colspan="7" 
+                    style="text-align:center; padding:40px;">
+                        Belum ada data kehadiran.
                     </td>
                 </tr>
             `;
+
             return;
         }
 
-        attendanceTable.innerHTML = filteredData.map(record => {
-            let clockAction = "";
 
-            if (record.status === "NOT_CHECKED_IN" && isTodayValue(record.schedule_date)) {
-                clockAction = `
-                    <button class="edit-btn clock-btn" type="button" data-action="clock-in" data-schedule-id="${record.schedule_id}">
-                        <i class="bi bi-box-arrow-in-right"></i> Clock In
-                    </button>
-                `;
-            } else if ((record.status === "PRESENT" || record.status === "LATE") && isTodayValue(record.schedule_date)) {
-                clockAction = `
-                    <button class="edit-btn clock-btn" type="button" data-action="clock-out" data-schedule-id="${record.schedule_id}">
-                        <i class="bi bi-box-arrow-right"></i> Clock Out
-                    </button>
-                `;
-            }
+        attendanceTable.innerHTML = filteredData.map(record => {
 
             return `
             <tr>
+
                 <td>
-                    <strong class="staff-name-only">${escapeHtml(record.full_name)}</strong>
+                    <strong>
+                        ${escapeHtml(record.full_name)}
+                    </strong>
                 </td>
-                <td>${formatTime(record.clock_in)}</td>
-                <td><span class="shift-badge">${escapeHtml(record.shift_name)}</span></td>
+
+
                 <td>
-                    <span class="badge ${getStatusBadgeClass(record.status)}">
-                        ${getStatusLabel(record.status)}
+                    ${formatTime(record.clock_in)}
+                </td>
+
+
+                <td>
+                    ${formatTime(record.clock_out)}
+                </td>
+
+
+                <td>
+                    <span class="shift-badge">
+                        ${escapeHtml(record.shift_name)}
                     </span>
                 </td>
-                <td>${record.work_minutes > 0 ? Math.floor(record.work_minutes / 60) + 'h ' + (record.work_minutes % 60) + 'm' : '00h 00m'}</td>
+
+
                 <td>
-                    <div class="attendance-row-actions">
-                        ${clockAction}
-                        <button class="edit-btn schedule-edit-btn" type="button" data-schedule-id="${record.schedule_id}">
-                            <i class="bi bi-pencil-square"></i> Edit Shift
-                        </button>
-                        <button class="secondary-button leave-btn" type="button" data-schedule-id="${record.schedule_id}">
-                            <i class="bi bi-file-earmark-medical"></i> Izin/Sakit
-                        </button>
-                        <button class="delete-btn schedule-delete-btn" type="button" data-schedule-id="${record.schedule_id}">
-                            <i class="bi bi-trash3"></i> Hapus
-                        </button>
-                    </div>
+
+                    <span class="badge ${getStatusBadgeClass(record.status)}">
+
+                        ${getStatusLabel(record.status)}
+
+                    </span>
+
                 </td>
+
+
+                <td>
+
+                    ${
+                        record.work_minutes > 0 
+                        ?
+                        Math.floor(record.work_minutes / 60)
+                        + "h " +
+                        (record.work_minutes % 60)
+                        + "m"
+
+                        :
+
+                        "00h 00m"
+                    }
+
+                </td>
+
+
+                <td>
+
+                    <div class="attendance-row-actions">
+
+
+                        <button 
+                        class="edit-btn schedule-edit-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-pencil-square"></i>
+                            Edit 
+
+                        </button>
+
+
+                        <button 
+                        class="delete-btn schedule-delete-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-trash3"></i>
+                            Hapus
+
+                        </button>
+
+
+                    </div>
+
+                </td>
+
+
             </tr>
-        `;
+            `;
+
+
         }).join("");
 
+
         animateRows();
+
     }
 
     function animateRows() {
@@ -513,7 +564,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     attendanceTable?.addEventListener("click", async event => {
-        const clockButton = event.target.closest(".clock-btn");
         const editButton = event.target.closest(".schedule-edit-btn");
         const leaveButton = event.target.closest(".leave-btn");
         const deleteButton = event.target.closest(".schedule-delete-btn");
@@ -552,26 +602,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 deleteButton.disabled = false;
             }
             return;
-        }
-
-        if (!clockButton) return;
-
-        const action = clockButton.dataset.action;
-        const scheduleId = clockButton.dataset.scheduleId;
-        const endpoint = action === "clock-in"
-            ? `/api/staff/attendance/${scheduleId}/clock-in`
-            : `/api/staff/attendance/${scheduleId}/clock-out`;
-
-        clockButton.disabled = true;
-        try {
-            const response = await apiRequest(endpoint, { method: "PATCH" });
-            showToast(response.message || "Kehadiran berhasil diperbarui");
-            await loadStatistics();
-            await loadMonthStatistics();
-            await loadAttendance();
-        } finally {
-            clockButton.disabled = false;
-        }
+        } 
     });
 
     // =====================================
@@ -632,7 +663,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             await loadStatistics();
             await loadMonthStatistics();
             await loadAttendance(selectedAttendanceDate);
-            await loadLeaveRequests();
+            //await loadLeaveRequests()
         } finally {
             saveLeave.disabled = false;
         }
@@ -826,7 +857,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await apiRequest(`/api/staff/leave-request/${requestId}/approve`, { method: "PATCH" });
                 showToast("Permohonan disetujui");
                 close();
-                await loadLeaveRequests();
+                //await loadLeaveRequests();
                 await loadStatistics();
                 await loadMonthStatistics();
                 await loadAttendance();
@@ -840,7 +871,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await apiRequest(`/api/staff/leave-request/${requestId}/reject`, { method: "PATCH" });
                 showToast("Permohonan ditolak");
                 close();
-                await loadLeaveRequests();
+                //await loadLeaveRequests();
                 await loadStatistics();
             } catch (error) {
                 console.error("Error rejecting leave:", error);
@@ -1025,30 +1056,49 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    shiftContainer?.addEventListener("click", event => {
-        const button = event.target.closest(".shift-edit-btn");
-        if (!button) return;
-        openShiftModal(button.dataset.shiftId);
-    });
-
     // =====================================
     // SHIFT EDIT MODAL
     // =====================================
 
-    function openShiftModal(shiftId) {
-        const shift = shiftData.find(item => String(item.id) === String(shiftId));
-        if (!shift) {
-            showToast("Shift tidak ditemukan", "error");
-            return;
-        }
+   function openShiftModal(shiftId = null) {
+
+        const shift = shiftData.find(
+            item => String(item.id) === String(shiftId)
+        );
+
+
+    if (shift) {
 
         selectedShiftId = Number(shift.id);
-        shiftNameInput.value = shift.shift_name || "";
-        shiftStartInput.value = toTimeInputValue(shift.start_time);
-        shiftEndInput.value = toTimeInputValue(shift.end_time);
-        shiftToleranceInput.value = shift.tolerance_minutes ?? 0;
+
+        if (shiftModalTitle) {
+                shiftModalTitle.textContent = "Edit Shift";
+            }
+
+            shiftNameInput.value = shift.shift_name || "";
+            shiftStartInput.value = toTimeInputValue(shift.start_time);
+            shiftEndInput.value = toTimeInputValue(shift.end_time);
+            shiftToleranceInput.value = shift.tolerance_minutes ?? 0;
+
+        } else {
+
+            selectedShiftId = null;
+
+            if (shiftModalTitle) {
+                shiftModalTitle.textContent = "Tambah Shift Baru";
+            }
+
+            shiftNameInput.value = "";
+            shiftStartInput.value = "";
+            shiftEndInput.value = "";
+            shiftToleranceInput.value = "10";
+
+        }
+
+
         shiftModal?.classList.remove("hidden");
         shiftNameInput?.focus();
+
     }
 
     function closeShift() {
@@ -1061,34 +1111,85 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function saveShiftData() {
-        if (!selectedShiftId) {
-            showToast("Shift belum dipilih", "error");
+
+
+        if (!shiftNameInput.value.trim() 
+            || !shiftStartInput.value 
+            || !shiftEndInput.value) {
+
+
+            showToast(
+                "Nama shift, jam mulai, dan jam selesai wajib diisi",
+                "error"
+            );
+
+
             return;
-        }
-        if (!shiftNameInput.value.trim() || !shiftStartInput.value || !shiftEndInput.value) {
-            showToast("Nama shift, jam mulai, dan jam selesai wajib diisi", "error");
-            return;
+
         }
 
+
         saveShift.disabled = true;
+
+
         try {
-            const response = await apiRequest(`/api/staff/shift/${selectedShiftId}`, {
-                method: "PATCH",
-                body: JSON.stringify({
-                    shift_name: shiftNameInput.value.trim(),
-                    start_time: shiftStartInput.value,
-                    end_time: shiftEndInput.value,
-                    tolerance_minutes: Number(shiftToleranceInput.value || 0)
-                })
-            });
-            showToast(response.message || "Shift berhasil diperbarui");
+
+
+            const response = await apiRequest(
+
+                selectedShiftId
+                    ? `/api/staff/shift/${selectedShiftId}`
+                    : "/api/staff/shift",
+
+                {
+
+                    method: selectedShiftId ? "PATCH" : "POST",
+
+
+                    body: JSON.stringify({
+
+                        shift_name: shiftNameInput.value.trim(),
+
+                        start_time: shiftStartInput.value,
+
+                        end_time: shiftEndInput.value,
+
+                        tolerance_minutes:
+                        Number(shiftToleranceInput.value || 0)
+
+                    })
+
+                }
+
+            );
+
+
+            showToast(
+                response.message ||
+                (selectedShiftId
+                    ? "Shift berhasil diperbarui"
+                    : "Shift berhasil dibuat")
+            );
+
+
             closeShift();
+
+
             await loadShiftData();
+
             await loadAttendance();
+
             await loadStatistics();
+
+
         } finally {
+
+
             saveShift.disabled = false;
+
+
         }
+
     }
 
     // =====================================
@@ -1263,9 +1364,46 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     closeShiftModal?.addEventListener("click", closeShift);
+
     cancelShift?.addEventListener("click", closeShift);
+
+
+    // ===============================
+    // SHIFT BUTTON ACTION
+    // ===============================
+
+    document.addEventListener("click", function(e) {
+
+
+        // tombol + kecil Manajemen Shift
+        const addBtn = e.target.closest("#btn-add-shift");
+
+        if (addBtn) {
+
+            openShiftModal(null);
+
+        }
+
+
+
+        // tombol edit shift
+        const editBtn = e.target.closest(".shift-edit-btn");
+
+        if (editBtn) {
+
+            openShiftModal(
+                editBtn.dataset.shiftId
+            );
+
+        }
+
+
+    });
+
     saveShift?.addEventListener("click", () => {
+
         saveShiftData().catch(error => console.error(error));
+
     });
 
     closeLeaveModal?.addEventListener("click", closeLeave);
@@ -1314,7 +1452,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadMonthStatistics();
         await loadAttendance(selectedAttendanceDate);
         await loadShiftData();
-        await loadLeaveRequests();
+        //await loadLeaveRequests();
         setupSearch();
     }
 
@@ -1327,4 +1465,80 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadAttendance(selectedAttendanceDate);
     }, 30000);
 
+    document.addEventListener("click", function(e){
+
+    console.log("CLICK:", e.target);
+
+
+    if(e.target.closest("#btn-add-shift")){
+
+        console.log("SHIFT PLUS MASUK");
+
+        document
+        .getElementById("shiftModal")
+        .classList
+        .remove("hidden");
+
+    }
+
+
+    if(e.target.closest(".shift-edit-btn")){
+
+        console.log("SHIFT EDIT MASUK");
+
+        document
+        .getElementById("shiftModal")
+        .classList
+        .remove("hidden");
+
+    }
+
 });
+
+// ===============================
+// REVIEW APPROVAL MODAL
+// ===============================
+
+
+    const reviewModal = document.getElementById("reviewModal");
+
+    const closeReviewModal = document.getElementById("closeReviewModal");
+
+
+    document.addEventListener("click", (e)=>{
+
+
+        if(e.target.classList.contains("review-btn")){
+
+
+            reviewModal.classList.remove("hidden");
+
+
+            document.getElementById("reviewName").value =
+            "Maya Putri";
+
+
+            document.getElementById("reviewType").value =
+            "Izin Sakit";
+
+
+            document.getElementById("reviewReason").value =
+            "Tidak masuk karena sakit";
+
+
+        }
+
+
+    });
+
+
+
+    closeReviewModal?.addEventListener("click",()=>{
+
+        reviewModal.classList.add("hidden");
+
+    });
+
+});
+
+

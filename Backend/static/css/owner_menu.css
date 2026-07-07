@@ -1870,19 +1870,21 @@ button:focus{
 
     display:grid;
 
-    grid-template-columns:minmax(0,1.5fr) minmax(120px,.8fr) 56px 42px;
+    grid-template-columns:
+        1fr
+        140px
+        110px
+        45px;
+
+    gap:12px;
 
     align-items:end;
 
-    gap:10px;
+    border:1px solid #ead7ca;
 
-    padding:12px;
+    border-radius:14px;
 
-    border:1px solid var(--border);
-
-    border-radius:12px;
-
-    background:#fff;
+    padding:16px;
 
 }
 
@@ -1894,17 +1896,27 @@ button:focus{
 
 .recipe-unit{
 
+    width:110px;
+
     height:46px;
 
     display:flex;
 
     align-items:center;
 
-    color:var(--text-light);
+    justify-content:center;
+
+    background:#faf4ef;
+
+    border:1px solid #ead7ca;
+
+    border-radius:12px;
 
     font-size:13px;
 
     font-weight:600;
+
+    color:#7a5130;
 
 }
 
@@ -2106,5 +2118,77 @@ button:focus{
     color:var(--text-light);
 
     font-size:13px;
+
+}
+
+.recipe-row select,
+.recipe-row input{
+
+    width:100%;
+
+    height:46px;
+
+    border:1px solid #ead7ca;
+
+    border-radius:12px;
+
+    padding:0 14px;
+
+    font-weight:600;
+
+}
+
+/* ===========================
+   RECIPE FINAL ALIGN FIX
+=========================== */
+
+.recipe-row{
+
+    align-items:start;
+
+}
+
+
+.recipe-row label{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+
+.recipe-stock{
+
+    margin-top:8px;
+
+    font-size:12px;
+
+    font-weight:500;
+
+    color:#8A817B;
+
+}
+
+
+.recipe-unit{
+
+    margin-top:25px;
+
+    width:95px;
+
+}
+
+
+.remove-recipe-btn{
+
+    margin-top:25px;
+
+}
+
+
+.recipe-row input{
+
+    margin-top:0;
 
 }

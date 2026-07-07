@@ -295,9 +295,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (el.notificationBadge) el.notificationBadge.textContent = notifications.length;
         if (el.notificationSubtitle) el.notificationSubtitle.textContent = `${notifications.length} Notifikasi Aktif`;
         if (el.stockAlertText) {
-            el.stockAlertText.textContent = notifications.length
-                ? `Stok ${notifications[0].product} menipis`
-                : "Semua stok aman";
+
+            if (!notifications.length) {
+                el.stockAlertText.textContent = "Semua stok aman";
+            } else {
+                let index = 0;
+                el.stockAlertText.textContent =
+                    `Stok ${notifications[index].product} menipis`;
+                setInterval(() => {
+                    index++;
+                    if(index >= notifications.length){
+
+                        index = 0;
+
+                    }
+                    el.stockAlertText.textContent =
+                        `Stok ${notifications[index].product} menipis`;
+                }, 3000);
+
+            }
+
         }
         if (!el.notificationList) return;
         if (!notifications.length) {

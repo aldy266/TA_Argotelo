@@ -94,7 +94,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         savePassword: byId("savePassword"),
         oldPassword: byId("oldPassword"),
         newPassword: byId("newPassword"),
-        confirmPassword: byId("confirmPassword")
+        confirmPassword: byId("confirmPassword"),
+        manageAccountsBtn: byId("manageAccountsBtn"),
+        accountsModal: byId("accountsModal"),
+        closeAccountsModal: byId("closeAccountsModal"),
+        accountList: byId("accountList"),
+        accountCount: byId("accountCount")
     };
 
     const state = {
@@ -552,30 +557,107 @@ document.addEventListener("DOMContentLoaded", async () => {
         showMessage(result.message || "Profil berhasil diperbarui");
     }
 
-    async function savePassword() {
-        const oldPassword = el.oldPassword?.value || "";
-        const newPassword = el.newPassword?.value || "";
-        const confirmPassword = el.confirmPassword?.value || "";
-        if (!oldPassword || !newPassword) {
-            showMessage("Password lama dan password baru wajib diisi");
-            return;
+        async function savePassword() {
+            const oldPassword = el.oldPassword?.value || "";
+            const newPassword = el.newPassword?.value || "";
+            const confirmPassword = el.confirmPassword?.value || "";
+            if (!oldPassword || !newPassword) {
+                showMessage("Password lama dan password baru wajib diisi");
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showMessage("Konfirmasi password tidak sama");
+                return;
+            }
+            const result = await api("/api/change-password", {
+                method: "POST",
+                body: JSON.stringify({
+                    old_password: oldPassword,
+                    new_password: newPassword
+                })
+            });
+            [el.oldPassword, el.newPassword, el.confirmPassword].forEach(input => {
+                if (input) input.value = "";
+            });
+            hideModal(el.passwordModal);
+            showMessage(result.message || "Password berhasil diperbarui");
         }
-        if (newPassword !== confirmPassword) {
-            showMessage("Konfirmasi password tidak sama");
-            return;
+
+        async function loadAccounts(){
+
+        const result = await api("/api/accounts");
+
+        const accounts = result.data || [];
+
+
+        if(el.accountCount){
+
+            el.accountCount.textContent =
+                accounts.length + " akun";
+
         }
-        const result = await api("/api/change-password", {
-            method: "POST",
-            body: JSON.stringify({
-                old_password: oldPassword,
-                new_password: newPassword
-            })
-        });
-        [el.oldPassword, el.newPassword, el.confirmPassword].forEach(input => {
-            if (input) input.value = "";
-        });
-        hideModal(el.passwordModal);
-        showMessage(result.message || "Password berhasil diperbarui");
+
+
+        if(!el.accountList) return;
+
+
+        if(!accounts.length){
+
+            el.accountList.innerHTML =
+                "<p>Tidak ada akun.</p>";
+
+            return;
+
+        }
+
+
+        el.accountList.innerHTML =
+            accounts.map(account => `
+
+            <div class="account-item">
+
+                <div class="account-info">
+
+                    <h5>
+                        ${escapeHtml(account.fullname)}
+                    </h5>
+
+
+                    <p>
+                        @${escapeHtml(account.username)}
+                        -
+                        ${escapeHtml(account.email || "-")}
+                    </p>
+
+
+                    <span class="account-badge">
+
+                        ${account.role} - Aktif
+
+                    </span>
+
+
+                </div>
+
+
+                <div class="account-actions">
+
+                    <button class="edit-account">
+                        Edit
+                    </button>
+
+
+                    <button class="toggle-account">
+                        Nonaktifkan
+                    </button>
+
+                </div>
+
+
+            </div>
+
+            `).join("");
+
     }
 
     function bindEvents() {
@@ -731,6 +813,30 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (!file || !el.previewPhoto) return;
             el.previewPhoto.src = URL.createObjectURL(file);
         });
+
+        el.manageAccountsBtn?.addEventListener(
+            "click",
+            async event => {
+
+                event.preventDefault();
+
+                el.settingsMenu?.classList.remove("active");
+
+                showModal(el.accountsModal);
+
+                await loadAccounts();
+
+            }
+        );
+
+        el.closeAccountsModal?.addEventListener(
+            "click",
+            () => {
+
+                hideModal(el.accountsModal);
+
+            }
+        );
 
         el.changePasswordBtn?.addEventListener("click", event => {
             event.preventDefault();

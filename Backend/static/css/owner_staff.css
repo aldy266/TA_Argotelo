@@ -709,6 +709,8 @@ body{
 
     border-collapse:collapse;
 
+    table-layout:fixed;
+
 }
 
 .attendance-table thead{
@@ -755,6 +757,48 @@ body{
 
     background:#FCFAF8;
 
+}
+
+/* Karyawan */
+.attendance-table th:nth-child(1),
+.attendance-table td:nth-child(1){
+    width:20%;
+}
+
+/* Masuk */
+.attendance-table th:nth-child(2),
+.attendance-table td:nth-child(2){
+    width:10%;
+}
+
+/* Pulang */
+.attendance-table th:nth-child(3),
+.attendance-table td:nth-child(3){
+    width:10%;
+}
+
+/* Shift */
+.attendance-table th:nth-child(4),
+.attendance-table td:nth-child(4){
+    width:18%;
+}
+
+/* Status */
+.attendance-table th:nth-child(5),
+.attendance-table td:nth-child(5){
+    width:13%;
+}
+
+/* Jam Kerja */
+.attendance-table th:nth-child(6),
+.attendance-table td:nth-child(6){
+    width:13%;
+}
+
+/* Aksi */
+.attendance-table th:nth-child(7),
+.attendance-table td:nth-child(7){
+    width:16%;
 }
 
 /* =====================================================
@@ -839,13 +883,6 @@ body{
     line-height:34px;
     text-align:center;
     white-space:nowrap;
-}
-
-.attendance-table th:nth-child(3),
-.attendance-table td:nth-child(3){
-
-    text-align:center;
-
 }
 
 /* =====================================================
@@ -1535,11 +1572,11 @@ button:hover{
 }
 
 .attendance-row-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-    align-items: center;
+    display:flex;
+    gap:8px;
+    justify-content:flex-start;
+    align-items:center;
+    flex-wrap:nowrap;
 }
 
 .attendance-row-actions .edit-btn,
@@ -1939,6 +1976,8 @@ button:hover{
     color: #666;
 }
 
+
+
 /* =====================================================
                     SCROLLBAR
 ===================================================== */
@@ -2192,4 +2231,201 @@ html{
 
 .attendance-footer a:hover{
     color:#6B4218;
+}
+
+/* =====================================================
+            APPROVAL REQUEST CARD
+===================================================== */
+
+.approval-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    padding:16px 0;
+
+    border-bottom:1px solid #EFE7E0;
+
+}
+
+
+.approval-item:last-child{
+
+    border-bottom:none;
+
+}
+
+
+.approval-icon{
+
+    width:46px;
+
+    height:46px;
+
+    border-radius:14px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:20px;
+
+    flex-shrink:0;
+
+}
+
+
+/* sakit */
+.approval-icon.sick{
+
+    background:#FFF4D9;
+
+    color:#D89B00;
+
+}
+
+
+/* cuti */
+.approval-icon.leave{
+
+    background:#E7F0FF;
+
+    color:#2962FF;
+
+}
+
+
+.approval-info{
+
+    flex:1;
+
+}
+
+
+.approval-info strong{
+
+    display:block;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    color:#2F1D0F;
+
+    margin-bottom:4px;
+
+}
+
+
+.approval-info span{
+
+    font-size:12px;
+
+    color:#777;
+
+}
+
+
+.review-btn{
+
+    border:none;
+
+    background:#4B2E13;
+
+    color:white;
+
+    padding:9px 15px;
+
+    border-radius:10px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+}
+
+
+.review-btn:hover{
+
+    background:#38210E;
+
+}
+
+/* ===============================
+   REVIEW APPROVAL MODAL
+================================ */
+
+.modal-action{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+
+    gap:12px;
+
+    margin-top:20px;
+}
+
+
+#rejectRequest{
+
+    background:#EF4444;
+    color:white;
+
+    border:none;
+
+    padding:10px 18px;
+
+    border-radius:10px;
+
+    font-weight:600;
+
+    cursor:pointer;
+}
+
+
+#approveRequest{
+
+    background:#5A3718;
+    color:white;
+
+    border:none;
+
+    padding:10px 18px;
+
+    border-radius:10px;
+
+    font-weight:600;
+
+    cursor:pointer;
+}
+
+
+#rejectRequest:hover{
+
+    background:#DC2626;
+
+}
+
+
+#approveRequest:hover{
+
+    background:#3A220E;
+
+}
+
+
+#reviewModal input,
+#reviewModal textarea{
+
+    background:#FAFAFA;
+
+    cursor:not-allowed;
+
 }

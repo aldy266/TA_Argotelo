@@ -290,18 +290,47 @@ body{
 }
 
 .stock-alert{
+
+    height:42px;
+
     display:flex;
+
     align-items:center;
+
     gap:8px;
 
-    background:#FFE5E5;
-    color:#D84A4A;
+    padding:0 16px;
 
-    padding:8px 16px;
+
+    background:#FFF1F1;
+
+    border:1px solid #FFCACA;
+
     border-radius:20px;
 
+
+    color:#FF3B3B;
+
     font-size:13px;
+
     font-weight:600;
+
+}
+
+
+.stock-alert i{
+
+    font-size:16px;
+
+    color:#FF3B3B;
+
+}
+
+
+.stock-alert span{
+
+    white-space:nowrap;
+
 }
 
 .icon-button{
