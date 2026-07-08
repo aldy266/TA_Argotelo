@@ -27,3 +27,8 @@ def pos():
 @role_name_required("KASIR")
 def inventory():
     return render_template("cashier_inventory.html")
+
+@cashier_bp.route("/transaction")
+@role_name_required("KASIR")
+def transaction():
+    return render_template("cashier_transaction.html")
