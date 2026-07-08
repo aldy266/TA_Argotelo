@@ -599,9 +599,18 @@
                 </span>
 
 
-                    <div 
-                        class="pagination"
-                        id="pagination">
+                    <div class="pagination">
+
+                        <button>&lt;</button>
+
+                        <button class="active">1</button>
+
+                        <button>2</button>
+
+                        <button>3</button>
+
+                        <button>&gt;</button>
+
                     </div>
 
             </div>
@@ -974,14 +983,14 @@
                     Jumlah Stok
                 </label>
 
-                <input 
+              <input 
                     type="number"
                     id="jumlahStok"
+                    min="0"
+                    step="1"
+                    value="0"
                     placeholder="Contoh : 500">
-
             </div>
-
-
 
             <div class="form-group">
 
@@ -989,24 +998,24 @@
                     Satuan
                 </label>
 
-                <input 
+                <input
                     type="text"
                     id="satuan"
-                    placeholder="Kilogram / Pcs">
+                    placeholder="Contoh : Kilogram / Pcs">
 
             </div>
-
-
 
             <div class="form-group">
 
                 <label>
                     Minimal Stok
                 </label>
-
                 <input 
                     type="number"
                     id="minimalStok"
+                    min="0"
+                    step="1"
+                    value="0"
                     placeholder="Contoh : 100">
 
             </div>

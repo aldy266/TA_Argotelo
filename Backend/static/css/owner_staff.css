@@ -2429,3 +2429,351 @@ html{
     cursor:not-allowed;
 
 }
+
+/* =====================================================
+        NOTIFICATION DROPDOWN FIX
+===================================================== */
+
+.notification-wrapper{
+
+    position:relative;
+
+    display:flex;
+
+    align-items:center;
+
+}
+
+
+.notification-dropdown{
+
+    position:absolute;
+
+    top:55px;
+
+    right:0;
+
+    width:340px;
+
+    background:#fff;
+
+    border:1px solid #E7DDD6;
+
+    border-radius:16px;
+
+    overflow:hidden;
+
+    display:none;
+
+    box-shadow:0 15px 40px rgba(0,0,0,.15);
+
+    z-index:99999;
+
+}
+
+
+.notification-dropdown.active{
+
+    display:block;
+
+}
+
+
+
+/* HEADER */
+.notification-header{
+
+    padding:16px 18px;
+
+    background:#FAF7F5;
+
+    border-bottom:1px solid #EFE7E0;
+
+}
+
+
+.notification-header h4{
+
+    font-size:15px;
+
+    color:#4B2E13;
+
+}
+
+
+#notificationSubtitle{
+
+    font-size:12px;
+
+    color:#777;
+
+}
+
+
+
+/* LIST 3 DATA SAJA */
+.notification-list{
+
+    max-height:260px;
+
+    overflow-y:auto;
+
+}
+
+
+.notification-item{
+
+    display:flex;
+
+    gap:14px;
+
+    padding:15px 18px;
+
+    border-bottom:1px solid #EFE7E0;
+
+}
+
+
+.notif-icon{
+
+    width:42px;
+
+    height:42px;
+
+    border-radius:12px;
+
+    background:#FFF4E5;
+
+    color:#F59E0B;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-shrink:0;
+
+}
+
+
+.notification-item strong{
+
+    font-size:13px;
+
+    color:#2F1D0F;
+
+}
+
+
+.notification-item p{
+
+    margin-top:4px;
+
+    font-size:12px;
+
+    color:#777;
+
+}
+
+
+.notification-item small{
+
+    font-size:11px;
+
+    color:#999;
+
+}
+
+
+
+/* LIHAT SEMUA */
+.notification-footer{
+
+    padding:12px;
+
+    background:#FAF7F5;
+
+}
+
+
+.view-all-notification{
+
+    width:100%;
+
+    height:38px;
+
+    border:none;
+
+    background:transparent;
+
+    color:#4B2E13;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+}
+
+
+
+/* ===============================
+   MODAL SEMUA NOTIFIKASI
+================================ */
+
+.stock-modal{
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.45);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    z-index:999999;
+
+}
+
+
+.stock-modal.hidden{
+
+    display:none;
+
+}
+
+
+.stock-modal-content{
+
+    width:480px;
+
+    max-height:80vh;
+
+    background:#fff;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    box-shadow:0 25px 60px rgba(0,0,0,.25);
+
+}
+
+
+.stock-modal-header{
+
+    padding:20px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    background:#FAF7F5;
+
+    border-bottom:1px solid #eee;
+
+}
+
+
+.stock-modal-header h3{
+
+    font-size:18px;
+
+    color:#4B2E13;
+
+}
+
+
+.stock-modal-body{
+
+    padding:18px;
+
+    max-height:420px;
+
+    overflow-y:auto;
+
+}
+
+
+.stock-modal-footer{
+
+    padding:15px;
+
+    text-align:right;
+
+    border-top:1px solid #eee;
+
+}
+
+
+#closeStockNotification,
+#closeStockNotificationBtn{
+
+    border:none;
+
+    background:#4B2E13;
+
+    color:white;
+
+    padding:10px 20px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+}
+
+/* ===============================
+   FIX POSISI NOTIF BELL
+================================ */
+
+.topbar-right{
+    position:relative;
+}
+
+
+.notification-wrapper{
+    position:relative !important;
+}
+
+
+#notificationMenu{
+
+    position:absolute !important;
+
+    top:50px !important;
+
+    right:0 !important;
+
+    width:340px !important;
+
+    background:white;
+
+    display:none;
+
+    z-index:999999;
+
+}
+
+
+#notificationMenu.active{
+
+    display:block !important;
+
+}
+
+
+/* isi list biar cuma 3 terlihat */
+#notificationList{
+
+    max-height:260px;
+
+    overflow-y:auto;
+
+}

@@ -94,6 +94,58 @@ document.addEventListener("DOMContentLoaded", async () => {
     const shiftContainer = document.getElementById("shift-container");
     const approvalContainer = document.getElementById("approval-container");
 
+
+
+    // ===============================
+    // NOTIFICATION ELEMENT
+    // ===============================
+
+    const notificationBtn =
+        document.getElementById("notificationBtn");
+
+
+    const notificationMenu =
+        document.getElementById("notificationMenu");
+
+
+    const notificationBadge =
+        document.getElementById("notificationBadge");
+
+
+    const notificationSubtitle =
+        document.getElementById("notificationSubtitle");
+
+
+    const notificationList =
+        document.getElementById("notificationList");
+
+
+    const viewAllNotification =
+        document.getElementById("viewAllNotification");
+
+
+
+    // MODAL LIHAT SEMUA NOTIFIKASI
+
+    const stockNotificationModal =
+        document.getElementById("stockNotificationModal");
+
+
+    const allNotificationList =
+        document.getElementById("allNotificationList");
+
+
+    const allNotificationTotal =
+        document.getElementById("allNotificationTotal");
+
+
+    const closeStockNotification =
+        document.getElementById("closeStockNotification");
+
+
+    const closeStockNotificationBtn =
+        document.getElementById("closeStockNotificationBtn");
+
     // =====================================
     // STATE
     // =====================================
@@ -1442,62 +1494,47 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =====================================
 
     async function init() {
-        selectedAttendanceDate = getTodayInputValue();
-        if (attendanceDateInput) {
-            attendanceDateInput.value = selectedAttendanceDate;
+
+            selectedAttendanceDate = getTodayInputValue();
+
+            if (attendanceDateInput) {
+
+                attendanceDateInput.value = selectedAttendanceDate;
+
+            }
+
+
+            updateTodayDate();
+
+
+            await initUser();
+
+
+            await loadStatistics();
+
+
+            await loadMonthStatistics();
+
+
+            await loadAttendance(selectedAttendanceDate);
+
+
+            await loadShiftData();
+
+
+            //await loadLeaveRequests();
+
+
+            setupSearch();
+
+
         }
-        updateTodayDate();
-        await initUser();
-        await loadStatistics();
-        await loadMonthStatistics();
-        await loadAttendance(selectedAttendanceDate);
-        await loadShiftData();
-        //await loadLeaveRequests();
-        setupSearch();
-    }
 
-    init();
+        init();
 
-    // Refresh data every 30 seconds
-    setInterval(async () => {
-        await loadStatistics();
-        await loadMonthStatistics();
-        await loadAttendance(selectedAttendanceDate);
-    }, 30000);
-
-    document.addEventListener("click", function(e){
-
-    console.log("CLICK:", e.target);
-
-
-    if(e.target.closest("#btn-add-shift")){
-
-        console.log("SHIFT PLUS MASUK");
-
-        document
-        .getElementById("shiftModal")
-        .classList
-        .remove("hidden");
-
-    }
-
-
-    if(e.target.closest(".shift-edit-btn")){
-
-        console.log("SHIFT EDIT MASUK");
-
-        document
-        .getElementById("shiftModal")
-        .classList
-        .remove("hidden");
-
-    }
-
-});
-
-// ===============================
-// REVIEW APPROVAL MODAL
-// ===============================
+    // ===============================
+    // REVIEW APPROVAL MODAL
+    // ===============================
 
 
     const reviewModal = document.getElementById("reviewModal");
@@ -1539,6 +1576,533 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     });
 
-});
+    // ===============================
+    // STOCK NOTIFICATION ALERT
+    // ===============================
 
+    let stockAlerts = [];
+    let stockIndex = 0;
+
+
+    async function loadNotifications(){
+
+
+        try{
+
+
+            const response = await fetch("/api/dashboard", {
+
+                method:"POST",
+
+                credentials:"include",
+
+                headers:{
+                    "Content-Type":"application/json"
+                },
+
+                body: JSON.stringify({
+                    filter:"today"
+                })
+
+            });
+
+
+
+            const result =
+                await response.json();
+
+
+
+            stockAlerts =
+                result.data.notifications || [];
+
+
+
+            stockIndex = 0;
+
+
+
+            renderStockAlert();
+
+
+
+        }catch(error){
+
+
+            console.log(error);
+
+
+        }
+
+
+    }
+
+
+
+    function renderStockAlert(){
+
+
+        const alertText =
+        document.getElementById("stockAlertText");
+
+
+        const badge =
+        document.querySelector(".notification-badge");
+
+
+        if(!alertText) return;
+
+
+
+        if(stockAlerts.length === 0){
+
+
+            alertText.textContent =
+            "Semua stok aman";
+
+
+            if(badge){
+                badge.textContent = "0";
+            }
+
+
+            return;
+
+        }
+
+
+
+        const currentStock =
+        stockAlerts[stockIndex];
+
+
+
+        alertText.textContent =
+            `Stok ${currentStock.product} menipis`;
+
+
+
+        if(badge){
+
+            badge.textContent =
+            stockAlerts.length;
+
+        }
+
+
+
+        // pindah stok berikutnya
+        stockIndex++;
+
+
+        if(stockIndex === stockAlerts.length){
+
+            stockIndex = 0;
+
+        }
+
+
+    }
+
+
+    // pertama buka halaman
+    loadNotifications();
+
+
+    // ganti stok setiap 3 detik
+    setInterval(()=>{
+
+        renderStockAlert();
+
+    },3000);
+
+
+    // update database setiap 30 detik
+    setInterval(()=>{
+
+        loadNotifications();
+
+    },30000);
+
+
+    // ===============================
+    // DROPDOWN NOTIFIKASI (3 DATA)
+    // ===============================
+
+    function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8(){
+
+
+        const list =
+        document.getElementById("notificationList");
+
+
+        const total =
+        document.getElementById("notificationSubtitle");
+
+
+        if(!list) return;
+
+
+        list.innerHTML = "";
+
+
+        if(total){
+
+            total.textContent =
+            `${stockAlerts.length} Notifikasi Aktif`;
+
+        }
+
+
+
+        if(stockAlerts.length === 0){
+
+            list.innerHTML = `
+                <div class="notification-item">
+                    Semua stok aman
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+
+        stockAlerts.slice(0,3).forEach(item=>{
+
+
+            list.innerHTML += `
+
+            <div class="notification-item">
+
+                <div class="notif-icon">
+
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        Stok ${item.product} Menipis
+                    </strong>
+
+
+                    <p>
+                        Sisa : ${item.stock}
+                    </p>
+
+
+                    <small>
+                        Real-time
+                    </small>
+
+
+                </div>
+
+
+            </div>
+
+            `;
+
+
+        });
+
+
+    }
+
+
+
+
+    // ===============================
+    // KLIK BELL
+    // ===============================
+
+    document
+    .getElementById("notificationBtn")
+    .addEventListener("click",function(e){
+
+
+        e.stopPropagation();
+
+
+        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
+
+
+        document
+        .getElementById("notificationMenu")
+        .classList.toggle("active");
+
+
+    });
+
+
+
+
+    // ===============================
+    // TUTUP KLIK LUAR
+    // ===============================
+
+    document.addEventListener("click",()=>{
+
+
+        document
+        .getElementById("notificationMenu")
+        .classList.remove("active");
+
+
+    });
+
+
+
+    document
+    .getElementById("notificationMenu")
+    .addEventListener("click",(e)=>{
+
+
+        e.stopPropagation();
+
+
+    });
+
+
+    // ===============================
+    // LIHAT SEMUA MODAL
+    // ===============================
+
+    document
+    .getElementById("viewAllNotification")
+    .addEventListener("click",function(e){
+
+
+    e.stopPropagation();
+
+
+    document
+    .getElementById("notificationMenu")
+    .classList.remove("active");
+
+
+    openStockNotificationModal();
+
+
+    });
+
+    // ===============================
+    // MODAL SEMUA NOTIFIKASI
+    // ===============================
+
+    function openStockNotificationModal(){
+
+
+        const modal =
+        document.getElementById("stockNotificationModal");
+
+
+        const list =
+        document.getElementById("allNotificationList");
+
+
+        const total =
+        document.getElementById("allNotificationTotal");
+
+
+        if(!modal || !list) return;
+
+
+
+        list.innerHTML = "";
+
+
+
+        if(total){
+
+            total.textContent =
+            `${stockAlerts.length} Notifikasi`;
+
+        }
+
+
+
+        if(stockAlerts.length === 0){
+
+
+            list.innerHTML = `
+
+                <div class="notification-item">
+
+                    Semua stok aman
+
+                </div>
+
+            `;
+
+
+        }else{
+
+
+            stockAlerts.forEach(item=>{
+
+
+                list.innerHTML += `
+
+
+                <div class="notification-item">
+
+
+                    <div class="notif-icon">
+
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+
+                    </div>
+
+
+                    <div>
+
+
+                        <strong>
+
+                            Stok ${item.product} Menipis
+
+                        </strong>
+
+
+
+                        <p>
+
+                            Sisa : ${item.stock}
+
+                        </p>
+
+
+
+                        <small>
+
+                            Real-time
+
+                        </small>
+
+
+                    </div>
+
+
+                </div>
+
+
+                `;
+
+
+            });
+
+
+        }
+
+
+
+        modal.classList.remove("hidden");
+
+
+    }
+
+
+
+    // ===============================
+    // CLOSE MODAL NOTIFIKASI
+    // ===============================
+
+    document
+    .getElementById("closeStockNotification")
+    .addEventListener("click",()=>{
+
+
+        document
+        .getElementById("stockNotificationModal")
+        .classList.add("hidden");
+
+
+    });
+
+
+
+    document
+    .getElementById("closeStockNotificationBtn")
+    .addEventListener("click",()=>{
+
+
+        document
+        .getElementById("stockNotificationModal")
+        .classList.add("hidden");
+
+
+    });
+
+    // ===============================
+    // CLICK BELL
+    // ===============================
+
+    notificationBtn.addEventListener(
+        "click",
+        function(event){
+
+            event.stopPropagation();
+
+            notificationMenu.classList.toggle(
+                "active"
+            );
+
+        }
+    );
+
+
+    // ===============================
+    // LIHAT SEMUA
+    // ===============================
+
+    viewAllNotification.addEventListener(
+        "click",
+        function(){
+
+            notificationMenu.classList.remove(
+                "active"
+            );
+
+
+            notificationModal.classList.remove(
+                "hidden"
+            );
+
+        }
+    );
+
+
+    // ===============================
+    // CLOSE MODAL
+    // ===============================
+
+    closeNotification.addEventListener(
+        "click",
+        function(){
+
+            notificationModal.classList.add(
+                "hidden"
+            );
+
+        }
+    );
+
+
+    closeNotificationBtn.addEventListener(
+        "click",
+        function(){
+
+            notificationModal.classList.add(
+                "hidden"
+            );
+
+        }
+    );
+
+});
 

@@ -104,6 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const state = {
         user: null,
+        accounts: [],
         inventory: [],
         pendingOrders: [],
         history: [],
@@ -585,80 +586,86 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         async function loadAccounts(){
 
-        const result = await api("/api/accounts");
+            try{
 
-        const accounts = result.data || [];
+                const result = await api("/api/accounts");
 
 
-        if(el.accountCount){
+                state.accounts = result.data || [];
 
-            el.accountCount.textContent =
-                accounts.length + " akun";
+
+                byId("accountCount").textContent =
+                    `${state.accounts.length} akun`;
+
+
+                byId("accountList").innerHTML =
+                    state.accounts.map(acc=>`
+
+                    <div class="account-item" data-id="${acc.id}">
+
+
+                        <div class="account-info">
+
+
+                            <h5>
+                                ${escapeHtml(acc.fullname)}
+                            </h5>
+
+
+                            <p>
+                                @${escapeHtml(acc.username)}
+                            </p>
+
+
+                            <span class="account-badge">
+
+                                ${acc.role} -
+                                ${acc.is_active ? "Aktif" : "Nonaktif"}
+
+                            </span>
+
+
+                        </div>
+
+
+
+                        <div class="account-actions">
+
+
+                            <button
+                                type="button"
+                                data-action="edit">
+
+                                Edit
+
+                            </button>
+
+
+                            <button
+                                type="button"
+                                data-action="toggle">
+
+                                ${acc.is_active ? "Nonaktifkan" : "Aktifkan"}
+
+                            </button>
+
+
+                        </div>
+
+
+                    </div>
+
+                `).join("");
+
+
+            }catch(error){
+
+                byId("accountList").innerHTML =
+                "Gagal memuat akun";
+
+            }
 
         }
-
-
-        if(!el.accountList) return;
-
-
-        if(!accounts.length){
-
-            el.accountList.innerHTML =
-                "<p>Tidak ada akun.</p>";
-
-            return;
-
-        }
-
-
-        el.accountList.innerHTML =
-            accounts.map(account => `
-
-            <div class="account-item">
-
-                <div class="account-info">
-
-                    <h5>
-                        ${escapeHtml(account.fullname)}
-                    </h5>
-
-
-                    <p>
-                        @${escapeHtml(account.username)}
-                        -
-                        ${escapeHtml(account.email || "-")}
-                    </p>
-
-
-                    <span class="account-badge">
-
-                        ${account.role} - Aktif
-
-                    </span>
-
-
-                </div>
-
-
-                <div class="account-actions">
-
-                    <button class="edit-account">
-                        Edit
-                    </button>
-
-
-                    <button class="toggle-account">
-                        Nonaktifkan
-                    </button>
-
-                </div>
-
-
-            </div>
-
-            `).join("");
-
-    }
 
     function bindEvents() {
         el.searchInput?.addEventListener("input", event => {
@@ -864,6 +871,203 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.closeToast?.addEventListener("click", () => {
             if (el.toast) el.toast.style.display = "none";
         });
+
+        byId("accountList")?.addEventListener("click", async event => {
+
+
+            const button =
+                event.target.closest("[data-action]");
+
+
+            if(!button) return;
+
+
+            const row =
+                button.closest(".account-item");
+
+
+            const account =
+                state.accounts.find(
+                    item => String(item.id) === row.dataset.id
+                );
+
+
+            if(!account) return;
+
+
+
+            // EDIT
+            if(button.dataset.action === "edit"){
+
+                byId("accountId").value =
+                    account.id;
+
+
+                byId("accountFullname").value =
+                    account.fullname;
+
+
+                byId("accountUsername").value =
+                    account.username;
+
+
+                byId("accountEmail").value =
+                    account.email || "";
+
+
+                byId("accountPhone").value =
+                    account.phone || "";
+
+
+                byId("accountRole").value =
+                    account.role;
+
+
+            }
+
+
+
+            // AKTIF / NONAKTIF
+            if(button.dataset.action === "toggle"){
+
+
+                await api(
+                    `/api/accounts/${account.id}/toggle`,
+                    {
+                        method:"PATCH"
+                    }
+                );
+
+
+                await loadAccounts();
+
+            }
+
+
+        });
+
+        byId("saveAccount")?.addEventListener("click", async()=>{
+
+
+            const id =
+                byId("accountId").value;
+
+
+            const payload = {
+
+                fullname:
+                    byId("accountFullname").value,
+
+                username:
+                    byId("accountUsername").value,
+
+                email:
+                    byId("accountEmail").value,
+
+                phone:
+                    byId("accountPhone").value,
+
+                role:
+                    byId("accountRole").value,
+
+                password:
+                    byId("accountPassword").value
+
+            };
+
+
+
+            // UPDATE AKUN LAMA
+            if(id){
+
+
+                await api(
+                    `/api/accounts/${id}`,
+                    {
+                        method:"PUT",
+
+                        body:
+                        JSON.stringify(payload)
+                    }
+                );
+
+
+            }
+
+
+            // TAMBAH AKUN BARU
+            else{
+
+
+                await api(
+                    "/api/accounts",
+                    {
+                        method:"POST",
+
+                        body:
+                        JSON.stringify(payload)
+                    }
+                );
+
+
+            }
+
+
+
+            // kosongkan form
+            byId("accountId").value="";
+            byId("accountFullname").value="";
+            byId("accountUsername").value="";
+            byId("accountEmail").value="";
+            byId("accountPhone").value="";
+            byId("accountPassword").value="";
+
+
+            // reload data terbaru
+            await loadAccounts();
+
+
+        });
+
+
+
+
+        // =========================
+        // RESET FORM BARU
+        // =========================
+        byId("resetAccountForm")
+        ?.addEventListener("click",()=>{
+
+
+            byId("accountId").value="";
+            byId("accountFullname").value="";
+            byId("accountUsername").value="";
+            byId("accountEmail").value="";
+            byId("accountPhone").value="";
+            byId("accountPassword").value="";
+
+
+        });
+
+
+        byId("satuan")
+            ?.addEventListener("input", e=>{
+
+
+                e.target.value =
+                    e.target.value.replace(/[0-9]/g,"");
+
+
+            });
+
+        byId("satuan")
+        ?.addEventListener("input", e => {
+
+            e.target.value =
+                e.target.value.replace(/[0-9]/g,"");
+
+        });
+
     }
 
     bindEvents();

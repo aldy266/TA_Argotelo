@@ -100,34 +100,175 @@
 <!-- ======================================
             MAIN CONTENT
 ======================================= -->
-
-<main class="main-content">
-
-        <!-- ======================================
-                        TOPBAR
-        ======================================= -->
+    <main class="main-content">
 
         <header class="topbar">
 
             <div class="topbar-right">
 
+
+                <!-- STOCK ALERT BERJALAN -->
                 <div class="stock-alert">
 
                     <i class="bi bi-exclamation-triangle"></i>
 
-                    <span>Status inventori</span>
+                    <span id="stockAlertText">
+                        Status inventori
+                    </span>
 
                 </div>
 
-                <button class="icon-button">
 
-                    <i class="bi bi-bell-fill"></i>
 
-                </button>
+                <!-- NOTIFICATION AREA -->
+                <div class="notification-wrapper">
+
+
+                    <!-- BELL BUTTON -->
+                    <button 
+                        id="notificationBtn"
+                        class="icon-button notification-btn"
+                        type="button">
+
+                        <i class="bi bi-bell-fill"></i>
+
+
+                        <span 
+                            id="notificationBadge"
+                            class="notification-badge">
+
+                            0
+
+                        </span>
+
+
+                    </button>
+
+
+
+                    <!-- DROPDOWN NOTIFIKASI -->
+                    <div 
+                        class="notification-dropdown"
+                        id="notificationMenu">
+
+
+                        <div class="notification-header">
+
+                            <h4>
+                                Notifikasi Stok
+                            </h4>
+
+
+                            <span id="notificationSubtitle">
+                                0 Notifikasi
+                            </span>
+
+                        </div>
+
+
+
+
+                        <!-- PREVIEW 4 DATA SAJA -->
+                        <div 
+                            class="notification-list"
+                            id="notificationList">
+
+
+                        </div>
+
+
+
+
+                        <div class="notification-footer">
+
+                            <button 
+                                id="viewAllNotification"
+                                type="button"
+                                class="view-all-notification">
+
+                                Lihat Semua
+
+                            </button>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+                
 
             </div>
 
         </header>
+
+        <!-- MODAL SEMUA NOTIFIKASI STOK -->
+        <div 
+            class="stock-modal hidden"
+            id="stockNotificationModal">
+
+
+            <div class="stock-modal-content">
+
+
+                <div class="stock-modal-header">
+
+                    <div>
+
+                        <h3>
+                            <i class="bi bi-bell-fill"></i>
+                            Notifikasi Stok Menipis
+                        </h3>
+
+
+                        <span id="allNotificationTotal">
+                            0 Notifikasi
+                        </span>
+
+                    </div>
+
+
+                    <button 
+                        id="closeStockNotification"
+                        type="button">
+
+                        <i class="bi bi-x-lg"></i>
+
+                    </button>
+
+
+                </div>
+
+
+
+                <div 
+                    class="stock-modal-body"
+                    id="allNotificationList">
+
+
+                </div>
+
+
+
+                <div class="stock-modal-footer">
+
+                    <button 
+                        id="closeStockNotificationBtn"
+                        type="button">
+
+                        Tutup
+
+                    </button>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
 
         <!-- ======================================
                     STATISTICS

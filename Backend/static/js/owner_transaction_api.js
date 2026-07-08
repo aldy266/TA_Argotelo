@@ -46,6 +46,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         photoInput: document.getElementById("photoInput"),
         previewPhoto: document.getElementById("previewPhoto"),
         changePasswordBtn: document.getElementById("changePasswordBtn"),
+        manageAccountsBtn: document.getElementById("manageAccountsBtn"),
+        accountsModal: document.getElementById("accountsModal"),
+        closeAccountsModal: document.getElementById("closeAccountsModal"),
         passwordModal: document.getElementById("passwordModal"),
         closePasswordModal: document.getElementById("closePasswordModal"),
         cancelPassword: document.getElementById("cancelPassword"),
@@ -91,6 +94,38 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         closeNotificationButton:
             document.getElementById("closeNotificationButton"),
+        accountList:
+            document.getElementById("accountList"),
+
+        accountCount:
+            document.getElementById("accountCount"),
+
+        accountId:
+            document.getElementById("accountId"),
+
+        accountFullname:
+            document.getElementById("accountFullname"),
+
+        accountUsername:
+            document.getElementById("accountUsername"),
+
+        accountEmail:
+            document.getElementById("accountEmail"),
+
+        accountPhone:
+            document.getElementById("accountPhone"),
+
+        accountRole:
+            document.getElementById("accountRole"),
+
+        accountPassword:
+            document.getElementById("accountPassword"),
+
+        saveAccount:
+            document.getElementById("saveAccount"),
+
+        resetAccountForm:
+            document.getElementById("resetAccountForm"),
 
     };
 
@@ -99,6 +134,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     let notifications = [];
     let stockAlertIndex = 0;
     let stockAlertTimer = null;
+    let accounts = [];
+
+    let currentPage = 1;
+    const rowsPerPage = 10;
 
     function rupiah(value) {
         return new Intl.NumberFormat("id-ID", {
@@ -360,60 +399,351 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderNotifications();
     }
 
-    function renderTransactions() {
-        el.transactionTableBody.innerHTML = "";
-        el.transactionCount.textContent = `Total ${transactions.length} Transaksi`;
-        el.totalData.textContent = transactions.length;
-        el.showingData.textContent = transactions.length ? `1 - ${transactions.length}` : "0";
+    async function loadAccounts(){
 
-        if (!transactions.length) {
+    try{
+
+        const result = await api("/api/accounts");
+
+        accounts = result.data || [];
+
+
+        el.accountCount.textContent =
+            `${accounts.length} akun`;
+
+
+        el.accountList.innerHTML =
+        accounts.map(acc=>`
+
+            <div class="account-item" data-id="${acc.id}">
+
+                <div class="account-info">
+
+                    <h5>${acc.fullname}</h5>
+
+                    <p>@${acc.username}</p>
+
+                    <span class="account-badge">
+
+                        ${acc.role} -
+                        ${acc.is_active ? "Aktif" : "Nonaktif"}
+
+                    </span>
+
+                </div>
+
+
+                <div class="account-actions">
+
+                    <button 
+                    class="edit-account"
+                    type="button"
+                    data-action="edit">
+
+                    Edit
+
+                    </button>
+
+
+                    <button
+                    class="toggle-account"
+                    type="button"
+                    data-action="toggle">
+
+                    ${acc.is_active ? "Nonaktifkan" : "Aktifkan"}
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        `).join("");
+
+
+    }catch(error){
+
+        el.accountList.innerHTML =
+        "Gagal memuat akun";
+
+    }
+
+    }
+
+    function renderTransactions() {
+
+        el.transactionTableBody.innerHTML = "";
+
+        el.transactionCount.textContent =
+            `Total ${transactions.length} Transaksi`;
+
+
+        const start =
+            (currentPage - 1) * rowsPerPage;
+
+
+        const end =
+            start + rowsPerPage;
+
+
+        const pageData =
+            transactions.slice(start,end);
+
+
+
+        if(!transactions.length){
+
             el.transactionTableBody.innerHTML = `
-                <tr>
-                    <td colspan="8" style="text-align:center;padding:40px;">
-                        Tidak ada transaksi.
-                    </td>
-                </tr>
-            `;
+
+            <tr>
+
+                <td colspan="8"
+                style="text-align:center;padding:40px">
+
+                Tidak ada transaksi.
+
+                </td>
+
+            </tr>`;
+
             return;
+
         }
 
-        el.transactionTableBody.innerHTML = transactions.map(item => `
+
+
+        el.transactionTableBody.innerHTML =
+        pageData.map(item => `
+
             <tr>
+
                 <td>${escapeHtml(item.transaction_number)}</td>
+
                 <td>${escapeHtml(item.date)}</td>
+
                 <td>${escapeHtml(item.customer_name || "Umum")}</td>
+
                 <td>${escapeHtml(item.cashier)}</td>
-                <td><strong>${rupiah(item.total)}</strong></td>
-                <td><span class="badge ${item.status === "completed" ? "completed" : "cancel"}">${escapeHtml(item.status.toUpperCase())}</span></td>
-                <td>${escapeHtml(item.payment_method)}</td>
+
                 <td>
-                    <button class="detail-btn" data-id="${item.id}" type="button">
-                        <i class="bi bi-eye-fill"></i>
-                    </button>
+                    <strong>${rupiah(item.total)}</strong>
                 </td>
+
+                <td>
+                    <span class="badge ${
+                        item.status === "completed"
+                        ? "completed"
+                        : "cancel"
+                    }">
+
+                    ${escapeHtml(item.status.toUpperCase())}
+
+                    </span>
+                </td>
+
+
+                <td>${escapeHtml(item.payment_method)}</td>
+
+
+                <td>
+
+                    <button 
+                    class="detail-btn"
+                    data-id="${item.id}">
+
+                        <i class="bi bi-eye-fill"></i>
+
+                    </button>
+
+                </td>
+
+
             </tr>
+
+
         `).join("");
+
+
+        renderPagination();
+
+    }
+
+    function renderPagination(){
+        
+        const totalPages =
+            Math.ceil(transactions.length / rowsPerPage);
+
+
+        const start =
+            transactions.length
+            ? ((currentPage - 1) * rowsPerPage) + 1
+            : 0;
+
+
+        const end =
+            Math.min(
+                currentPage * rowsPerPage,
+                transactions.length
+            );
+
+
+        el.showingData.textContent =
+            `${start} - ${end}`;
+
+
+        el.totalData.textContent =
+            transactions.length;
+
+
+
+        const pagination =
+            document.getElementById("pagination");
+
+
+        if(!pagination) return;
+
+
+        let html = `
+
+        <button
+        ${currentPage === 1 ? "disabled":""}
+        data-page="${currentPage - 1}">
+
+        &lt;
+
+        </button>
+
+        `;
+
+
+        for(let i=1;i<=totalPages;i++){
+
+            html += `
+
+            <button
+            class="${i===currentPage?'active':''}"
+            data-page="${i}">
+
+            ${i}
+
+            </button>`;
+
+        }
+
+
+        html += `
+
+        <button
+        ${currentPage === totalPages ? "disabled":""}
+        data-page="${currentPage + 1}">
+
+        &gt;
+
+        </button>`;
+
+
+        pagination.innerHTML = html;
+
+
     }
 
     async function showTransactionDetail(transactionId) {
-        const result = await api(`/api/transaction/${transactionId}`);
+
+        const result =
+            await api(`/api/transaction/${transactionId}`);
+
         const trx = result.data;
 
         el.transactionDetail.innerHTML = `
-            <div class="detail-group"><h4>ID Transaksi</h4><span>${escapeHtml(trx.transaction_number)}</span></div>
-            <div class="detail-group"><h4>Tanggal</h4><span>${escapeHtml(trx.date)} ${escapeHtml(trx.time)}</span></div>
-            <div class="detail-group"><h4>Pelanggan</h4><span>${escapeHtml(trx.customer_name || "Umum")}</span></div>
-            <div class="detail-group"><h4>Kasir</h4><span>${escapeHtml(trx.cashier)}</span></div>
-            <div class="detail-group"><h4>Item</h4><span>${trx.items.map(item => `${item.quantity}x ${escapeHtml(item.name)}`).join("<br>") || "-"}</span></div>
-            <div class="detail-group"><h4>Subtotal</h4><span>${rupiah(trx.subtotal)}</span></div>
-            <div class="detail-group"><h4>Pajak</h4><span>${rupiah(trx.tax)}</span></div>
-            <div class="detail-group"><h4>Total</h4><span>${rupiah(trx.total)}</span></div>
-            <div class="detail-group"><h4>Pembayaran</h4><span>${escapeHtml(trx.payment_method)}</span></div>
-            <div class="detail-group"><h4>Status</h4><span class="badge completed">${escapeHtml(trx.status.toUpperCase())}</span></div>
-            <div class="detail-group"><h4>Receipt</h4><a href="/receipt/${trx.id}" target="_blank">Buka struk</a></div>
+
+
+            <div class="detail-row">
+                <span>ID Transaksi</span>
+                <b>${escapeHtml(trx.transaction_number)}</b>
+            </div>
+
+            <div class="detail-row">
+                <span>Tanggal</span>
+                <b>${escapeHtml(trx.date)} ${escapeHtml(trx.time)}</b>
+            </div>
+
+            <div class="detail-row">
+                <span>Pelanggan</span>
+                <b>${escapeHtml(trx.customer_name || "Umum")}</b>
+            </div>
+
+            <div class="detail-row">
+                <span>Kasir</span>
+                <b>${escapeHtml(trx.cashier)}</b>
+            </div>
+
+            <div class="detail-title">
+                Item Pesanan
+            </div>
+
+            <div class="detail-product">
+
+                ${
+                    trx.items.map(item => `
+
+                        <div>
+                            ${item.quantity}x 
+                            ${escapeHtml(item.name)}
+                        </div>
+
+                    `).join("")
+                }
+
+            </div>
+
+            <div class="detail-row">
+                <span>Subtotal</span>
+                <b>${rupiah(trx.subtotal)}</b>
+            </div>
+
+            <div class="detail-row">
+                <span>Pajak</span>
+                <b>${rupiah(trx.tax)}</b>
+            </div>
+
+            <div class="detail-row total">
+                <span>Total</span>
+                <b>${rupiah(trx.total)}</b>
+            </div>
+
+            <div class="detail-row">
+                <span>Pembayaran</span>
+                <b>${escapeHtml(trx.payment_method)}</b>
+            </div>
+
+            <div class="detail-row">
+                <span>Status</span>
+
+                <span class="badge completed">
+                    ${escapeHtml(trx.status.toUpperCase())}
+                </span>
+
+            </div>
+
+            <div class="detail-row">
+
+                <span>Receipt</span>
+
+                <a 
+                href="/receipt/${trx.id}"
+                target="_blank">
+
+                    Buka Struk
+
+                </a>
+
+            </div>
+
+
         `;
 
         el.transactionModal.classList.add("show");
+
     }
 
     function closeTransactionModal() {
@@ -585,11 +915,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             const qs = queryString();
             window.location.href = `/api/transaction/export-excel${qs ? `?${qs}` : ""}`;
         });
-
         el.settingBtn?.addEventListener("click", event => {
+
+            event.preventDefault();
             event.stopPropagation();
-            el.notificationMenu?.classList.remove("active");
-            el.settingsMenu?.classList.toggle("active");
+
+
+            el.notificationMenu
+            ?.classList.remove("active");
+
+
+            el.settingsMenu
+            ?.classList.toggle("active");
+
+
         });
         el.notificationBtn?.addEventListener("click", event => {
             event.stopPropagation();
@@ -608,16 +947,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             openProfileModal();
         });
 
-       document.addEventListener("click", function(event){
-
-            const btn = event.target.closest("#viewAllNotification");
-
-            if(!btn) return;
-
+       el.viewAllNotification?.addEventListener("click", event => {
 
             event.preventDefault();
-
-            event.stopPropagation();
 
 
             console.log("LIHAT SEMUA KLIK");
@@ -626,35 +958,28 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderAllNotifications();
 
 
-            document
-            .getElementById("notificationMenu")
+            el.notificationMenu
             ?.classList.remove("active");
 
 
-            document
-            .getElementById("notificationModal")
+            el.notificationModal
             ?.classList.add("show");
-
 
         });
 
-       document
-        .getElementById("closeNotificationModal")
+            el.closeNotificationModal
         ?.addEventListener("click",()=>{
 
-            document
-            .getElementById("notificationModal")
+            el.notificationModal
             ?.classList.remove("show");
 
         });
 
 
-        document
-        .getElementById("closeNotificationButton")
+        el.closeNotificationButton
         ?.addEventListener("click",()=>{
 
-            document
-            .getElementById("notificationModal")
+            el.notificationModal
             ?.classList.remove("show");
 
         });
@@ -674,6 +999,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             event.preventDefault();
             openPasswordModal();
         });
+
+      el.manageAccountsBtn?.addEventListener("click", event => {
+
+            event.preventDefault();
+
+            el.settingsMenu?.classList.remove("active");
+
+           el.accountsModal.classList.add("show");
+            loadAccounts();
+
+        });
+
+        el.closeAccountsModal?.addEventListener("click",()=>{
+
+            el.accountsModal
+            ?.classList.remove("show");
+
+        });
+        
         el.closePasswordModal?.addEventListener("click", closePasswordModal);
         el.cancelPassword?.addEventListener("click", closePasswordModal);
         el.savePassword?.addEventListener("click", () => {
@@ -694,6 +1038,180 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (event.target === el.editProfileModal) closeProfileModal();
             if (event.target === el.passwordModal) closePasswordModal();
         });
+
+        el.saveAccount?.addEventListener("click", async () => {
+
+            const id = el.accountId.value;
+
+            const payload = {
+
+                fullname: el.accountFullname.value,
+                username: el.accountUsername.value,
+                email: el.accountEmail.value,
+                phone: el.accountPhone.value,
+                role: el.accountRole.value,
+                password: el.accountPassword.value
+
+            };
+
+
+            try{
+
+                if(id){
+
+                    await api(
+                        `/api/accounts/${id}`,
+                        {
+                            method:"PUT",
+                            body:JSON.stringify(payload)
+                        }
+                    );
+
+                }else{
+
+                    await api(
+                        "/api/accounts",
+                        {
+                            method:"POST",
+                            body:JSON.stringify(payload)
+                        }
+                    );
+
+                }
+
+
+                resetAccountForm();
+
+                loadAccounts();
+
+
+            }catch(error){
+
+                alert("Gagal menyimpan akun");
+
+            }
+
+        });
+
+
+
+        // FORM BARU
+        el.resetAccountForm?.addEventListener("click",()=>{
+
+            resetAccountForm();
+
+        });
+
+        el.accountList?.addEventListener("click",event=>{
+
+
+            const button =
+                event.target.closest("[data-action]");
+
+
+            if(!button) return;
+
+
+            const row =
+                button.closest(".account-item");
+
+
+            const acc =
+                accounts.find(
+                    item => String(item.id) === row.dataset.id
+                );
+
+
+            if(!acc) return;
+
+
+
+            if(button.dataset.action==="edit"){
+
+                fillAccountForm(acc);
+
+            }
+
+
+
+            if(button.dataset.action==="toggle"){
+
+                toggleManagedAccount(acc);
+
+            }
+
+
+        });
+
+        document.getElementById("pagination")?.addEventListener("click", e=>{
+
+            const btn =
+                e.target.closest("button");
+
+
+            if(!btn) return;
+
+
+            currentPage =
+                Number(btn.dataset.page);
+
+
+            renderTransactions();
+
+
+        });
+
+    }
+
+    function resetAccountForm(){
+
+    el.accountId.value = "";
+
+    el.accountFullname.value = "";
+
+    el.accountUsername.value = "";
+
+    el.accountEmail.value = "";
+
+    el.accountPhone.value = "";
+
+    el.accountPassword.value = "";
+
+    el.accountRole.value = "FINANCE";
+
+    }
+
+    function fillAccountForm(acc){
+
+    el.accountId.value = acc.id;
+
+    el.accountFullname.value = acc.fullname;
+
+    el.accountUsername.value = acc.username;
+
+    el.accountEmail.value = acc.email || "";
+
+    el.accountPhone.value = acc.phone || "";
+
+    el.accountRole.value = acc.role;
+
+}
+
+
+
+    async function toggleManagedAccount(acc){
+
+
+        await api(
+            `/api/accounts/${acc.id}/toggle`,
+            {
+                method:"PATCH"
+            }
+        );
+
+
+        await loadAccounts();
+
     }
 
     await loadUser();
