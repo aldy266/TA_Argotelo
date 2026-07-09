@@ -194,41 +194,219 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function checkout() {
+
         setCheckoutMessage("");
+
+
         const items = Array.from(cart.values()).map(item => ({
             menu_item_id: item.menu.id,
             quantity: item.quantity
         }));
 
+
         if (!items.length) {
-            setCheckoutMessage("Keranjang masih kosong", true);
+
+            setCheckoutMessage(
+                "Keranjang masih kosong",
+                true
+            );
+
             return;
-        }
-        if (!paymentMethod) {
-            setCheckoutMessage("Pilih metode pembayaran", true);
-            return;
+
         }
 
+
+
         checkoutBtn.disabled = true;
+
+
+
         try {
-            const result = await api("/api/pos/checkout", {
-                method: "POST",
-                body: JSON.stringify({
-                    items,
-                    payment_method: paymentMethod,
-                    customer_name: customerName.value
-                })
+
+
+            // ==========================
+            // CASH = LANGSUNG CHECKOUT
+            // ==========================
+
+            if (paymentMethod === "CASH") {
+
+
+                const result = await api("/api/pos/checkout", {
+
+                    method: "POST",
+
+                    body: JSON.stringify({
+
+                        items,
+
+                        payment_method: paymentMethod,
+
+                        customer_name: customerName.value
+
+                    })
+
+                });
+
+
+
+                cart.clear();
+
+                renderCart();
+
+
+                customerName.value = "";
+
+
+                window.open(
+                    `/receipt/${result.data.id}`,
+                    "_blank"
+                );
+
+
+                return;
+
+            }
+
+
+
+
+
+
+
+            // ==========================
+            // QRIS / EWALLET MIDTRANS
+            // ==========================
+
+
+            // ==========================
+            // QRIS / EWALLET MIDTRANS
+            // ==========================
+
+            if (typeof snap === "undefined") {
+
+                setCheckoutMessage(
+                    "Midtrans Snap belum aktif",
+                    true
+                );
+
+                return;
+            }
+
+
+            const payment = await api(
+                "/cashier/api/payment/create",
+                {
+                    method: "POST",
+
+                    body: JSON.stringify({
+
+                        total: Number(
+                            totalEl.textContent
+                                .replace(/[^\d]/g, "")
+                        ),
+
+                        customer_name:
+                            customerName.value || "Umum"
+
+                    })
+                }
+            );
+
+
+            console.log("TOKEN MIDTRANS:", payment.token);
+
+
+            snap.pay(payment.token, {
+
+
+                onSuccess: async function () {
+
+
+                    const result = await api(
+                        "/api/pos/checkout",
+                        {
+
+                            method: "POST",
+
+                            body: JSON.stringify({
+
+                                items,
+
+                                payment_method: paymentMethod,
+
+                                customer_name:
+                                    customerName.value
+
+                            })
+
+                        }
+                    );
+
+
+
+                    cart.clear();
+
+                    renderCart();
+
+                    customerName.value = "";
+
+
+
+                    window.open(
+                        `/receipt/${result.data.id}`,
+                        "_blank"
+                    );
+
+
+                },
+
+
+                onPending: function () {
+
+
+                    setCheckoutMessage(
+                        "Pembayaran belum selesai",
+                        true
+                    );
+
+
+                },
+
+
+                onError: function () {
+
+
+                    setCheckoutMessage(
+                        "Pembayaran gagal",
+                        true
+                    );
+
+
+                }
+
+
             });
-            cart.clear();
-            renderCart();
-            customerName.value = "";
-            setCheckoutMessage(`Pembayaran berhasil. <a href="/receipt/${result.data.id}" target="_blank">Buka struk</a>`);
-            window.open(`/receipt/${result.data.id}`, "_blank");
+
+
+
         } catch (error) {
-            setCheckoutMessage(error.message, true);
+
+
+            setCheckoutMessage(
+                error.message,
+                true
+            );
+
+
         } finally {
-            renderCart();
+
+
+            checkoutBtn.disabled = false;
+
+
         }
+
+
     }
 
     menuGrid.addEventListener("click", event => {
@@ -251,11 +429,30 @@ document.addEventListener("DOMContentLoaded", async () => {
         Promise.all([loadMenus(), loadNotifications()]).catch(error => setCheckoutMessage(error.message, true));
     });
     paymentOptions?.addEventListener("click", event => {
+
         const button = event.target.closest("[data-method]");
+
         if (!button) return;
+
+
         paymentMethod = button.dataset.method;
-        paymentOptions.querySelectorAll(".payment-option").forEach(item => item.classList.remove("active"));
+
+
+        console.log(
+            "PAYMENT DIPILIH:",
+            paymentMethod
+        );
+
+
+        paymentOptions
+        .querySelectorAll(".payment-option")
+        .forEach(item =>
+            item.classList.remove("active")
+        );
+
+
         button.classList.add("active");
+
     });
     resetCartBtn.addEventListener("click", () => {
         cart.clear();
