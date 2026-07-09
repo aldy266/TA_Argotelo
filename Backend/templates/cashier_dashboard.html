@@ -86,6 +86,7 @@
             <nav class="nav">
                 <a href="{{ url_for('cashier.pos') }}" class="active"><i class="bi bi-cash-register"></i><span>POS System</span></a>
                 <a href="{{ url_for('cashier.inventory') }}"><i class="bi bi-archive"></i><span>Inventory</span></a>
+                <a href="{{ url_for('cashier.transaction') }}"><i class="bi bi-receipt"></i><span>Riwayat Transaksi</span></a>
             </nav>
             <div class="sidebar-footer">
                 <button id="logoutBtn" type="button"><i class="bi bi-box-arrow-right"></i><span>Sign Out</span></button>
@@ -156,8 +157,16 @@
             </div>
         </aside>
     </main>
+    <!-- MIDTRANS SNAP SANDBOX -->
+    <script
+        type="text/javascript"
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="Mid-client-5ttbauRrKEtYHA8pY">
+    </script>
 
+
+    <!-- POS LOGIC -->
     <script src="{{ url_for('static', filename='js/cashier_pos.js') }}"></script>
-</body>
 
+</body>
 </html>

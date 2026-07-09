@@ -2,184 +2,201 @@
 <html lang="id">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Transaksi | Argotelo</title>
 
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<meta charset="UTF-8">
+<title>Riwayat Transaksi | Argotelo</title>
 
-    <link rel="stylesheet"
-        href="{{ url_for('static', filename='css/cashier_transaction.css') }}">
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/cashier_transaction.css') }}">
+
 </head>
+
 
 <body>
 
-<div class="page">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
+<div class="wrapper">
 
-        <h1 class="brand">
-            ARGOTELO SALATIGA
-        </h1>
 
-        <nav class="nav">
+<!-- SIDEBAR -->
+<aside class="sidebar">
 
-            <a href="{{ url_for('cashier.pos') }}">
-                <i class="bi bi-cash-register"></i>
-                <span>POS System</span>
-            </a>
 
+<div class="sidebar-logo">
 
-            <a href="{{ url_for('cashier.inventory') }}">
-                <i class="bi bi-archive"></i>
-                <span>Inventory</span>
-            </a>
+<h2>ARGOTELO<br>SALATIGA</h2>
 
+</div>
 
-            <a href="{{ url_for('cashier.transaction') }}"
-               class="active">
 
-                <i class="bi bi-receipt"></i>
-                <span>Riwayat Transaksi</span>
+<nav class="sidebar-menu">
 
-            </a>
 
-        </nav>
+<a href="{{ url_for('cashier.pos') }}">
 
-    </aside>
+<i class="bi bi-cash-register"></i>
 
+<span>POS System</span>
 
-    <!-- MAIN -->
-    <main>
+</a>
 
 
-        <!-- TOPBAR -->
-        <header class="topbar">
+<a href="{{ url_for('cashier.inventory') }}">
 
-            <div class="search-box">
+<i class="bi bi-box"></i>
 
-                <i class="bi bi-search"></i>
+<span>Inventory</span>
 
-                <input
-                    id="transactionSearch"
-                    type="search"
-                    placeholder="Cari transaksi...">
+</a>
 
-            </div>
 
+<a href="{{ url_for('cashier.transaction') }}"
+class="active">
 
-            <div class="profile">
+<i class="bi bi-receipt"></i>
 
-                <div>
+<span>Riwayat Transaksi</span>
 
-                    <h4 id="cashierName">
-                        Memuat...
-                    </h4>
+</a>
 
-                    <span>
-                        KASIR
-                    </span>
 
-                </div>
+</nav>
 
 
-                <img
-                    id="profileImage"
-                    src="{{ url_for('static',
-                    filename='images/profile.png') }}">
+</aside>
 
-            </div>
 
-        </header>
 
 
 
-        <!-- CONTENT -->
-        <section class="content">
+<!-- MAIN -->
+<main class="main-content">
 
 
-            <div class="header">
+<header class="topbar">
 
-                <div>
 
-                    <h1>
-                        Riwayat Transaksi
-                    </h1>
+<div class="search-box">
 
-                    <p>
-                        Daftar transaksi yang dilakukan oleh kasir.
-                    </p>
+<i class="bi bi-search"></i>
 
-                </div>
+<input 
+id="transactionSearch"
+placeholder="Cari transaksi...">
 
-            </div>
+</div>
 
 
+<div class="profile">
 
-            <!-- CARD -->
-            <div class="table-card">
+<div class="profile-info">
 
+<h4 id="cashierName">Kasir</h4>
 
-                <table>
+<span>KASIR</span>
 
+</div>
 
-                    <thead>
 
-                    <tr>
-
-                        <th>No Transaksi</th>
-
-                        <th>Tanggal</th>
-
-                        <th>Pelanggan</th>
-
-                        <th>Pembayaran</th>
-
-                        <th>Total</th>
-
-                        <th>Aksi</th>
-
-                    </tr>
-
-                    </thead>
-
-
-
-                    <tbody id="transactionTable">
-
-                        <tr>
-
-                            <td colspan="6"
-                                class="empty">
-
-                                Memuat transaksi...
-
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-
-                </table>
-
-
-            </div>
-
-
-        </section>
-
-
-    </main>
+<img id="profileImage"
+src="/static/images/profile.png">
 
 
 </div>
 
 
-<script src="{{ url_for('static',
-filename='js/cashier_transaction.js') }}"></script>
+</header>
+
+
+
+
+
+<div class="page-header">
+
+
+<div class="page-title">
+
+<h1>Riwayat Transaksi</h1>
+
+<p>Daftar transaksi yang dilakukan kasir.</p>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="transaction-card">
+
+
+<div class="table-responsive">
+
+
+<table class="transaction-table">
+
+
+<thead>
+
+<tr>
+
+<th>No Transaksi</th>
+
+<th>Tanggal</th>
+
+<th>Pelanggan</th>
+
+<th>Pembayaran</th>
+
+<th>Total</th>
+
+<th>Aksi</th>
+
+</tr>
+
+</thead>
+
+
+
+<tbody id="transactionTable">
+
+
+<tr>
+
+<td colspan="6">
+
+Memuat transaksi...
+
+</td>
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+</div>
+
+
+
+</main>
+
+
+</div>
+
+
+<script src="{{ url_for('static', filename='js/cashier_transaction.js') }}"></script>
 
 
 </body>
