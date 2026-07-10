@@ -15,6 +15,7 @@ from routes.finance import finance_bp
 from routes.inventory import inventory_bp
 from routes.purchase_order import purchase_order_bp
 from routes.staff import staff_bp
+from routes.attendance import attendance_bp
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -214,7 +215,7 @@ app.register_blueprint(finance_bp)
 app.register_blueprint(inventory_bp)
 app.register_blueprint(purchase_order_bp)
 app.register_blueprint(staff_bp)
-
+app.register_blueprint(attendance_bp)
 
 
 # ==========================

@@ -132,3 +132,182 @@ def create_midtrans_payment():
             "success": False,
             "message": str(e)
         }), 500
+
+# ==========================
+# CASHIER ATTENDANCE
+# ==========================
+
+@cashier_bp.route("/attendance")
+@role_name_required("KASIR")
+def attendance():
+
+    return render_template(
+        "cashier_attendance.html"
+    )
+
+# ==========================
+# GET STAFF ABSENSI
+# ==========================
+
+@cashier_bp.route("/api/attendance/staff")
+@role_name_required("KASIR")
+def attendance_staff():
+
+    try:
+
+        result = db.session.execute(text("""
+            SELECT
+                id,
+                full_name,
+                position
+            FROM staff
+            ORDER BY full_name
+        """))
+
+
+        data=[]
+
+
+        for row in result:
+
+            data.append({
+
+                "id":row.id,
+                "name":row.full_name,
+                "position":row.position
+
+            })
+
+
+        return jsonify({
+
+            "success":True,
+            "data":data
+
+        })
+
+
+    except Exception as e:
+
+        return jsonify({
+
+            "success":False,
+            "message":str(e)
+
+        }),500
+    
+# ==========================
+# ABSEN MASUK
+# ==========================
+
+@cashier_bp.route("/api/attendance/check-in", methods=["POST"])
+@role_name_required("KASIR")
+def attendance_check_in():
+
+    try:
+
+        data = request.json
+
+        staff_id = data["staff_id"]
+
+
+        db.session.execute(text("""
+            INSERT INTO attendance
+            (
+                staff_id,
+                schedule_id,
+                attendance_date,
+                clock_in,
+                status,
+                created_at
+            )
+            VALUES
+            (
+                :staff_id,
+                1,
+                CURDATE(),
+                NOW(),
+                'PRESENT',
+                NOW()
+            )
+        """),
+        {
+            "staff_id": staff_id
+        })
+
+
+        db.session.commit()
+
+
+        return jsonify({
+
+            "success": True,
+            "message": "Absen masuk berhasil"
+
+        })
+
+
+    except Exception as e:
+
+        db.session.rollback()
+
+        return jsonify({
+
+            "success":False,
+            "message":str(e)
+
+        }),500
+
+# ==========================
+# ABSEN PULANG
+# ==========================
+
+@cashier_bp.route("/api/attendance/check-out", methods=["POST"])
+@role_name_required("KASIR")
+def attendance_check_out():
+
+    try:
+
+        data=request.json
+
+        staff_id=data["staff_id"]
+
+
+        db.session.execute(text("""
+            UPDATE attendance
+
+            SET
+                clock_out=NOW(),
+                status='COMPLETED',
+                updated_at=NOW()
+
+            WHERE
+                staff_id=:staff_id
+                AND attendance_date=CURDATE()
+        """),
+        {
+            "staff_id":staff_id
+        })
+
+
+        db.session.commit()
+
+
+        return jsonify({
+
+            "success":True,
+            "message":"Absen pulang berhasil"
+
+        })
+
+
+    except Exception as e:
+
+        db.session.rollback()
+
+        return jsonify({
+
+            "success":False,
+            "message":str(e)
+
+        }),500

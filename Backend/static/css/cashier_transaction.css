@@ -3415,3 +3415,290 @@ body{
 
 }
 
+/* =================================================
+   CASHIER TRANSACTION MODERN ARGOTELO
+================================================= */
+
+.transaction-page{
+
+    padding:35px;
+
+    background:#FBF5F0;
+
+    min-height:100vh;
+
+}
+
+
+/* HEADER */
+
+
+.transaction-page h1{
+
+    font-size:30px;
+
+    font-weight:800;
+
+    color:#2F1D0F;
+
+    margin-bottom:8px;
+
+}
+
+
+.transaction-page p{
+
+    color:#8A7568;
+
+    font-size:14px;
+
+}
+
+
+
+/* SEARCH */
+
+
+.transaction-search{
+
+    width:420px;
+
+    height:48px;
+
+    background:#fff;
+
+    border:1px solid #E7DDD6;
+
+    border-radius:30px;
+
+    display:flex;
+
+    align-items:center;
+
+    padding:0 20px;
+
+    margin-bottom:25px;
+
+}
+
+
+.transaction-search input{
+
+    flex:1;
+
+    border:none;
+
+    outline:none;
+
+    background:transparent;
+
+}
+
+
+
+/* TABLE CARD */
+
+
+.transaction-card{
+
+    margin-top:25px;
+
+    background:white;
+
+    border-radius:22px;
+
+    overflow:hidden;
+
+
+    border:1px solid #E8D8CD;
+
+
+    box-shadow:
+    0 18px 45px rgba(75,46,19,.08);
+
+}
+
+
+
+/* TABLE */
+
+
+.transaction-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+
+.transaction-table thead{
+
+    background:#EFE0D4;
+
+}
+
+
+.transaction-table th{
+
+    padding:20px 24px;
+
+    text-align:left;
+
+    color:#4B2E13;
+
+    font-size:13px;
+
+    font-weight:800;
+
+    text-transform:uppercase;
+
+}
+
+
+.transaction-table td{
+
+    padding:22px 24px;
+
+    border-bottom:1px solid #F1E6DF;
+
+
+    font-size:14px;
+
+    color:#2F1D0F;
+
+}
+
+
+.transaction-table tbody tr{
+
+    transition:.25s;
+
+}
+
+
+.transaction-table tbody tr:hover{
+
+    background:#FAF4EF;
+
+}
+
+
+
+/* NOMOR TRANSAKSI */
+
+
+.transaction-table td:first-child{
+
+    font-weight:700;
+
+    color:#4B2E13;
+
+}
+
+
+
+/* TOTAL */
+
+.transaction-table td:nth-child(5){
+
+    font-weight:800;
+
+}
+
+
+
+/* LINK STRUK */
+
+.transaction-table a{
+
+    background:#4B2E13;
+
+    color:white;
+
+
+    padding:9px 16px;
+
+    border-radius:10px;
+
+
+    text-decoration:none;
+
+
+    font-size:12px;
+
+    font-weight:700;
+
+
+    transition:.25s;
+
+}
+
+
+.transaction-table a:hover{
+
+    background:#2d1708;
+
+}
+
+
+
+/* PAYMENT BADGE */
+
+
+.payment-badge{
+
+    display:inline-block;
+
+
+    padding:7px 15px;
+
+    border-radius:20px;
+
+
+    background:#F6E8DD;
+
+    color:#4B2E13;
+
+
+    font-weight:700;
+
+    font-size:12px;
+
+}
+
+
+
+/* EMPTY DATA */
+
+.empty-row{
+
+    padding:50px;
+
+    text-align:center;
+
+    color:#999;
+
+}
+
+
+
+/* RESPONSIVE */
+
+
+@media(max-width:900px){
+
+.transaction-card{
+
+    overflow-x:auto;
+
+}
+
+
+.transaction-search{
+
+    width:100%;
+
+}
+
+}
