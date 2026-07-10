@@ -236,28 +236,6 @@
     gap:16px;
 }
 
-.account-photo{
-    display:grid;
-    justify-items:center;
-    gap:10px;
-    margin-bottom:4px;
-}
-
-.account-photo img{
-    width:92px;
-    height:92px;
-    border-radius:50%;
-    object-fit:cover;
-    border:4px solid #F7ECE4;
-}
-
-.account-photo label{
-    color:#5A3718;
-    font-size:13px;
-    font-weight:700;
-    cursor:pointer;
-}
-
 .account-field{
     display:grid;
     gap:8px;

@@ -35,6 +35,9 @@
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/owner_account_controls.css') }}">
 
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/owner_sidebar.css') }}">
+
 </head>
 
 <body>
@@ -78,7 +81,7 @@
                     </a>
 
                     <a href="{{ url_for('owner.owner_menu') }}" class="active">
-                        <i class="bi bi-tools"></i>
+                        <i class="bi bi-card-list"></i>
                         <span>Menu Management</span>
                     </a>
 
@@ -159,11 +162,6 @@
                     </span>
 
                 </div>
-
-                <img id="profileImage"
-                     src="{{ url_for('static', filename='images/profile.png') }}"
-                     data-default-src="{{ url_for('static', filename='images/logo.png') }}"
-                     alt="Profile">
 
             </div>
 

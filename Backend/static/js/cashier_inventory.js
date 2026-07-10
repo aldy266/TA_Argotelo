@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         stockAlertText: document.getElementById("stockAlertText"),
         cashierName: document.getElementById("cashierName"),
         cashierRole: document.getElementById("cashierRole"),
-        profileImage: document.getElementById("profileImage"),
         logoutBtn: document.getElementById("logoutBtn")
     };
 
@@ -128,7 +127,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         const user = result.user;
         el.cashierName.textContent = user.fullname || user.username || "Kasir";
         el.cashierRole.textContent = user.role || "KASIR";
-        el.profileImage.src = user.photo || "/static/images/profile.png";
     }
 
     async function loadInventory() {

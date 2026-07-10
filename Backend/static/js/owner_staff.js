@@ -40,8 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const allStaffSearch = document.getElementById("allStaffSearch");
     const allStaffList = document.getElementById("allStaffList");
     const scheduleButtons = [
-        document.getElementById("btn-top-schedule"),
-        document.getElementById("btn-new-schedule")
+        document.getElementById("btn-top-schedule")
     ].filter(Boolean);
     const scheduleModal = document.getElementById("scheduleModal");
     const scheduleModalTitle = document.getElementById("scheduleModalTitle");
@@ -96,56 +95,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 
-    // ===============================
-    // NOTIFICATION ELEMENT
-    // ===============================
-
-    const notificationBtn =
-        document.getElementById("notificationBtn");
-
-
-    const notificationMenu =
-        document.getElementById("notificationMenu");
-
-
-    const notificationBadge =
-        document.getElementById("notificationBadge");
-
-
-    const notificationSubtitle =
-        document.getElementById("notificationSubtitle");
-
-
-    const notificationList =
-        document.getElementById("notificationList");
-
-
-    const viewAllNotification =
-        document.getElementById("viewAllNotification");
-
-
-
-    // MODAL LIHAT SEMUA NOTIFIKASI
-
-    const stockNotificationModal =
-        document.getElementById("stockNotificationModal");
-
-
-    const allNotificationList =
-        document.getElementById("allNotificationList");
-
-
-    const allNotificationTotal =
-        document.getElementById("allNotificationTotal");
-
-
-    const closeStockNotification =
-        document.getElementById("closeStockNotification");
-
-
-    const closeStockNotificationBtn =
-        document.getElementById("closeStockNotificationBtn");
-
     // =====================================
     // STATE
     // =====================================
@@ -158,6 +107,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let selectedScheduleId = null;
     let selectedShiftId = null;
     let selectedAttendanceDate = "";
+    let currentUserRole = "";
 
     // =====================================
     // UTILITIES
@@ -375,9 +325,49 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (response.success) {
                 if (fullnameEl) fullnameEl.textContent = response.user.fullname || "User";
                 if (roleEl) roleEl.textContent = response.user.role || "Role";
+                currentUserRole = String(response.user.role || "").toUpperCase();
             }
         } catch (error) {
             console.error("Error loading user:", error);
+        }
+    }
+
+    function isFinanceRole() {
+        return currentUserRole === "FINANCE";
+    }
+
+    function isOwnerRole() {
+        return currentUserRole === "OWNER";
+    }
+
+    function setHidden(selector, hidden) {
+        document.querySelectorAll(selector).forEach(element => {
+            element.hidden = hidden;
+        });
+    }
+
+    function applyRoleCapabilities() {
+        const financeMode = isFinanceRole();
+        const ownerMode = isOwnerRole();
+        const managementMode = financeMode || ownerMode;
+
+        document.body.dataset.staffMode = ownerMode
+            ? "owner-management"
+            : (financeMode ? "operational" : "readonly");
+
+        document.querySelector(".staff-layout")?.classList.toggle("approval-only", false);
+
+        setHidden(".statistics", !managementMode);
+        setHidden(".attendance-card", !managementMode);
+        setHidden(".summary-card", !managementMode);
+        setHidden(".shift-card", !managementMode);
+        setHidden(".approval-card", !ownerMode);
+        setHidden("#btn-import-staff", !financeMode);
+        setHidden("#btn-top-schedule", !financeMode);
+        setHidden("#btn-add-shift", !financeMode);
+
+        if (financeMode && statApproval) {
+            statApproval.textContent = "Menunggu approval Owner";
         }
     }
 
@@ -397,17 +387,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function updateStatisticsUI(stats) {
-        const { total_scheduled, total_staff, present_count, attendance_rate, late_count, avg_late_minutes, leave_count } = stats;
-        const staffTotal = Number.isFinite(Number(total_staff))
-            ? Number(total_staff)
-            : Number(total_scheduled || 0);
+        const { total_scheduled, present_count, attendance_rate, late_count, avg_late_minutes, leave_count } = stats;
+        const scheduledTotal = Number(total_scheduled || 0);
         
-        statPresent.textContent = `${present_count} / ${staffTotal}`;
+        statPresent.textContent = `${present_count} / ${scheduledTotal}`;
         statRate.textContent = `${attendance_rate}% Attendance`;
         
         if (late_count === 0) {
             statLate.textContent = "0 Staff";
             statAvgLate.textContent = "Tidak ada keterlambatan";
+            statAvgLate.classList.remove("danger");
         } else {
             statLate.textContent = `${late_count} Staff`;
             statAvgLate.textContent = `Rata-rata ${Math.round(avg_late_minutes)} menit`;
@@ -472,7 +461,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <tr>
                     <td colspan="7" 
                     style="text-align:center; padding:40px;">
-                        Belum ada data kehadiran.
+                        Belum ada Staff yang dijadwalkan hari ini.
                     </td>
                 </tr>
             `;
@@ -482,6 +471,77 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
         attendanceTable.innerHTML = filteredData.map(record => {
+            const lockedStatuses = ["LEAVE", "SICK", "ABSENT"];
+            const canClockIn = isFinanceRole()
+                && !record.clock_in
+                && !lockedStatuses.includes(record.status);
+            const canClockOut = isFinanceRole()
+                && record.clock_in
+                && !record.clock_out
+                && !lockedStatuses.includes(record.status)
+                && record.status !== "COMPLETED";
+            const canManageSchedule = isFinanceRole() || isOwnerRole();
+            const actionButtons = canManageSchedule ? `
+                        <button 
+                        class="edit-btn schedule-edit-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-pencil-square"></i>
+                            Edit 
+
+                        </button>
+
+
+                        ${isFinanceRole() && canClockIn ? `
+                        <button 
+                        class="secondary-button clock-in-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Clock In
+
+                        </button>
+                        ` : ""}
+
+
+                        ${isFinanceRole() && canClockOut ? `
+                        <button 
+                        class="secondary-button clock-out-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-box-arrow-right"></i>
+                            Clock Out
+
+                        </button>
+                        ` : ""}
+
+
+                        ${isFinanceRole() ? `
+                        <button 
+                        class="secondary-button leave-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-file-earmark-medical"></i>
+                            Izin
+
+                        </button>
+                        ` : ""}
+
+
+                        <button 
+                        class="delete-btn schedule-delete-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-trash3"></i>
+                            Hapus
+
+                        </button>
+            ` : `<span class="readonly-action">Read-only</span>`;
 
             return `
             <tr>
@@ -542,29 +602,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <td>
 
                     <div class="attendance-row-actions">
-
-
-                        <button 
-                        class="edit-btn schedule-edit-btn"
-                        type="button"
-                        data-schedule-id="${record.schedule_id}">
-
-                            <i class="bi bi-pencil-square"></i>
-                            Edit 
-
-                        </button>
-
-
-                        <button 
-                        class="delete-btn schedule-delete-btn"
-                        type="button"
-                        data-schedule-id="${record.schedule_id}">
-
-                            <i class="bi bi-trash3"></i>
-                            Hapus
-
-                        </button>
-
+                        ${actionButtons}
 
                     </div>
 
@@ -619,6 +657,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         const editButton = event.target.closest(".schedule-edit-btn");
         const leaveButton = event.target.closest(".leave-btn");
         const deleteButton = event.target.closest(".schedule-delete-btn");
+        const clockInButton = event.target.closest(".clock-in-btn");
+        const clockOutButton = event.target.closest(".clock-out-btn");
 
         if (editButton) {
             const record = findAttendanceRecord(editButton.dataset.scheduleId);
@@ -629,9 +669,46 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (leaveButton) {
+            if (!isFinanceRole()) return;
             const record = findAttendanceRecord(leaveButton.dataset.scheduleId);
             if (record) {
                 openLeaveModal(record);
+            }
+            return;
+        }
+
+        if (clockInButton) {
+            if (!isFinanceRole()) return;
+            clockInButton.disabled = true;
+            try {
+                const response = await apiRequest(`/api/staff/attendance/${clockInButton.dataset.scheduleId}/clock-in`, {
+                    method: "PATCH"
+                });
+                showToast(response.message || "Clock in berhasil");
+                await loadStatistics();
+                await loadMonthStatistics();
+                await loadAttendance(selectedAttendanceDate);
+                await loadShiftData();
+            } finally {
+                clockInButton.disabled = false;
+            }
+            return;
+        }
+
+        if (clockOutButton) {
+            if (!isFinanceRole()) return;
+            clockOutButton.disabled = true;
+            try {
+                const response = await apiRequest(`/api/staff/attendance/${clockOutButton.dataset.scheduleId}/clock-out`, {
+                    method: "PATCH"
+                });
+                showToast(response.message || "Clock out berhasil");
+                await loadStatistics();
+                await loadMonthStatistics();
+                await loadAttendance(selectedAttendanceDate);
+                await loadShiftData();
+            } finally {
+                clockOutButton.disabled = false;
             }
             return;
         }
@@ -668,7 +745,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         leaveStartDateInput.value = record.schedule_date || selectedAttendanceDate || getTodayInputValue();
         leaveEndDateInput.value = record.schedule_date || selectedAttendanceDate || getTodayInputValue();
         leaveReasonInput.value = "";
-        leaveAutoApprove.checked = true;
+        leaveAutoApprove.checked = false;
         leaveModal?.classList.remove("hidden");
         leaveTypeSelect?.focus();
     }
@@ -678,7 +755,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (leaveStaffId) leaveStaffId.value = "";
         if (leaveStaffName) leaveStaffName.textContent = "-";
         if (leaveReasonInput) leaveReasonInput.value = "";
-        if (leaveAutoApprove) leaveAutoApprove.checked = true;
+        if (leaveAutoApprove) leaveAutoApprove.checked = false;
     }
 
     async function saveLeaveData() {
@@ -702,7 +779,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     start_date: leaveStartDateInput.value,
                     end_date: leaveEndDateInput.value,
                     reason: leaveReasonInput.value.trim(),
-                    auto_approve: leaveAutoApprove.checked
+                    auto_approve: false
                 })
             });
 
@@ -715,7 +792,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             await loadStatistics();
             await loadMonthStatistics();
             await loadAttendance(selectedAttendanceDate);
-            //await loadLeaveRequests()
         } finally {
             saveLeave.disabled = false;
         }
@@ -740,6 +816,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                             <span>Shift</span>
                             <span>Jam</span>
                             <span>Toleransi</span>
+                            <span>Terjadwal</span>
                             <span>Aksi</span>
                         </div>
                         ${shiftData.map(shift => `
@@ -750,10 +827,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 </div>
                                 <span>${shift.start_time} - ${shift.end_time}</span>
                                 <span>${escapeHtml(shift.tolerance_minutes)} menit</span>
+                                <span>${escapeHtml(shift.today_staff_count || 0)} Staff Hari Ini</span>
                                 <div class="shift-action">
+                                    ${isFinanceRole() ? `
                                     <button class="edit-btn shift-edit-btn" type="button" data-shift-id="${shift.id}">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </button>
+                                    ` : `<span class="readonly-action">Read-only</span>`}
                                 </div>
                             </div>
                         `).join("")}
@@ -763,7 +843,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 shiftData = [];
                 shiftContainer.innerHTML = `
                     <div style="padding: 20px; text-align: center; color: var(--text-light);">
-                        <p>Tidak ada shift yang terdaftar</p>
+                        <p>Tidak ada shift yang terdaftar.</p>
                     </div>
                 `;
             }
@@ -799,11 +879,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                     return `
                         <div class="approval-item">
                             <div class="approval-left">
-                                <div class="approval-icon ${req.leave_type === 'SICK' ? 'warning' : 'primary'}">
+                                <div class="approval-icon ${req.leave_type === 'SICK' ? 'sick' : 'leave'}">
                                     <i class="bi bi-${typeInfo.icon}"></i>
                                 </div>
-                                <div>
-                                    <h5>${typeInfo.label} - ${escapeHtml(req.staff_name)}</h5>
+                                <div class="approval-info">
+                                    <strong>${typeInfo.label} - ${escapeHtml(req.staff_name)}</strong>
                                     <span>${timeLabel}</span>
                                 </div>
                             </div>
@@ -887,7 +967,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                     ` : ''}
                     <div class="menu-form-actions" style="margin-top: 12px;">
-                        <button type="button" class="cancel-btn" id="btn-reject-leave">Tolak</button>
+                        <button type="button" class="delete-btn" id="btn-reject-leave">Tolak</button>
                         <button type="button" class="save-btn" id="btn-approve-leave">Setujui</button>
                     </div>
                 </div>
@@ -898,7 +978,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const close = () => modal.remove();
         modal.querySelector(".modal-close").addEventListener("click", close);
-        modal.querySelector(".cancel-btn").addEventListener("click", close);
         
         modal.addEventListener("click", event => {
             if (event.target === modal) close();
@@ -909,7 +988,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await apiRequest(`/api/staff/leave-request/${requestId}/approve`, { method: "PATCH" });
                 showToast("Permohonan disetujui");
                 close();
-                //await loadLeaveRequests();
+                await loadLeaveRequests();
                 await loadStatistics();
                 await loadMonthStatistics();
                 await loadAttendance();
@@ -923,7 +1002,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await apiRequest(`/api/staff/leave-request/${requestId}/reject`, { method: "PATCH" });
                 showToast("Permohonan ditolak");
                 close();
-                //await loadLeaveRequests();
+                await loadLeaveRequests();
                 await loadStatistics();
             } catch (error) {
                 console.error("Error rejecting leave:", error);
@@ -1024,7 +1103,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             : `<option value="">Belum ada Shift</option>`;
 
         if (scheduleModalTitle) {
-            scheduleModalTitle.textContent = selectedScheduleId ? "Edit Penjadwalan" : "Tambah Penjadwalan";
+            scheduleModalTitle.textContent = selectedScheduleId ? "Edit Jadwal Staff" : "Tambah Jadwal Staff";
         }
         if (saveSchedule) {
             saveSchedule.textContent = selectedScheduleId ? "Simpan Perubahan" : "Simpan Jadwal";
@@ -1050,7 +1129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         scheduleModal?.classList.add("hidden");
         selectedScheduleId = null;
         if (scheduleModalTitle) {
-            scheduleModalTitle.textContent = "Tambah Penjadwalan";
+            scheduleModalTitle.textContent = "Tambah Jadwal Staff";
         }
         if (saveSchedule) {
             saveSchedule.textContent = "Simpan Jadwal";
@@ -1137,7 +1216,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             selectedShiftId = null;
 
             if (shiftModalTitle) {
-                shiftModalTitle.textContent = "Tambah Shift Baru";
+                shiftModalTitle.textContent = "Tambah Shift";
             }
 
             shiftNameInput.value = "";
@@ -1431,6 +1510,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const addBtn = e.target.closest("#btn-add-shift");
 
         if (addBtn) {
+            if (!isFinanceRole()) return;
 
             openShiftModal(null);
 
@@ -1442,6 +1522,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const editBtn = e.target.closest(".shift-edit-btn");
 
         if (editBtn) {
+            if (!isFinanceRole()) return;
 
             openShiftModal(
                 editBtn.dataset.shiftId
@@ -1509,600 +1590,33 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             await initUser();
 
+            applyRoleCapabilities();
 
-            await loadStatistics();
-
-
-            await loadMonthStatistics();
-
-
-            await loadAttendance(selectedAttendanceDate);
+            if (isFinanceRole() || isOwnerRole()) {
+                await loadStatistics();
 
 
-            await loadShiftData();
+                await loadMonthStatistics();
 
 
-            //await loadLeaveRequests();
+                await loadAttendance(selectedAttendanceDate);
 
 
-            setupSearch();
+                await loadShiftData();
+
+
+                setupSearch();
+            }
+
+
+            if (isOwnerRole()) {
+                await loadLeaveRequests();
+            }
 
 
         }
 
         init();
-
-    // ===============================
-    // REVIEW APPROVAL MODAL
-    // ===============================
-
-
-    const reviewModal = document.getElementById("reviewModal");
-
-    const closeReviewModal = document.getElementById("closeReviewModal");
-
-
-    document.addEventListener("click", (e)=>{
-
-
-        if(e.target.classList.contains("review-btn")){
-
-
-            reviewModal.classList.remove("hidden");
-
-
-            document.getElementById("reviewName").value =
-            "Maya Putri";
-
-
-            document.getElementById("reviewType").value =
-            "Izin Sakit";
-
-
-            document.getElementById("reviewReason").value =
-            "Tidak masuk karena sakit";
-
-
-        }
-
-
-    });
-
-
-
-    closeReviewModal?.addEventListener("click",()=>{
-
-        reviewModal.classList.add("hidden");
-
-    });
-
-    // ===============================
-    // STOCK NOTIFICATION ALERT
-    // ===============================
-
-    let stockAlerts = [];
-    let stockIndex = 0;
-
-
-    async function loadNotifications(){
-
-
-        try{
-
-
-            const response = await fetch("/api/dashboard", {
-
-                method:"POST",
-
-                credentials:"include",
-
-                headers:{
-                    "Content-Type":"application/json"
-                },
-
-                body: JSON.stringify({
-                    filter:"today"
-                })
-
-            });
-
-
-
-            const result =
-                await response.json();
-
-
-
-            stockAlerts =
-                result.data.notifications || [];
-
-
-
-            stockIndex = 0;
-
-
-
-            renderStockAlert();
-
-
-
-        }catch(error){
-
-
-            console.log(error);
-
-
-        }
-
-
-    }
-
-
-
-    function renderStockAlert(){
-
-
-        const alertText =
-        document.getElementById("stockAlertText");
-
-
-        const badge =
-        document.querySelector(".notification-badge");
-
-
-        if(!alertText) return;
-
-
-
-        if(stockAlerts.length === 0){
-
-
-            alertText.textContent =
-            "Semua stok aman";
-
-
-            if(badge){
-                badge.textContent = "0";
-            }
-
-
-            return;
-
-        }
-
-
-
-        const currentStock =
-        stockAlerts[stockIndex];
-
-
-
-        alertText.textContent =
-            `Stok ${currentStock.product} menipis`;
-
-
-
-        if(badge){
-
-            badge.textContent =
-            stockAlerts.length;
-
-        }
-
-
-
-        // pindah stok berikutnya
-        stockIndex++;
-
-
-        if(stockIndex === stockAlerts.length){
-
-            stockIndex = 0;
-
-        }
-
-
-    }
-
-
-    // pertama buka halaman
-    loadNotifications();
-
-
-    // ganti stok setiap 3 detik
-    setInterval(()=>{
-
-        renderStockAlert();
-
-    },3000);
-
-
-    // update database setiap 30 detik
-    setInterval(()=>{
-
-        loadNotifications();
-
-    },30000);
-
-
-    // ===============================
-    // DROPDOWN NOTIFIKASI (3 DATA)
-    // ===============================
-
-    function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8(){
-
-
-        const list =
-        document.getElementById("notificationList");
-
-
-        const total =
-        document.getElementById("notificationSubtitle");
-
-
-        if(!list) return;
-
-
-        list.innerHTML = "";
-
-
-        if(total){
-
-            total.textContent =
-            `${stockAlerts.length} Notifikasi Aktif`;
-
-        }
-
-
-
-        if(stockAlerts.length === 0){
-
-            list.innerHTML = `
-                <div class="notification-item">
-                    Semua stok aman
-                </div>
-            `;
-
-            return;
-
-        }
-
-
-
-        stockAlerts.slice(0,3).forEach(item=>{
-
-
-            list.innerHTML += `
-
-            <div class="notification-item">
-
-                <div class="notif-icon">
-
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Stok ${item.product} Menipis
-                    </strong>
-
-
-                    <p>
-                        Sisa : ${item.stock}
-                    </p>
-
-
-                    <small>
-                        Real-time
-                    </small>
-
-
-                </div>
-
-
-            </div>
-
-            `;
-
-
-        });
-
-
-    }
-
-
-
-
-    // ===============================
-    // KLIK BELL
-    // ===============================
-
-    document
-    .getElementById("notificationBtn")
-    .addEventListener("click",function(e){
-
-
-        e.stopPropagation();
-
-
-        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
-
-
-        document
-        .getElementById("notificationMenu")
-        .classList.toggle("active");
-
-
-    });
-
-
-
-
-    // ===============================
-    // TUTUP KLIK LUAR
-    // ===============================
-
-    document.addEventListener("click",()=>{
-
-
-        document
-        .getElementById("notificationMenu")
-        .classList.remove("active");
-
-
-    });
-
-
-
-    document
-    .getElementById("notificationMenu")
-    .addEventListener("click",(e)=>{
-
-
-        e.stopPropagation();
-
-
-    });
-
-
-    // ===============================
-    // LIHAT SEMUA MODAL
-    // ===============================
-
-    document
-    .getElementById("viewAllNotification")
-    .addEventListener("click",function(e){
-
-
-    e.stopPropagation();
-
-
-    document
-    .getElementById("notificationMenu")
-    .classList.remove("active");
-
-
-    openStockNotificationModal();
-
-
-    });
-
-    // ===============================
-    // MODAL SEMUA NOTIFIKASI
-    // ===============================
-
-    function openStockNotificationModal(){
-
-
-        const modal =
-        document.getElementById("stockNotificationModal");
-
-
-        const list =
-        document.getElementById("allNotificationList");
-
-
-        const total =
-        document.getElementById("allNotificationTotal");
-
-
-        if(!modal || !list) return;
-
-
-
-        list.innerHTML = "";
-
-
-
-        if(total){
-
-            total.textContent =
-            `${stockAlerts.length} Notifikasi`;
-
-        }
-
-
-
-        if(stockAlerts.length === 0){
-
-
-            list.innerHTML = `
-
-                <div class="notification-item">
-
-                    Semua stok aman
-
-                </div>
-
-            `;
-
-
-        }else{
-
-
-            stockAlerts.forEach(item=>{
-
-
-                list.innerHTML += `
-
-
-                <div class="notification-item">
-
-
-                    <div class="notif-icon">
-
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-
-                    </div>
-
-
-                    <div>
-
-
-                        <strong>
-
-                            Stok ${item.product} Menipis
-
-                        </strong>
-
-
-
-                        <p>
-
-                            Sisa : ${item.stock}
-
-                        </p>
-
-
-
-                        <small>
-
-                            Real-time
-
-                        </small>
-
-
-                    </div>
-
-
-                </div>
-
-
-                `;
-
-
-            });
-
-
-        }
-
-
-
-        modal.classList.remove("hidden");
-
-
-    }
-
-
-
-    // ===============================
-    // CLOSE MODAL NOTIFIKASI
-    // ===============================
-
-    document
-    .getElementById("closeStockNotification")
-    .addEventListener("click",()=>{
-
-
-        document
-        .getElementById("stockNotificationModal")
-        .classList.add("hidden");
-
-
-    });
-
-
-
-    document
-    .getElementById("closeStockNotificationBtn")
-    .addEventListener("click",()=>{
-
-
-        document
-        .getElementById("stockNotificationModal")
-        .classList.add("hidden");
-
-
-    });
-
-    // ===============================
-    // CLICK BELL
-    // ===============================
-
-    notificationBtn.addEventListener(
-        "click",
-        function(event){
-
-            event.stopPropagation();
-
-            notificationMenu.classList.toggle(
-                "active"
-            );
-
-        }
-    );
-
-
-    // ===============================
-    // LIHAT SEMUA
-    // ===============================
-
-    viewAllNotification.addEventListener(
-        "click",
-        function(){
-
-            notificationMenu.classList.remove(
-                "active"
-            );
-
-
-            notificationModal.classList.remove(
-                "hidden"
-            );
-
-        }
-    );
-
-
-    // ===============================
-    // CLOSE MODAL
-    // ===============================
-
-    closeNotification.addEventListener(
-        "click",
-        function(){
-
-            notificationModal.classList.add(
-                "hidden"
-            );
-
-        }
-    );
-
-
-    closeNotificationBtn.addEventListener(
-        "click",
-        function(){
-
-            notificationModal.classList.add(
-                "hidden"
-            );
-
-        }
-    );
 
 });
 

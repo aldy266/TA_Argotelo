@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const logoutBtn = document.getElementById("logoutBtn");
     const cashierName = document.getElementById("cashierName");
     const cashierRole = document.getElementById("cashierRole");
-    const profileImage = document.getElementById("profileImage");
     const stockAlertText = document.getElementById("stockAlertText");
     const checkoutMessage = document.getElementById("checkoutMessage");
     const menuCount = document.getElementById("menuCount");
@@ -62,7 +61,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         const result = await api("/api/me");
         cashierName.textContent = result.user.fullname || result.user.username || "Kasir";
         if (cashierRole) cashierRole.textContent = result.user.role || "KASIR";
-        if (profileImage) profileImage.src = result.user.photo || "/static/images/profile.png";
     }
 
     async function loadMenus() {

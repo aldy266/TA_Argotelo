@@ -28,6 +28,8 @@
     <!-- CSS -->
     <link rel="stylesheet"
         href="{{ url_for('static', filename='css/owner_inventory.css') }}">
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/owner_sidebar.css') }}">
 
 </head>
 
@@ -71,7 +73,7 @@
 
             {% if current_user_role == "OWNER" %}
             <a href="{{ url_for('owner.owner_menu') }}">
-                <i class="bi bi-tools"></i>
+                <i class="bi bi-card-list"></i>
                 <span>Menu Management</span>
             </a>
             {% endif %}
@@ -291,11 +293,6 @@
                 </span>
 
             </div>
-
-            <img
-                id="profileImage"
-                src="{{ url_for('static', filename='images/profile.png') }}"
-                alt="Profile">
 
         </div>
 
@@ -649,36 +646,6 @@
 
         </div>
 
-        <!-- ==========================
-                ALERT NOTIFICATION
-        ========================== -->
-
-        <div class="stock-toast" id="stockToast">
-
-    <div class="toast-left">
-
-        <div class="toast-icon">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-        </div>
-
-        <div class="toast-content">
-
-            <h4>Stok Keju Cheddar Kritis!</h4>
-
-            <p>Sisa 2.5kg. Lakukan re-order segera.</p>
-
-        </div>
-
-    </div>
-
-    <button class="toast-close" id="closeToast">
-
-        <i class="bi bi-x-lg"></i>
-
-    </button>
-
-</div>
-
 <!-- ==========================
         EDIT PROFILE MODAL
 ========================== -->
@@ -701,28 +668,6 @@
         </div>
 
         <div class="modal-body">
-
-            <div class="profile-photo">
-
-                <img
-                    id="previewPhoto"
-                    src="{{ url_for('static', filename='images/profile.png') }}">
-
-                <label
-                    for="photoInput"
-                    class="change-photo">
-
-                    Ganti Foto
-
-                </label>
-
-                <input
-                    type="file"
-                    id="photoInput"
-                    accept="image/*"
-                    hidden>
-
-            </div>
 
             <div class="form-group">
 

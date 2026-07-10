@@ -1,0 +1,166 @@
+/* Shared owner sidebar rules. Loaded after page CSS to keep every owner page aligned. */
+.sidebar{
+    width:280px;
+    background:#fff;
+    border-right:1px solid #E7DDD6;
+    position:fixed;
+    top:0;
+    left:0;
+    bottom:0;
+    padding:28px 20px;
+    display:flex;
+    flex-direction:column;
+    z-index:1000;
+    box-shadow:none;
+}
+
+.sidebar-logo{
+    text-align:center;
+    margin-bottom:38px;
+}
+
+.sidebar-logo img{
+    width:100px;
+    height:100px;
+    object-fit:contain;
+    margin:0 auto 14px;
+}
+
+.sidebar-logo h2{
+    display:block;
+    margin:0;
+    color:#2F1D0F;
+    font-size:20px;
+    font-weight:800;
+    line-height:1.3;
+    white-space:nowrap;
+}
+
+.sidebar-menu{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.sidebar-menu a{
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:12px;
+    width:100%;
+    min-height:48px;
+    padding:0 16px;
+    border-radius:8px;
+    color:#5F5650;
+    text-decoration:none;
+    font-size:14px;
+    font-weight:600;
+    line-height:1.2;
+    box-shadow:none;
+    transition:.25s;
+}
+
+.sidebar-menu a i{
+    width:20px;
+    height:20px;
+    flex:0 0 20px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+    text-align:center;
+}
+
+.sidebar-menu a span{
+    display:inline;
+    min-width:0;
+    white-space:nowrap;
+}
+
+.sidebar-menu a:hover{
+    background:#F5E7DE;
+    color:#4B2E13;
+}
+
+.sidebar-menu a.active,
+.sidebar-menu a.active:hover{
+    background:#4B2E13;
+    color:#fff;
+    box-shadow:none;
+}
+
+.sidebar-footer{
+    margin-top:auto;
+    border-top:1px solid #E7DDD6;
+    padding-top:18px;
+    display:grid;
+    gap:8px;
+}
+
+.sidebar-footer a{
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:12px;
+    width:100%;
+    min-height:48px;
+    padding:0 16px;
+    border-radius:8px;
+    color:#5F5650;
+    text-decoration:none;
+    font-size:14px;
+    font-weight:600;
+    line-height:1.2;
+    transition:.25s;
+}
+
+.sidebar-footer a i{
+    width:20px;
+    height:20px;
+    flex:0 0 20px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+}
+
+.sidebar-footer a span{
+    display:inline;
+    white-space:nowrap;
+}
+
+.sidebar-footer a:hover{
+    background:#F5E7DE;
+}
+
+.sidebar-footer .logout,
+.sidebar-footer a:last-child{
+    color:#D92D20;
+}
+
+.main-content{
+    margin-left:280px;
+    width:calc(100% - 280px);
+}
+
+@media(max-width:992px){
+    .sidebar{
+        width:280px;
+    }
+
+    .main-content{
+        margin-left:280px;
+        width:calc(100% - 280px);
+    }
+}
+
+@media(max-width:768px){
+    .sidebar{
+        display:none;
+    }
+
+    .main-content{
+        margin-left:0;
+        width:100%;
+    }
+}

@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const el = {
         fullname: byId("fullname"),
         role: byId("role"),
-        profileImage: byId("profileImage"),
         searchInput: byId("inventorySearch") || $(".search-box input"),
         clearSearch: byId("clearSearch"),
         sortSelect: byId("sort"),
@@ -85,8 +84,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         editUsername: byId("editUsername"),
         editEmail: byId("editEmail"),
         editPhone: byId("editPhone"),
-        photoInput: byId("photoInput"),
-        previewPhoto: byId("previewPhoto"),
         changePasswordBtn: byId("changePasswordBtn"),
         passwordModal: byId("passwordModal"),
         closePasswordModal: byId("closePasswordModal"),
@@ -515,7 +512,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             state.user = result.user;
             if (el.fullname) el.fullname.textContent = result.user.fullname || result.user.username || "User";
             if (el.role) el.role.textContent = result.user.role || "User";
-            if (el.profileImage) el.profileImage.src = result.user.photo || "/static/images/profile.png";
             applyRolePermissions();
         } catch {
             window.location.href = "/";
@@ -528,7 +524,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (el.editUsername) el.editUsername.value = user.username || "";
         if (el.editEmail) el.editEmail.value = user.email || "";
         if (el.editPhone) el.editPhone.value = user.phone || "";
-        if (el.previewPhoto) el.previewPhoto.src = user.photo || "/static/images/profile.png";
         el.settingsMenu?.classList.remove("active");
         showModal(el.editProfileModal);
     }
@@ -545,7 +540,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         formData.append("username", username);
         formData.append("email", el.editEmail?.value.trim() || "");
         formData.append("phone", el.editPhone?.value.trim() || "");
-        if (el.photoInput?.files?.[0]) formData.append("photo", el.photoInput.files[0]);
 
         const result = await api("/api/update-profile", {
             method: "POST",
@@ -553,7 +547,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
         state.user = { ...state.user, ...result.user, role: state.user?.role };
         if (el.fullname) el.fullname.textContent = state.user.fullname || state.user.username || "User";
-        if (el.profileImage) el.profileImage.src = state.user.photo || "/static/images/profile.png";
         hideModal(el.editProfileModal);
         showMessage(result.message || "Profil berhasil diperbarui");
     }
@@ -815,11 +808,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.closeProfileModal?.addEventListener("click", () => hideModal(el.editProfileModal));
         el.cancelProfile?.addEventListener("click", () => hideModal(el.editProfileModal));
         el.saveProfile?.addEventListener("click", () => saveProfile().catch(error => showMessage(error.message)));
-        el.photoInput?.addEventListener("change", event => {
-            const file = event.target.files?.[0];
-            if (!file || !el.previewPhoto) return;
-            el.previewPhoto.src = URL.createObjectURL(file);
-        });
 
         el.manageAccountsBtn?.addEventListener(
             "click",

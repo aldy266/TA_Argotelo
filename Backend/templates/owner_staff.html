@@ -35,6 +35,9 @@
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/owner_account_controls.css') }}">
 
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/owner_sidebar.css') }}">
+
 </head>
 
 <body>
@@ -79,7 +82,7 @@
 
     {% if current_user_role == "OWNER" %}
     <a href="{{ url_for('owner.owner_menu') }}">
-        <i class="bi bi-tools"></i>
+        <i class="bi bi-card-list"></i>
         <span>Menu Management</span>
     </a>
     {% endif %}
@@ -101,174 +104,6 @@
             MAIN CONTENT
 ======================================= -->
     <main class="main-content">
-
-        <header class="topbar">
-
-            <div class="topbar-right">
-
-
-                <!-- STOCK ALERT BERJALAN -->
-                <div class="stock-alert">
-
-                    <i class="bi bi-exclamation-triangle"></i>
-
-                    <span id="stockAlertText">
-                        Status inventori
-                    </span>
-
-                </div>
-
-
-
-                <!-- NOTIFICATION AREA -->
-                <div class="notification-wrapper">
-
-
-                    <!-- BELL BUTTON -->
-                    <button 
-                        id="notificationBtn"
-                        class="icon-button notification-btn"
-                        type="button">
-
-                        <i class="bi bi-bell-fill"></i>
-
-
-                        <span 
-                            id="notificationBadge"
-                            class="notification-badge">
-
-                            0
-
-                        </span>
-
-
-                    </button>
-
-
-
-                    <!-- DROPDOWN NOTIFIKASI -->
-                    <div 
-                        class="notification-dropdown"
-                        id="notificationMenu">
-
-
-                        <div class="notification-header">
-
-                            <h4>
-                                Notifikasi Stok
-                            </h4>
-
-
-                            <span id="notificationSubtitle">
-                                0 Notifikasi
-                            </span>
-
-                        </div>
-
-
-
-
-                        <!-- PREVIEW 4 DATA SAJA -->
-                        <div 
-                            class="notification-list"
-                            id="notificationList">
-
-
-                        </div>
-
-
-
-
-                        <div class="notification-footer">
-
-                            <button 
-                                id="viewAllNotification"
-                                type="button"
-                                class="view-all-notification">
-
-                                Lihat Semua
-
-                            </button>
-
-                        </div>
-
-
-                    </div>
-
-
-                </div>
-
-                
-
-            </div>
-
-        </header>
-
-        <!-- MODAL SEMUA NOTIFIKASI STOK -->
-        <div 
-            class="stock-modal hidden"
-            id="stockNotificationModal">
-
-
-            <div class="stock-modal-content">
-
-
-                <div class="stock-modal-header">
-
-                    <div>
-
-                        <h3>
-                            <i class="bi bi-bell-fill"></i>
-                            Notifikasi Stok Menipis
-                        </h3>
-
-
-                        <span id="allNotificationTotal">
-                            0 Notifikasi
-                        </span>
-
-                    </div>
-
-
-                    <button 
-                        id="closeStockNotification"
-                        type="button">
-
-                        <i class="bi bi-x-lg"></i>
-
-                    </button>
-
-
-                </div>
-
-
-
-                <div 
-                    class="stock-modal-body"
-                    id="allNotificationList">
-
-
-                </div>
-
-
-
-                <div class="stock-modal-footer">
-
-                    <button 
-                        id="closeStockNotificationBtn"
-                        type="button">
-
-                        Tutup
-
-                    </button>
-
-                </div>
-
-
-            </div>
-
-
-        </div>
 
         <!-- ======================================
                     STATISTICS
@@ -433,7 +268,7 @@
 
                             <i class="bi bi-plus-lg"></i>
 
-                            Tambah Jadwal Kerja
+                            Tambah Penjadwalan
 
                         </button>
 
@@ -559,11 +394,11 @@
 
                         </div>
 
-                        <button class="add-schedule" id="btn-new-schedule" type="button">
+                        <button class="add-schedule" id="btn-add-shift" type="button">
 
                             <i class="bi bi-plus-lg"></i>
 
-                            Tambah Jadwal Kerja
+                            Tambah Shift
 
                         </button>
 
@@ -584,61 +419,9 @@
 
                         <div id="approval-container">
 
-
-                            <div class="approval-item">
-
-                                <div class="approval-icon sick">
-
-                                    <i class="bi bi-clipboard2-pulse"></i>
-
-                                </div>
-
-
-                                <div class="approval-info">
-
-                                    <strong>Izin Sakit - Maya Putri</strong>
-
-                                    <span>2 jam yang lalu</span>
-
-                                </div>
-
-
-                                <button class="review-btn">
-
-                                    Review
-
-                                </button>
-
+                            <div style="padding: 20px; text-align: center; color: var(--text-light);">
+                                <p>Memuat permohonan...</p>
                             </div>
-
-
-
-                            <div class="approval-item">
-
-                                <div class="approval-icon leave">
-
-                                    <i class="bi bi-calendar-check"></i>
-
-                                </div>
-
-
-                                <div class="approval-info">
-
-                                    <strong>Pengajuan Cuti - Danu</strong>
-
-                                    <span>5 jam yang lalu</span>
-
-                                </div>
-
-
-                                <button class="review-btn">
-
-                                    Review
-
-                                </button>
-
-                            </div>
-
 
                         </div>
 
@@ -668,6 +451,10 @@
                     <a class="template-link" href="/api/staff/import-template">
                         <i class="bi bi-download"></i>
                         Download Template Excel
+                    </a>
+                    <a class="template-link" href="/api/staff/dummy-excel">
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                        Download Data Dummy
                     </a>
                 </div>
                 <div class="menu-form-actions">
@@ -725,7 +512,7 @@
     <div class="menu-modal-backdrop hidden" id="scheduleModal">
         <div class="menu-modal" role="dialog" aria-modal="true">
             <div class="menu-modal-header">
-                <h2 id="scheduleModalTitle">Tambah Jadwal Kerja</h2>
+                <h2 id="scheduleModalTitle">Tambah Jadwal Staff</h2>
                 <button class="modal-close" id="closeScheduleModal" type="button" aria-label="Tutup">
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -815,10 +602,10 @@
                     Alasan
                     <textarea id="leaveReasonInput" rows="4" placeholder="Contoh: sakit demam / izin keluarga"></textarea>
                 </label>
-                <label class="inline-check">
-                    <input id="leaveAutoApprove" type="checkbox" checked>
-                    <span>Langsung setujui dan ubah status kehadiran</span>
-                </label>
+                <input id="leaveAutoApprove" type="hidden" value="false">
+                <p class="modal-help">
+                    Pengajuan akan masuk ke Owner untuk disetujui.
+                </p>
                 <div class="menu-form-actions">
                     <button class="cancel-btn" id="cancelLeave" type="button">Batal</button>
                     <button class="save-btn" id="saveLeave" type="button">Simpan</button>
