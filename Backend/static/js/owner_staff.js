@@ -374,11 +374,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         setHidden(".statistics", !managementMode);
         setHidden(".attendance-card", !managementMode);
         setHidden(".summary-card", !managementMode);
-        setHidden(".shift-card", !managementMode);
+        setHidden(".shift-card", !ownerMode);
         setHidden(".approval-card", !ownerMode);
         setHidden("#btn-import-staff", !financeMode);
         setHidden("#btn-top-schedule", !financeMode);
-        setHidden("#btn-add-shift", !financeMode);
+        setHidden("#btn-add-shift", !ownerMode);
 
         if (financeMode && statApproval) {
             statApproval.textContent = "Menunggu approval Owner";
@@ -843,7 +843,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 <span>${escapeHtml(shift.tolerance_minutes)} menit</span>
                                 <span>${escapeHtml(shift.today_staff_count || 0)} Staff Hari Ini</span>
                                 <div class="shift-action">
-                                    ${isFinanceRole() ? `
+                                    ${isOwnerRole() ? `
                                     <button class="edit-btn shift-edit-btn" type="button" data-shift-id="${shift.id}">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </button>
@@ -1257,6 +1257,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function saveShiftData() {
 
+        if (!isOwnerRole()) {
+            showToast("Hanya owner yang dapat mengelola shift", "error");
+            return;
+        }
 
         if (!shiftNameInput.value.trim() 
             || !shiftStartInput.value 
@@ -1524,7 +1528,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const addBtn = e.target.closest("#btn-add-shift");
 
         if (addBtn) {
-            if (!isFinanceRole()) return;
+            if (!isOwnerRole()) return;
 
             openShiftModal(null);
 
@@ -1536,7 +1540,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const editBtn = e.target.closest(".shift-edit-btn");
 
         if (editBtn) {
-            if (!isFinanceRole()) return;
+            if (!isOwnerRole()) return;
 
             openShiftModal(
                 editBtn.dataset.shiftId

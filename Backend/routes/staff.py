@@ -813,7 +813,7 @@ def get_shifts(user):
 
 
 @staff_bp.route("/shift", methods=["POST"])
-@check_authorization("FINANCE")
+@check_authorization("OWNER")
 def create_shift(user):
     """Create a new active shift."""
     try:
@@ -878,7 +878,7 @@ def create_shift(user):
 
 
 @staff_bp.route("/shift/<int:shift_id>", methods=["PATCH"])
-@check_authorization("FINANCE")
+@check_authorization("OWNER")
 def update_shift(user, shift_id):
     """Update shift name and working hours"""
     try:
