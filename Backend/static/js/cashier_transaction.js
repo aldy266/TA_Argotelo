@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const table = document.getElementById("transactionTable");
     const searchInput = document.getElementById("transactionSearch");
+    const logoutBtn = document.getElementById("logoutBtn");
 
 
     let transactionData = [];
@@ -257,6 +258,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         });
 
+
+    }
+
+
+    if (logoutBtn) {
+
+        logoutBtn.addEventListener("click", async () => {
+
+            await fetch(
+                "/api/logout",
+                {
+                    method: "POST",
+                    credentials: "include"
+                }
+            );
+
+            window.location.href = "/";
+
+        });
 
     }
 

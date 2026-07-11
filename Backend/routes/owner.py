@@ -3,11 +3,15 @@ from decimal import Decimal, InvalidOperation
 import io
 import json
 import os
+from tabnanny import check
 
 import cloudinary.uploader
 from flask import Blueprint, current_app, jsonify, redirect, render_template, request, send_file, session, url_for
 from openpyxl import Workbook
 from sqlalchemy import func, or_
+from sqlalchemy import text
+from werkzeug.security import generate_password_hash
+import bcrypt
 
 from model import (
     Attendance,
@@ -866,3 +870,323 @@ def receipt_api(transaction_id):
 def receipt_page(transaction_id):
     transaction = Transaction.query.get_or_404(transaction_id)
     return render_template("receipt.html", transaction=transaction)
+    
+
+# ======================================================
+# SEMUA DATA KEHADIRAN
+# ======================================================
+
+@owner_bp.route("/api/staff/attendance/history")
+@role_name_required("OWNER", "HRD", "FINANCE")
+def attendance_history():
+
+    try:
+
+        sql = text("""
+
+            SELECT
+
+                st.full_name,
+
+                a.attendance_date,
+
+                a.clock_in,
+
+                a.clock_out,
+
+                sh.shift_name,
+
+                a.status
+
+            FROM attendance a
+
+            JOIN staff st
+                ON a.staff_id = st.id
+
+            JOIN staff_schedules ss
+                ON a.schedule_id = ss.id
+
+            JOIN shifts sh
+                ON ss.shift_id = sh.id
+
+            ORDER BY
+                a.attendance_date DESC,
+                a.clock_in DESC
+
+        """)
+
+        result = db.session.execute(sql)
+
+        data = []
+
+        for row in result:
+
+            data.append({
+
+                "name": row.full_name,
+
+                "date": row.attendance_date.strftime("%d/%m/%Y"),
+
+                "clock_in":
+                    row.clock_in.strftime("%H:%M")
+                    if row.clock_in else "-",
+
+                "clock_out":
+                    row.clock_out.strftime("%H:%M")
+                    if row.clock_out else "-",
+
+                "shift": row.shift_name,
+
+                "status": row.status
+
+            })
+
+        return jsonify({
+            "success": True,
+            "data": data
+        })
+
+    except Exception as e:
+
+        print(e)
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }),500
+
+@owner_bp.route("/api/staff/accounts", methods=["POST"])
+def create_staff_account():
+
+    try:
+
+        data = request.get_json()
+
+        fullname = data.get("fullname", "").strip()
+        username = data.get("username", "").strip()
+        password = data.get("password", "").strip()
+        role = data.get("role", "").strip().upper()
+
+        if not fullname or not username or not password or not role:
+            return jsonify({
+                "success": False,
+                "message": "Data belum lengkap"
+            }), 400
+
+        # ==========================
+        # Cari Role
+        # ==========================
+        role_row = db.session.execute(text("""
+            SELECT id
+            FROM roles
+            WHERE UPPER(role_name)=:role
+        """), {
+            "role": role
+        }).fetchone()
+
+        if not role_row:
+            return jsonify({
+                "success": False,
+                "message": "Role tidak ditemukan"
+            }), 400
+
+        # ==========================
+        # Username sudah ada?
+        # ==========================
+        check = db.session.execute(text("""
+            SELECT id
+            FROM users
+            WHERE username=:username
+        """), {
+            "username": username
+        }).fetchone()
+
+        if check:
+            return jsonify({
+                "success": False,
+                "message": "Username sudah digunakan"
+            }), 400
+
+        # ==========================
+        # Simpan User
+        # ==========================
+        # Hash password
+
+        hashed = bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+        db.session.execute(text("""
+            INSERT INTO users
+            (
+                role_id,
+                fullname,
+                username,
+                password,
+                is_active
+            )
+            VALUES
+            (
+                :role_id,
+                :fullname,
+                :username,
+                :password,
+                1
+            )
+        """), {
+
+            "role_id": role_row.id,
+            "fullname": fullname,
+            "username": username,
+            "password": hashed
+
+        })
+
+        # Flush supaya INSERT benar-benar dikirim ke DB
+        db.session.flush()
+
+        # Ambil user_id berdasarkan username
+        user_row = db.session.execute(text("""
+            SELECT id
+            FROM users
+            WHERE username=:username
+        """), {
+            "username": username
+        }).fetchone()
+
+        if not user_row:
+            raise Exception("User gagal dibuat")
+
+        user_id = user_row.id
+
+        employee_code = f"ARG{user_id:03}"
+
+        # ==========================
+        # Simpan Staff
+        # ==========================
+        db.session.execute(text("""
+            INSERT INTO staff
+            (
+                user_id,
+                employee_code,
+                full_name,
+                department,
+                position,
+                joined_at,
+                status
+            )
+            VALUES
+            (
+                :user_id,
+                :employee_code,
+                :full_name,
+                :department,
+                :position,
+                NOW(),
+                'ACTIVE'
+            )
+        """), {
+
+            "user_id": user_id,
+            "employee_code": employee_code,
+            "full_name": fullname,
+            "department": "Finec",
+            "position": role
+
+        })
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Akun berhasil ditambahkan"
+        })
+
+    except Exception as e:
+
+        db.session.rollback()
+
+        print("ERROR CREATE STAFF :", e)
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+@owner_bp.route("/api/staff/accounts/<int:user_id>", methods=["DELETE"])
+def delete_staff_account(user_id):
+
+    try:
+
+        db.session.execute(text("""
+            UPDATE users
+            SET is_active = 0
+            WHERE id = :id
+        """), {
+            "id": user_id
+        })
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Akun berhasil dinonaktifkan"
+        })
+
+    except Exception as e:
+
+        db.session.rollback()
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+    
+@owner_bp.route("/api/staff/accounts/<int:user_id>", methods=["GET"])
+def get_staff_account(user_id):
+
+    row = db.session.execute(text("""
+
+        SELECT
+            users.id,
+            users.fullname,
+            users.username,
+            roles.role_name
+
+        FROM users
+
+        JOIN roles
+            ON users.role_id = roles.id
+
+        WHERE users.id = :id
+
+    """), {
+
+        "id": user_id
+
+    }).fetchone()
+
+    if not row:
+
+        return jsonify({
+
+            "success": False,
+            "message": "User tidak ditemukan"
+
+        }),404
+
+    return jsonify({
+
+        "success": True,
+
+        "data":{
+
+            "id": row.id,
+            "fullname": row.fullname,
+            "username": row.username,
+            "role": row.role_name
+
+        }
+
+    })

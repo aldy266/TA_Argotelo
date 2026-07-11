@@ -17,10 +17,13 @@
         .sidebar { background:#fff; border-right:1px solid var(--line); padding:28px 20px; display:flex; flex-direction:column; }
         .brand { font-size:20px; line-height:1.3; font-weight:800; margin:0 0 38px; }
         .nav { display:grid; gap:8px; }
-        .nav a { display:flex; align-items:center; gap:12px; text-decoration:none; color:#5F5650; padding:13px 16px; border-radius:8px; font-weight:600; }
+        .nav a { display:flex; align-items:center; gap:12px; width:100%; min-height:48px; text-decoration:none; color:#5F5650; padding:0 16px; border-radius:8px; font-size:14px; font-weight:600; line-height:1.2; }
+        .nav a i { width:20px; height:20px; flex:0 0 20px; display:inline-flex; align-items:center; justify-content:center; font-size:16px; }
+        .nav a span { min-width:0; }
         .nav a.active { background:var(--brown); color:#fff; }
         .sidebar-footer { margin-top:auto; border-top:1px solid var(--line); padding-top:18px; display:grid; gap:8px; }
-        .sidebar-footer button { border:0; background:transparent; color:#D92D20; display:flex; align-items:center; gap:10px; font:inherit; font-weight:600; cursor:pointer; padding:12px 16px; }
+        .sidebar-footer button { width:100%; min-height:48px; border:0; background:transparent; color:#D92D20; display:flex; align-items:center; gap:12px; font:inherit; font-size:14px; font-weight:600; line-height:1.2; cursor:pointer; padding:0 16px; border-radius:8px; }
+        .sidebar-footer button i { width:20px; height:20px; flex:0 0 20px; display:inline-flex; align-items:center; justify-content:center; font-size:16px; }
         .catalog { min-width:0; }
         .topbar { height:66px; background:#fff; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:18px; padding:0 28px; }
         .search-box { width:min(420px,100%); height:48px; background:#F5E7DE; border-radius:28px; display:flex; align-items:center; gap:12px; padding:0 18px; }
@@ -31,7 +34,6 @@
         .profile { display:flex; align-items:center; gap:12px; padding-left:14px; border-left:1px solid var(--line); }
         .profile h4 { margin:0; font-size:14px; }
         .profile span { color:var(--muted); font-size:12px; }
-        .profile img { width:44px; height:44px; border-radius:50%; object-fit:cover; }
         .catalog-content { padding:28px; }
         .section-head { display:flex; justify-content:space-between; gap:16px; align-items:center; margin-bottom:22px; }
         .section-head h1 { margin:0; font-size:24px; }
@@ -74,7 +76,7 @@
         .checkout-btn:disabled { opacity:.55; cursor:not-allowed; }
         .message { min-height:22px; color:var(--success); font-weight:600; }
         .message.error { color:var(--danger); }
-        @media (max-width:1100px) { .pos-page { grid-template-columns:220px minmax(0,1fr); } .cart { grid-column:2; border-left:0; border-top:1px solid var(--line); } }
+        @media (max-width:1100px) { .pos-page { grid-template-columns:280px minmax(0,1fr); } .cart { grid-column:2; border-left:0; border-top:1px solid var(--line); } }
         @media (max-width:760px) { .pos-page { display:block; } .sidebar { position:static; } .topbar, .section-head { align-items:flex-start; flex-direction:column; height:auto; padding:18px; } .cart { border-left:0; } }
     </style>
 </head>
@@ -84,7 +86,7 @@
         <aside class="sidebar">
             <h1 class="brand">ARGOTELO SALATIGA</h1>
             <nav class="nav">
-                <a href="{{ url_for('cashier.pos') }}" class="active"><i class="bi bi-cash-register"></i><span>POS System</span></a>
+                <a href="{{ url_for('cashier.pos') }}" class="active"><i class="bi bi-calculator"></i><span>POS System</span></a>
                 <a href="{{ url_for('cashier.inventory') }}"><i class="bi bi-archive"></i><span>Inventory</span></a>
                 <a href="{{ url_for('cashier.transaction') }}"><i class="bi bi-receipt"></i><span>Riwayat Transaksi</span></a>
                 <a href="{{ url_for('cashier.attendance') }}"><i class="bi bi-receipt"></i><span>Absensi</span></a>
@@ -108,7 +110,6 @@
                             <h4 id="cashierName">Memuat kasir...</h4>
                             <span id="cashierRole">KASIR</span>
                         </div>
-                        <img id="profileImage" src="{{ url_for('static', filename='images/profile.png') }}" alt="Profil">
                     </div>
                 </div>
             </header>

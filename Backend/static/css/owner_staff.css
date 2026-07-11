@@ -55,7 +55,7 @@ body{
 
 .sidebar{
 
-    width:250px;
+    width:280px;
 
     background:var(--white);
 
@@ -80,28 +80,28 @@ body{
 
     text-align:center;
 
-    margin-bottom:35px;
+    margin-bottom:38px;
 
 }
 
 .sidebar-logo img{
 
-    width:105px;
-    height:105px;
+    width:100px;
+    height:100px;
 
-    object-fit:cover;
+    object-fit:contain;
 
-    margin-bottom:15px;
+    margin:0 auto 14px;
 
 }
 
 .sidebar-logo h2{
 
-    font-size:19px;
+    font-size:20px;
 
-    font-weight:700;
+    font-weight:800;
 
-    line-height:1.4;
+    line-height:1.3;
 
 }
 
@@ -111,7 +111,7 @@ body{
 
     flex-direction:column;
 
-    gap:10px;
+    gap:8px;
 
 }
 
@@ -121,19 +121,25 @@ body{
 
     align-items:center;
 
-    gap:14px;
+    gap:12px;
 
     text-decoration:none;
 
     color:#5E554E;
 
-    padding:14px 18px;
+    width:100%;
 
-    border-radius:14px;
+    min-height:48px;
 
-    font-size:15px;
+    padding:0 16px;
 
-    font-weight:500;
+    border-radius:8px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    line-height:1.2;
 
     transition:.3s;
 
@@ -141,7 +147,7 @@ body{
 
 .sidebar-menu a:hover{
 
-    background:#F7F2EE;
+    background:#F5E7DE;
 
 }
 
@@ -155,7 +161,25 @@ body{
 
 .sidebar-menu a i{
 
-    font-size:18px;
+    width:20px;
+
+    height:20px;
+
+    flex:0 0 20px;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:16px;
+
+}
+
+.sidebar-menu a span{
+
+    min-width:0;
 
 }
 
@@ -165,17 +189,19 @@ body{
 
     border-top:1px solid var(--border);
 
-    padding-top:20px;
+    padding-top:18px;
 
-    display:flex;
+    display:grid;
 
-    flex-direction:column;
-
-    gap:10px;
+    gap:8px;
 
 }
 
 .sidebar-footer a{
+
+    width:100%;
+
+    min-height:48px;
 
     display:flex;
 
@@ -187,9 +213,15 @@ body{
 
     color:#5E554E;
 
-    padding:12px 15px;
+    padding:0 16px;
 
-    border-radius:10px;
+    border-radius:8px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    line-height:1.2;
 
     transition:.3s;
 
@@ -197,13 +229,31 @@ body{
 
 .sidebar-footer a:hover{
 
-    background:#F8F6F3;
+    background:#F5E7DE;
 
 }
 
 .sidebar-footer .logout{
 
-    color:#D84A4A;
+    color:#D92D20;
+
+}
+
+.sidebar-footer a i{
+
+    width:20px;
+
+    height:20px;
+
+    flex:0 0 20px;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:16px;
 
 }
 
@@ -213,9 +263,9 @@ body{
 
 .main-content{
 
-    margin-left:250px;
+    margin-left:280px;
 
-    width:calc(100% - 250px);
+    width:calc(100% - 280px);
 
     padding:28px 32px;
 
@@ -291,58 +341,6 @@ body{
     gap:15px;
 
 }
-/* =====================================
-            STOCK ALERT
-===================================== */
-
-.stock-alert{
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    gap:8px;
-
-    height:42px;
-
-    padding:0 18px;
-
-    background:#FFF4F2;
-
-    border:1px solid #FFD9D6;
-
-    border-radius:999px;
-
-    color:#D84A4A;
-
-    font-size:13px;
-
-    font-weight:600;
-
-    white-space:nowrap;
-
-    box-shadow:0 4px 12px rgba(216,74,74,.08);
-
-    transition:.3s;
-
-}
-
-.stock-alert:hover{
-
-    background:#FFEAE6;
-
-    transform:translateY(-2px);
-
-}
-
-.stock-alert i{
-
-    font-size:15px;
-
-    color:#D84A4A;
-
-}
-
 .icon-button{
 
     width:44px;
@@ -407,20 +405,8 @@ body{
 
 }
 
-.profile img{
-
-    width:48px;
-
-    height:48px;
-
-    border-radius:50%;
-
-    object-fit:cover;
-
-}
-
 /* =====================================================
-                    STATISTICS
+   STATISTICS
 ===================================================== */
 
 .statistics{
@@ -589,6 +575,14 @@ body{
 
 }
 
+.staff-layout.approval-only{
+
+    grid-template-columns:minmax(320px, 680px);
+
+    justify-content:start;
+
+}
+
 /* =====================================================
                     ATTENDANCE CARD
 ===================================================== */
@@ -636,6 +630,13 @@ body{
     flex-wrap:wrap;
     justify-content:flex-end;
     gap:12px;
+}
+
+.attendance-action .primary-button,
+.attendance-action .secondary-button{
+    height:46px !important;
+    padding:0 14px !important;
+    flex:0 0 auto;
 }
 
 .attendance-date-filter{
@@ -768,37 +769,37 @@ body{
 /* Masuk */
 .attendance-table th:nth-child(2),
 .attendance-table td:nth-child(2){
-    width:10%;
+    width:9%;
 }
 
 /* Pulang */
 .attendance-table th:nth-child(3),
 .attendance-table td:nth-child(3){
-    width:10%;
+    width:9%;
 }
 
 /* Shift */
 .attendance-table th:nth-child(4),
 .attendance-table td:nth-child(4){
-    width:18%;
+    width:17%;
 }
 
 /* Status */
 .attendance-table th:nth-child(5),
 .attendance-table td:nth-child(5){
-    width:13%;
+    width:12%;
 }
 
 /* Jam Kerja */
 .attendance-table th:nth-child(6),
 .attendance-table td:nth-child(6){
-    width:13%;
+    width:12%;
 }
 
 /* Aksi */
 .attendance-table th:nth-child(7),
 .attendance-table td:nth-child(7){
-    width:16%;
+    width:21%;
 }
 
 /* =====================================================
@@ -1053,7 +1054,7 @@ body{
 
 .progress-fill{
 
-    width:92%;
+    width:0%;
 
     height:100%;
 
@@ -1220,7 +1221,7 @@ body{
 
     display:grid;
 
-    grid-template-columns:1.15fr 1fr .75fr auto;
+    grid-template-columns:1.15fr 1fr .75fr .85fr auto;
 
     gap:12px;
 
@@ -1318,6 +1319,11 @@ body{
 
     justify-content:flex-end;
 
+}
+
+.shift-action .edit-btn{
+    width:64px;
+    min-width:64px;
 }
 
 .add-schedule{
@@ -1572,26 +1578,39 @@ button:hover{
 }
 
 .attendance-row-actions {
-    display:flex;
-    gap:8px;
-    justify-content:flex-start;
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2, minmax(78px, 1fr));
+    gap:6px;
     align-items:center;
-    flex-wrap:nowrap;
 }
 
 .attendance-row-actions .edit-btn,
 .attendance-row-actions .delete-btn,
 .attendance-row-actions .secondary-button,
 .shift-action .edit-btn {
-    min-height: 34px;
-    padding: 8px 10px !important;
+    width:100%;
+    min-height:32px;
+    justify-content:center !important;
+    padding:0 8px !important;
     white-space: nowrap;
+    font-size:11px !important;
+    border-radius:7px !important;
+    line-height:1 !important;
 }
 
 .attendance-row-actions .secondary-button {
-    font-size: 12px !important;
-    border-radius: 8px !important;
     gap: 6px !important;
+}
+
+.attendance-row-actions > :last-child:nth-child(3) {
+    grid-column:1 / -1;
+}
+
+.readonly-action {
+    color: var(--text-light);
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .primary-button {
@@ -1852,7 +1871,7 @@ button:hover{
 
 .template-actions {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
 }
 
@@ -2058,34 +2077,27 @@ html{
 
     .sidebar{
 
-        width:90px;
-
-    }
-
-    .sidebar h2,
-    .sidebar span{
-
-        display:none;
+        width:280px;
 
     }
 
     .sidebar-menu a{
 
-        justify-content:center;
+        justify-content:flex-start;
 
     }
 
     .sidebar-footer a{
 
-        justify-content:center;
+        justify-content:flex-start;
 
     }
 
     .main-content{
 
-        margin-left:90px;
+        margin-left:280px;
 
-        width:calc(100% - 90px);
+        width:calc(100% - 280px);
 
     }
 
@@ -2430,350 +2442,849 @@ html{
 
 }
 
-/* =====================================================
-        NOTIFICATION DROPDOWN FIX
-===================================================== */
+.employee-card{
 
-.notification-wrapper{
+    margin-top:28px;
 
-    position:relative;
+    background:#ffffff;
+
+    border:1px solid #eadfd6;
+
+    border-radius:20px;
+
+    padding:24px;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.05);
+
+}
+
+.employee-header{
 
     display:flex;
+
+    justify-content:space-between;
 
     align-items:center;
 
-}
-
-
-.notification-dropdown{
-
-    position:absolute;
-
-    top:55px;
-
-    right:0;
-
-    width:340px;
-
-    background:#fff;
-
-    border:1px solid #E7DDD6;
-
-    border-radius:16px;
-
-    overflow:hidden;
-
-    display:none;
-
-    box-shadow:0 15px 40px rgba(0,0,0,.15);
-
-    z-index:99999;
+    margin-bottom:20px;
 
 }
 
+.employee-header h2{
 
-.notification-dropdown.active{
+    font-size:24px;
 
-    display:block;
+    font-weight:700;
 
-}
-
-
-
-/* HEADER */
-.notification-header{
-
-    padding:16px 18px;
-
-    background:#FAF7F5;
-
-    border-bottom:1px solid #EFE7E0;
+    color:#2d1a0e;
 
 }
 
+.employee-header p{
 
-.notification-header h4{
+    margin-top:4px;
 
-    font-size:15px;
+    color:#7d6b60;
 
-    color:#4B2E13;
-
-}
-
-
-#notificationSubtitle{
-
-    font-size:12px;
-
-    color:#777;
+    font-size:14px;
 
 }
 
-
-
-/* LIST 3 DATA SAJA */
-.notification-list{
-
-    max-height:260px;
-
-    overflow-y:auto;
-
-}
-
-
-.notification-item{
+.employee-toolbar{
 
     display:flex;
 
-    gap:14px;
+    justify-content:space-between;
 
-    padding:15px 18px;
+    align-items:center;
 
-    border-bottom:1px solid #EFE7E0;
+    gap:16px;
+
+    margin-bottom:20px;
 
 }
 
+#employeeSearch{
 
-.notif-icon{
+    flex:1;
 
-    width:42px;
+    height:44px;
 
-    height:42px;
+    border:1px solid #e7d9cf;
 
     border-radius:12px;
 
-    background:#FFF4E5;
+    padding:0 16px;
 
-    color:#F59E0B;
+    font-size:14px;
+
+    outline:none;
+
+}
+
+#employeeRoleFilter{
+
+    width:180px;
+
+    height:44px;
+
+    border:1px solid #e7d9cf;
+
+    border-radius:12px;
+
+    padding:0 12px;
+
+    background:#fff;
+
+    cursor:pointer;
+
+}
+
+#btnAddEmployee{
+
+    height:46px;
+
+    padding:0 22px;
+
+    border-radius:12px;
+
+    font-weight:600;
+
+}
+
+.employee-card table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+.employee-card th{
+
+    background:#faf6f3;
+
+    padding:14px;
+
+    text-align:left;
+
+    font-size:13px;
+
+    color:#666;
+
+}
+
+.employee-card td{
+
+    padding:16px 14px;
+
+    border-bottom:1px solid #f1ebe6;
+
+}
+
+.attendance-footer{
 
     display:flex;
 
     justify-content:center;
 
+    margin-top:18px;
+
+}
+
+.view-attendance-btn{
+
+    background:#fff;
+
+    border:1px solid #d9c7b9;
+
+    color:#5A3718;
+
+    padding:10px 22px;
+
+    border-radius:12px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+.view-attendance-btn:hover{
+
+    background:#5A3718;
+
+    color:white;
+
+}
+
+.attendance-history-modal{
+    width:95%;
+    max-width:1100px;
+    height:80vh;
+    display:flex;
+    flex-direction:column;
+}
+
+
+.attendance-history-modal .menu-form{
+    flex:1;
+    overflow-y:auto;
+}
+
+.attendance-history-table{
+    min-width:900px;
+}
+
+.attendance-history-table thead th{
+    position:sticky;
+    top:0;
+    background:#fff;
+    z-index:2;
+}
+
+/* ==========================================
+   ATTENDANCE STATUS BADGE
+========================================== */
+
+.badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:600;
+}
+
+.badge-success{
+    background:#dcfce7;
+    color:#15803d;
+}
+
+.badge-warning{
+    background:#fef3c7;
+    color:#b45309;
+}
+
+.badge-info{
+    background:#dbeafe;
+    color:#1d4ed8;
+}
+
+.badge-purple{
+    background:#ede9fe;
+    color:#7c3aed;
+}
+
+.badge-danger{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+/* ======================================================
+   ATTENDANCE HISTORY TOOLBAR
+====================================================== */
+
+.attendance-history-toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+    margin-bottom:18px;
+}
+
+.attendance-history-toolbar input,
+.attendance-history-toolbar select{
+    height:42px;
+    padding:0 14px;
+    border:1px solid #e5d7cb;
+    border-radius:12px;
+    background:#fff;
+    font-size:14px;
+    color:#4b2e16;
+    outline:none;
+    transition:.25s;
+}
+
+.attendance-history-toolbar input:focus,
+.attendance-history-toolbar select:focus{
+    border-color:#8b5e34;
+    box-shadow:0 0 0 3px rgba(139,94,52,.15);
+}
+
+#historySearch{
+    flex:1;
+    min-width:230px;
+}
+
+#historyStartDate,
+#historyEndDate{
+    width:170px;
+}
+
+#historyStatus{
+    width:180px;
+}
+
+#resetHistoryFilter{
+    height:42px;
+    padding:0 18px;
+    border:none;
+    border-radius:12px;
+    background:#5A3718;
+    color:#fff;
+    cursor:pointer;
+    font-weight:600;
+    transition:.25s;
+}
+
+#resetHistoryFilter:hover{
+    background:#75471f;
+}
+
+
+/* ======================================================
+   MODAL TABLE
+====================================================== */
+
+.attendance-history-modal{
+    width:1100px;
+    max-width:95%;
+    height:80vh;
+    display:flex;
+    flex-direction:column;
+}
+
+.attendance-history-modal .menu-form{
+    overflow:auto;
+    flex:1;
+}
+
+.attendance-history-modal table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.attendance-history-modal thead{
+    position:sticky;
+    top:0;
+    z-index:5;
+    background:#fff;
+}
+
+.attendance-history-modal thead th{
+    background:#f8f4f0;
+    color:#6b4a2b;
+    font-size:12px;
+    text-transform:uppercase;
+    padding:14px;
+}
+
+.attendance-history-modal tbody td{
+    padding:14px;
+    border-bottom:1px solid #eee;
+    font-size:14px;
+}
+
+.attendance-history-modal tbody tr:hover{
+    background:#fcf8f5;
+}
+
+
+/* ======================================================
+   RESPONSIVE
+====================================================== */
+
+@media(max-width:900px){
+
+    .attendance-history-toolbar{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    #historySearch,
+    #historyStartDate,
+    #historyEndDate,
+    #historyStatus,
+    #resetHistoryFilter{
+        width:100%;
+    }
+
+}
+
+/* ==========================
+   FILTER MODAL
+========================== */
+
+.attendance-history-toolbar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:0 0 20px 0;
+    padding-bottom:16px;
+    border-bottom:1px solid #eee;
+    flex-wrap:wrap;
+}
+
+.attendance-history-toolbar input[type="search"]{
+    flex:1;
+    min-width:240px;
+}
+
+.attendance-history-toolbar input,
+.attendance-history-toolbar select{
+    height:42px;
+    padding:0 14px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    font-family:Poppins,sans-serif;
+}
+
+.attendance-history-toolbar button{
+    height:42px;
+}
+
+.attendance-history-modal .menu-form{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+}
+
+.attendance-history-table{
+    flex:1;
+    overflow-y:auto;
+}
+
+.attendance-history-table thead th{
+    position:sticky;
+    top:0;
+    background:#fffaf6;
+    z-index:10;
+}
+
+/* ==========================================================
+   DATA KARYAWAN
+========================================================== */
+
+.employee-card{
+
+    margin-top:30px;
+
+    background:#fff;
+
+    border-radius:20px;
+
+    padding:24px;
+
+    box-shadow:0 8px 24px rgba(0,0,0,.06);
+
+}
+
+.employee-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
     align-items:center;
 
-    flex-shrink:0;
+    margin-bottom:20px;
 
 }
 
+.employee-header h2{
 
-.notification-item strong{
+    font-size:22px;
 
-    font-size:13px;
+    color:#5A3718;
 
-    color:#2F1D0F;
+    margin:0;
+
+    font-weight:700;
 
 }
 
+.employee-header p{
 
-.notification-item p{
-
-    margin-top:4px;
-
-    font-size:12px;
+    margin-top:6px;
 
     color:#777;
 
+    font-size:14px;
+
 }
 
 
-.notification-item small{
+/* ==========================================================
+   TOOLBAR
+========================================================== */
 
-    font-size:11px;
+.employee-toolbar{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:15px;
+
+    margin-bottom:20px;
+
+    flex-wrap:wrap;
+
+}
+
+.employee-search{
+
+    position:relative;
+
+    flex:1;
+
+    min-width:280px;
+
+}
+
+.employee-search i{
+
+    position:absolute;
+
+    left:15px;
+
+    top:50%;
+
+    transform:translateY(-50%);
 
     color:#999;
 
 }
 
-
-
-/* LIHAT SEMUA */
-.notification-footer{
-
-    padding:12px;
-
-    background:#FAF7F5;
-
-}
-
-
-.view-all-notification{
+.employee-search input{
 
     width:100%;
 
-    height:38px;
+    height:45px;
 
-    border:none;
+    padding:0 15px 0 42px;
 
-    background:transparent;
+    border:1px solid #ddd;
 
-    color:#4B2E13;
+    border-radius:12px;
 
-    font-weight:700;
+    font-size:14px;
 
-    cursor:pointer;
+    outline:none;
+
+    transition:.25s;
+
+}
+
+.employee-search input:focus{
+
+    border-color:#8B5E34;
+
+    box-shadow:0 0 0 3px rgba(139,94,52,.15);
+
+}
+
+.employee-toolbar select{
+
+    width:190px;
+
+    height:45px;
+
+    border-radius:12px;
+
+    border:1px solid #ddd;
+
+    padding:0 14px;
+
+    font-size:14px;
+
+    outline:none;
 
 }
 
 
+/* ==========================================================
+   TABLE
+========================================================== */
 
-/* ===============================
-   MODAL SEMUA NOTIFIKASI
-================================ */
+.employee-table-wrapper{
 
-.stock-modal{
+    overflow-x:auto;
 
-    position:fixed;
+    border:1px solid #eee;
 
-    inset:0;
+    border-radius:15px;
 
-    background:rgba(0,0,0,.45);
+}
 
-    display:flex;
+.employee-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+.employee-table thead{
+
+    background:#F8F4F0;
+
+}
+
+.employee-table thead th{
+
+    padding:15px;
+
+    color:#6B4A2B;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+}
+
+.employee-table tbody td{
+
+    padding:16px;
+
+    border-top:1px solid #eee;
+
+    font-size:14px;
+
+}
+
+.employee-table tbody tr{
+
+    transition:.25s;
+
+}
+
+.employee-table tbody tr:hover{
+
+    background:#FCF9F6;
+
+}
+
+
+/* ==========================================================
+   STATUS
+========================================================== */
+
+.employee-status{
+
+    display:inline-flex;
 
     align-items:center;
 
     justify-content:center;
 
-    z-index:999999;
+    padding:6px 14px;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    font-weight:600;
+
+}
+
+.employee-status.active{
+
+    background:#DCFCE7;
+
+    color:#15803D;
+
+}
+
+.employee-status.inactive{
+
+    background:#FEE2E2;
+
+    color:#DC2626;
 
 }
 
 
-.stock-modal.hidden{
+/* ==========================================================
+   AKSI
+========================================================== */
 
-    display:none;
-
-}
-
-
-.stock-modal-content{
-
-    width:480px;
-
-    max-height:80vh;
-
-    background:#fff;
-
-    border-radius:18px;
-
-    overflow:hidden;
-
-    box-shadow:0 25px 60px rgba(0,0,0,.25);
-
-}
-
-
-.stock-modal-header{
-
-    padding:20px;
+.employee-action{
 
     display:flex;
 
-    align-items:center;
-
-    justify-content:space-between;
-
-    background:#FAF7F5;
-
-    border-bottom:1px solid #eee;
+    gap:8px;
 
 }
 
+.employee-action button{
 
-.stock-modal-header h3{
+    width:36px;
 
-    font-size:18px;
-
-    color:#4B2E13;
-
-}
-
-
-.stock-modal-body{
-
-    padding:18px;
-
-    max-height:420px;
-
-    overflow-y:auto;
-
-}
-
-
-.stock-modal-footer{
-
-    padding:15px;
-
-    text-align:right;
-
-    border-top:1px solid #eee;
-
-}
-
-
-#closeStockNotification,
-#closeStockNotificationBtn{
+    height:36px;
 
     border:none;
-
-    background:#4B2E13;
-
-    color:white;
-
-    padding:10px 20px;
 
     border-radius:10px;
 
     cursor:pointer;
 
+    transition:.25s;
+
 }
 
-/* ===============================
-   FIX POSISI NOTIF BELL
-================================ */
+.employee-action .edit{
 
-.topbar-right{
-    position:relative;
+    background:#EEF6FF;
+
+    color:#2563EB;
+
 }
 
+.employee-action .delete{
 
-.notification-wrapper{
-    position:relative !important;
+    background:#FEE2E2;
+
+    color:#DC2626;
+
 }
 
+.employee-action button:hover{
 
-#notificationMenu{
-
-    position:absolute !important;
-
-    top:50px !important;
-
-    right:0 !important;
-
-    width:340px !important;
-
-    background:white;
-
-    display:none;
-
-    z-index:999999;
+    transform:translateY(-2px);
 
 }
 
 
-#notificationMenu.active{
+/* ==========================================================
+   FOOTER
+========================================================== */
 
-    display:block !important;
+.employee-footer{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-top:18px;
+
+    flex-wrap:wrap;
+
+    gap:15px;
+
+}
+
+.pagination{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+#employeePage{
+
+    font-weight:600;
+
+    color:#5A3718;
+
+}
+
+.table-loading{
+
+    text-align:center;
+
+    color:#999;
+
+    padding:25px !important;
 
 }
 
 
-/* isi list biar cuma 3 terlihat */
-#notificationList{
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
 
-    max-height:260px;
+@media(max-width:768px){
 
-    overflow-y:auto;
+    .employee-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:15px;
+
+    }
+
+    .employee-toolbar{
+
+        flex-direction:column;
+
+        align-items:stretch;
+
+    }
+
+    .employee-search{
+
+        width:100%;
+
+    }
+
+    .employee-toolbar select{
+
+        width:100%;
+
+    }
+
+    .employee-footer{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+}
+
+.modal-action{
+
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+    margin-top:24px;
+
+}
+
+.menu-form label{
+
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:18px;
+    font-weight:600;
+
+}
+
+.menu-form input,
+.menu-form select{
+
+    height:44px;
+    border:1px solid #e7d7c8;
+    border-radius:10px;
+    padding:0 14px;
+    font-size:14px;
 
 }

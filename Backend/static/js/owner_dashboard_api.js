@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const el = {
         fullname: document.getElementById("fullname"),
         role: document.getElementById("role"),
-        profileImage: document.getElementById("profileImage"),
         todayBtn: document.getElementById("todayBtn"),
         weekBtn: document.getElementById("weekBtn"),
         monthBtn: document.getElementById("monthBtn"),
@@ -57,8 +56,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         editUsername: document.getElementById("editUsername"),
         editEmail: document.getElementById("editEmail"),
         editPhone: document.getElementById("editPhone"),
-        photoInput: document.getElementById("photoInput"),
-        previewPhoto: document.getElementById("previewPhoto"),
         passwordModal: document.getElementById("passwordModal"),
         changePasswordBtn: document.getElementById("changePasswordBtn"),
         closePasswordModal: document.getElementById("closePasswordModal"),
@@ -136,10 +133,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return { start, end };
     }
 
-    function profilePhoto() {
-        return state.user?.photo || "/static/images/profile.png";
-    }
-
     function renderUser() {
         if (!state.user) return;
         if (el.fullname) {
@@ -147,12 +140,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         if (el.role) {
             el.role.textContent = state.user.role || "User";
-        }
-        if (el.profileImage) {
-            el.profileImage.src = profilePhoto();
-        }
-        if (el.previewPhoto) {
-            el.previewPhoto.src = profilePhoto();
         }
     }
 
@@ -382,12 +369,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function closeProfileModal() {
         el.editProfileModal?.classList.remove("show");
-        if (el.photoInput) {
-            el.photoInput.value = "";
-        }
-        if (el.previewPhoto) {
-            el.previewPhoto.src = profilePhoto();
-        }
     }
 
     function openProfileModal() {
@@ -396,7 +377,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (el.editUsername) el.editUsername.value = state.user.username || "";
         if (el.editEmail) el.editEmail.value = state.user.email || "";
         if (el.editPhone) el.editPhone.value = state.user.phone || "";
-        if (el.previewPhoto) el.previewPhoto.src = profilePhoto();
         el.settingsMenu?.classList.remove("active");
         el.editProfileModal?.classList.add("show");
     }
@@ -415,10 +395,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         formData.append("username", username);
         formData.append("email", el.editEmail?.value.trim() || "");
         formData.append("phone", el.editPhone?.value.trim() || "");
-
-        if (el.photoInput?.files?.[0]) {
-            formData.append("photo", el.photoInput.files[0]);
-        }
 
         const result = await api("/api/update-profile", {
             method: "POST",
@@ -650,12 +626,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.cancelProfile?.addEventListener("click", closeProfileModal);
         el.saveProfile?.addEventListener("click", () => {
             saveProfile().catch(error => alert(error.message));
-        });
-        el.photoInput?.addEventListener("change", () => {
-            const file = el.photoInput.files?.[0];
-            if (file && el.previewPhoto) {
-                el.previewPhoto.src = URL.createObjectURL(file);
-            }
         });
         el.changePasswordBtn?.addEventListener("click", event => {
             event.preventDefault();

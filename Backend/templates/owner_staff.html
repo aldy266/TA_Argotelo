@@ -35,6 +35,9 @@
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/owner_account_controls.css') }}">
 
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/owner_sidebar.css') }}">
+
 </head>
 
 <body>
@@ -79,7 +82,7 @@
 
     {% if current_user_role == "OWNER" %}
     <a href="{{ url_for('owner.owner_menu') }}">
-        <i class="bi bi-tools"></i>
+        <i class="bi bi-card-list"></i>
         <span>Menu Management</span>
     </a>
     {% endif %}
@@ -101,174 +104,6 @@
             MAIN CONTENT
 ======================================= -->
     <main class="main-content">
-
-        <header class="topbar">
-
-            <div class="topbar-right">
-
-
-                <!-- STOCK ALERT BERJALAN -->
-                <div class="stock-alert">
-
-                    <i class="bi bi-exclamation-triangle"></i>
-
-                    <span id="stockAlertText">
-                        Status inventori
-                    </span>
-
-                </div>
-
-
-
-                <!-- NOTIFICATION AREA -->
-                <div class="notification-wrapper">
-
-
-                    <!-- BELL BUTTON -->
-                    <button 
-                        id="notificationBtn"
-                        class="icon-button notification-btn"
-                        type="button">
-
-                        <i class="bi bi-bell-fill"></i>
-
-
-                        <span 
-                            id="notificationBadge"
-                            class="notification-badge">
-
-                            0
-
-                        </span>
-
-
-                    </button>
-
-
-
-                    <!-- DROPDOWN NOTIFIKASI -->
-                    <div 
-                        class="notification-dropdown"
-                        id="notificationMenu">
-
-
-                        <div class="notification-header">
-
-                            <h4>
-                                Notifikasi Stok
-                            </h4>
-
-
-                            <span id="notificationSubtitle">
-                                0 Notifikasi
-                            </span>
-
-                        </div>
-
-
-
-
-                        <!-- PREVIEW 4 DATA SAJA -->
-                        <div 
-                            class="notification-list"
-                            id="notificationList">
-
-
-                        </div>
-
-
-
-
-                        <div class="notification-footer">
-
-                            <button 
-                                id="viewAllNotification"
-                                type="button"
-                                class="view-all-notification">
-
-                                Lihat Semua
-
-                            </button>
-
-                        </div>
-
-
-                    </div>
-
-
-                </div>
-
-                
-
-            </div>
-
-        </header>
-
-        <!-- MODAL SEMUA NOTIFIKASI STOK -->
-        <div 
-            class="stock-modal hidden"
-            id="stockNotificationModal">
-
-
-            <div class="stock-modal-content">
-
-
-                <div class="stock-modal-header">
-
-                    <div>
-
-                        <h3>
-                            <i class="bi bi-bell-fill"></i>
-                            Notifikasi Stok Menipis
-                        </h3>
-
-
-                        <span id="allNotificationTotal">
-                            0 Notifikasi
-                        </span>
-
-                    </div>
-
-
-                    <button 
-                        id="closeStockNotification"
-                        type="button">
-
-                        <i class="bi bi-x-lg"></i>
-
-                    </button>
-
-
-                </div>
-
-
-
-                <div 
-                    class="stock-modal-body"
-                    id="allNotificationList">
-
-
-                </div>
-
-
-
-                <div class="stock-modal-footer">
-
-                    <button 
-                        id="closeStockNotificationBtn"
-                        type="button">
-
-                        Tutup
-
-                    </button>
-
-                </div>
-
-
-            </div>
-
-
-        </div>
 
         <!-- ======================================
                     STATISTICS
@@ -374,275 +209,395 @@
 
         </section>
 
-                <!-- ======================================
+        <!-- ======================================
                     STAFF CONTENT
         ======================================= -->
 
         <section class="staff-content">
 
-            <div class="staff-layout">
+                <!-- ===============================
+                        GRID ATAS
+                ================================ -->
 
-                <!-- ======================================
-                        ATTENDANCE
-                ======================================= -->
+                <div class="staff-layout">
 
-                <div class="attendance-card">
+                    <!-- ======================================
+                            ATTENDANCE
+                    ======================================= -->
 
-                <!-- ================= HEADER ================= -->
+                    <div class="attendance-card">
 
-                <div class="attendance-header">
+                        <!-- HEADER -->
 
-                    <div class="attendance-title">
+                        <div class="attendance-header">
 
-                        <h2 id="attendanceTitle">Daftar Kehadiran Hari Ini</h2>
+                            <div class="attendance-title">
 
-                        <span id="today-date">Memuat tanggal...</span>
+                                <h2 id="attendanceTitle">
+                                    Daftar Kehadiran Hari Ini
+                                </h2>
 
-                    </div>
-
-                    <div class="attendance-action">
-
-                        <label class="attendance-date-filter">
-
-                            <i class="bi bi-calendar-event"></i>
-
-                            <input id="attendanceDateInput"
-                                   type="date">
-
-                        </label>
-
-                        <div class="attendance-search">
-
-                            <i class="bi bi-search"></i>
-
-                            <input
-                                type="text"
-                                placeholder="Cari karyawan...">
-
-                        </div>
-
-                        <button class="secondary-button" id="btn-import-staff" type="button">
-
-                            <i class="bi bi-file-earmark-spreadsheet"></i>
-
-                            Import Excel
-
-                        </button>
-
-                        <button class="primary-button" id="btn-top-schedule" type="button" style="background: #5A3718; color: white; border: none; padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; font-size: 14px;">
-
-                            <i class="bi bi-plus-lg"></i>
-
-                            Tambah Jadwal Kerja
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <!-- ================= TABLE ================= -->
-
-                <table class="attendance-table">
-
-                   <thead>
-                        <tr>
-                            <th>Karyawan</th>
-
-                            <th>Masuk</th>
-
-                            <th>Pulang</th>
-
-                            <th>Shift</th>
-
-                            <th>Status</th>
-
-                            <th>Jam Kerja</th>
-
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <!-- Rows will be rendered by JavaScript -->
-                    </tbody>
-
-                </table>
-
-                <div class="attendance-footer">
-
-                    <a href="#" id="view-all-staff">
-                        Lihat Semua Karyawan
-                    </a>
-
-                </div>
-
-                </div>
-
-                <!-- ======================================
-                        RIGHT PANEL
-                ======================================= -->
-
-                <div class="right-panel">
-
-                    <!-- ===============================
-                            MONTH SUMMARY
-                    ================================ -->
-
-                    <div class="summary-card">
-
-                        <div class="card-header">
-
-                            <h3>Ringkasan Bulan Ini</h3>
-
-                        </div>
-
-                        <div class="attendance-progress">
-
-                            <div class="progress-title">
-
-                                <span>Tingkat Kehadiran</span>
-
-                                <strong id="month-rate">0%</strong>
+                                <span id="today-date">
+                                    Memuat tanggal...
+                                </span>
 
                             </div>
 
-                            <div class="progress-bar">
+                            <div class="attendance-action">
 
-                                <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+                                <label class="attendance-date-filter">
 
-                            </div>
+                                    <i class="bi bi-calendar-event"></i>
 
-                        </div>
+                                    <input
+                                        id="attendanceDateInput"
+                                        type="date">
 
-                        <div class="summary-box">
+                                </label>
 
-                            <div class="summary-item">
+                                <div class="attendance-search">
 
-                                <small>Total Hadir</small>
+                                    <i class="bi bi-search"></i>
 
-                                <h2 id="month-attended">0</h2>
-
-                            </div>
-
-                            <div class="summary-item">
-
-                                <small>Total Izin</small>
-
-                                <h2 id="month-leave">0</h2>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <!-- ===============================
-                            SHIFT MANAGEMENT
-                    ================================ -->
-
-                    <div class="shift-card">
-
-                        <div class="card-header">
-
-                            <h3>Manajemen Shift</h3>
-
-                        </div>
-
-                        <div id="shift-container">
-
-                            <div style="padding: 20px; text-align: center; color: var(--text-light);">
-
-                                <p>Memuat data shift...</p>
-
-                            </div>
-
-                        </div>
-
-                        <button class="add-schedule" id="btn-new-schedule" type="button">
-
-                            <i class="bi bi-plus-lg"></i>
-
-                            Tambah Jadwal Kerja
-
-                        </button>
-
-                    </div>
-
-                    <!-- ===============================
-                            APPROVAL
-                    ================================ -->
-
-                    <div class="approval-card">
-
-                        <div class="card-header">
-
-                            <h3>Menunggu Persetujuan</h3>
-
-                        </div>
-
-
-                        <div id="approval-container">
-
-
-                            <div class="approval-item">
-
-                                <div class="approval-icon sick">
-
-                                    <i class="bi bi-clipboard2-pulse"></i>
+                                    <input
+                                        type="text"
+                                        placeholder="Cari karyawan...">
 
                                 </div>
 
+                                <button
+                                    class="secondary-button"
+                                    id="btn-import-staff"
+                                    type="button">
 
-                                <div class="approval-info">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i>
 
-                                    <strong>Izin Sakit - Maya Putri</strong>
+                                    Import Excel
 
-                                    <span>2 jam yang lalu</span>
+                                </button>
 
-                                </div>
+                                <button
+                                    class="primary-button"
+                                    id="btn-top-schedule"
+                                    type="button">
 
+                                    <i class="bi bi-plus-lg"></i>
 
-                                <button class="review-btn">
-
-                                    Review
+                                    Tambah Penjadwalan
 
                                 </button>
 
                             </div>
 
+                        </div>
+
+                        <!-- TABLE -->
+                        
+                        <table class="attendance-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Tanggal</th>
+                                    <th>Masuk</th>
+                                    <th>Pulang</th>
+                                    <th>Shift</th>
+                                    <th>Status</th>
+                                </tr>
+                                </thead>
+
+                            <tbody id="attendanceTableBody">
+
+                            </tbody>
+
+                        </table>
+
+                        <!-- FOOTER -->
+                        <div class="attendance-footer">
+
+                            <button
+                                id="btnViewAttendance"
+                                class="view-all-btn"
+                                type="button">
+
+                                Lihat Semua Kehadiran
+                                <i class="bi bi-arrow-right"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+                    <!-- ======================================
+                            RIGHT PANEL
+                    ====================================== -->
+
+                    <div class="right-panel">
+
+                        <!-- ===============================
+                                MONTH SUMMARY
+                        ================================ -->
+
+                        <div class="summary-card">
+
+                            <div class="card-header">
+                                <h3>Ringkasan Bulan Ini</h3>
+                            </div>
+
+                            <div class="attendance-progress">
+
+                                <div class="progress-title">
+                                    <span>Tingkat Kehadiran</span>
+                                    <strong id="month-rate">0%</strong>
+                                </div>
+
+                                <div class="progress-bar">
+                                    <div class="progress-fill"
+                                        id="progress-fill"
+                                        style="width:0%;">
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="summary-box">
+
+                                <div class="summary-item">
+                                    <small>Total Hadir</small>
+                                    <h2 id="month-attended">0</h2>
+                                </div>
+
+                                <div class="summary-item">
+                                    <small>Total Izin</small>
+                                    <h2 id="month-leave">0</h2>
+                                </div>
+
+                            </div>
+
+                        </div>
 
 
-                            <div class="approval-item">
+                        <!-- ===============================
+                                SHIFT MANAGEMENT
+                        ================================ -->
 
-                                <div class="approval-icon leave">
+                        <div class="shift-card">
 
-                                    <i class="bi bi-calendar-check"></i>
+                            <div class="card-header">
+                                <h3>Manajemen Shift</h3>
+                            </div>
+
+                            <div id="shift-container">
+
+                                <div style="padding:20px;text-align:center;color:var(--text-light);">
+
+                                    <p>Memuat data shift...</p>
 
                                 </div>
 
+                            </div>
 
-                                <div class="approval-info">
+                            <button
+                                class="add-schedule"
+                                id="btn-add-shift"
+                                type="button">
 
-                                    <strong>Pengajuan Cuti - Danu</strong>
+                                <i class="bi bi-plus-lg"></i>
 
-                                    <span>5 jam yang lalu</span>
+                                Tambah Shift
+
+                            </button>
+
+                        </div>
+
+
+                        <!-- ===============================
+                                APPROVAL
+                        ================================ -->
+
+                        <div class="approval-card">
+
+                            <div class="card-header">
+                                <h3>Menunggu Persetujuan</h3>
+                            </div>
+
+                            <div id="approval-container">
+
+                                <div style="padding:20px;text-align:center;color:var(--text-light);">
+
+                                    <p>Memuat permohonan...</p>
 
                                 </div>
 
+                            </div>
 
-                                <button class="review-btn">
+                        </div>
 
-                                    Review
+                    </div>
+
+                    <!-- ======================================
+                            END STAFF LAYOUT
+                    ====================================== -->
+
+                    </div>
+
+                    <!-- ======================================
+                            DATA KARYAWAN
+                    ====================================== -->
+
+                    <div class="employee-card">
+
+                        <!-- HEADER -->
+
+                        <div class="employee-header">
+
+                            <div>
+
+                                <h2>👥 Data Karyawan</h2>
+
+                                <p>
+                                    Kelola akun login staff Argotelo
+                                </p>
+
+                            </div>
+
+                            <button
+                                class="primary-button"
+                                id="btnAddEmployee"
+                                type="button">
+
+                                <i class="bi bi-person-plus-fill"></i>
+
+                                Tambah Akun
+
+                            </button>
+
+                        </div>
+
+                        <!-- TOOLBAR -->
+
+                        <div class="employee-toolbar">
+
+                            <div class="employee-search">
+
+                                <i class="bi bi-search"></i>
+
+                                <input
+                                    id="employeeSearch"
+                                    type="search"
+                                    placeholder="Cari nama atau username...">
+
+                            </div>
+
+                            <select id="employeeRoleFilter">
+
+                                <option value="">
+                                    Semua Role
+                                </option>
+
+                                <option value="OWNER">
+                                    Owner
+                                </option>
+
+                                <option value="FINANCE">
+                                    Finance
+                                </option>
+
+                                <option value="KASIR">
+                                    Kasir
+                                </option>
+
+                                <option value="HRD">
+                                    HRD
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- TABLE -->
+
+                        <div class="employee-table-wrapper">
+
+                            <table class="employee-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>Nama</th>
+                                        <th>Username</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Last Login</th>
+                                        <th width="170">Aksi</th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody id="employeeTable">
+
+                                    <tr>
+
+                                        <td colspan="6" class="table-loading">
+
+                                            Memuat data...
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                        <!-- PAGINATION -->
+
+                        <div class="employee-footer">
+
+                            <span id="employeeInfo">
+
+                                Menampilkan 0 data
+
+                            </span>
+
+                            <div class="pagination">
+
+                                <button
+                                    id="employeePrev"
+                                    class="secondary-button"
+                                    type="button">
+
+                                    <i class="bi bi-chevron-left"></i>
+
+                                </button>
+
+                                <span id="employeePage">
+
+                                    1 / 1
+
+                                </span>
+
+                                <button
+                                    id="employeeNext"
+                                    class="secondary-button"
+                                    type="button">
+
+                                    <i class="bi bi-chevron-right"></i>
 
                                 </button>
 
                             </div>
 
-
                         </div>
 
                     </div>
+
+                    </section>
+
 
     <!-- IMPORT STAFF MODAL -->
     <div class="menu-modal-backdrop hidden" id="staffImportModal">
@@ -668,6 +623,10 @@
                     <a class="template-link" href="/api/staff/import-template">
                         <i class="bi bi-download"></i>
                         Download Template Excel
+                    </a>
+                    <a class="template-link" href="/api/staff/dummy-excel">
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                        Download Data Dummy
                     </a>
                 </div>
                 <div class="menu-form-actions">
@@ -725,7 +684,7 @@
     <div class="menu-modal-backdrop hidden" id="scheduleModal">
         <div class="menu-modal" role="dialog" aria-modal="true">
             <div class="menu-modal-header">
-                <h2 id="scheduleModalTitle">Tambah Jadwal Kerja</h2>
+                <h2 id="scheduleModalTitle">Tambah Jadwal Staff</h2>
                 <button class="modal-close" id="closeScheduleModal" type="button" aria-label="Tutup">
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -815,10 +774,10 @@
                     Alasan
                     <textarea id="leaveReasonInput" rows="4" placeholder="Contoh: sakit demam / izin keluarga"></textarea>
                 </label>
-                <label class="inline-check">
-                    <input id="leaveAutoApprove" type="checkbox" checked>
-                    <span>Langsung setujui dan ubah status kehadiran</span>
-                </label>
+                <input id="leaveAutoApprove" type="hidden" value="false">
+                <p class="modal-help">
+                    Pengajuan akan masuk ke Owner untuk disetujui.
+                </p>
                 <div class="menu-form-actions">
                     <button class="cancel-btn" id="cancelLeave" type="button">Batal</button>
                     <button class="save-btn" id="saveLeave" type="button">Simpan</button>
@@ -936,6 +895,189 @@
 
                 </div>
 
+
+            </div>
+
+        </div>
+
+    </div>
+
+   <!-- =====================================================
+    MODAL RIWAYAT KEHADIRAN
+    ===================================================== -->
+
+    <div id="attendanceModal" class="menu-modal-backdrop hidden">
+
+        <div class="menu-modal attendance-history-modal">
+
+            <div class="menu-modal-header">
+
+                <h2>Semua Data Kehadiran</h2>
+
+                <button
+                    id="closeAttendanceModal"
+                    class="modal-close"
+                    type="button">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </div>
+
+            <div class="menu-form">
+
+                <!-- ===========================
+                    FILTER
+                ============================ -->
+
+                <div class="attendance-history-toolbar">
+
+                    <input
+                        type="search"
+                        id="historySearch"
+                        placeholder="Cari nama karyawan...">
+
+                    <input
+                        type="date"
+                        id="historyStartDate">
+
+                    <input
+                        type="date"
+                        id="historyEndDate">
+
+                    <select id="historyStatus">
+
+                        <option value="">Semua Status</option>
+                        <option value="PRESENT">Hadir</option>
+                        <option value="LATE">Terlambat</option>
+                        <option value="LEAVE">Izin</option>
+                        <option value="SICK">Sakit</option>
+                        <option value="NOT_CHECKED_IN">Belum Hadir</option>
+
+                    </select>
+
+                    <button
+                        id="resetHistoryFilter"
+                        class="secondary-button">
+
+                        Reset
+
+                    </button>
+
+                </div>
+
+                <!-- ===========================
+                    TABLE
+                ============================ -->
+
+                <table class="attendance-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Karyawan</th>
+                            <th>Tanggal</th>
+                            <th>Masuk</th>
+                            <th>Pulang</th>
+                            <th>Shift</th>
+                            <th>Status</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="attendanceHistoryTable">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+     MODAL TAMBAH AKUN
+    ===================================================== -->
+
+    <div id="employeeModal" class="menu-modal-backdrop hidden">
+
+        <div class="menu-modal">
+
+            <div class="menu-modal-header">
+
+                <h2>Tambah Akun Staff</h2>
+
+                <button
+                    id="closeEmployeeModal"
+                    class="modal-close"
+                    type="button">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </div>
+
+            <div class="menu-form">
+
+                <label>
+                    Nama Lengkap
+                    <input
+                        id="employeeName"
+                        type="text"
+                        placeholder="Masukkan nama">
+                </label>
+
+                <label>
+                    Username
+                    <input
+                        id="employeeUsername"
+                        type="text"
+                        placeholder="Masukkan username">
+                </label>
+
+                <label>
+                    Password
+                    <input
+                        id="employeePassword"
+                        type="password"
+                        placeholder="Minimal 8 karakter">
+                </label>
+
+                <label>
+                    Role
+                    <select id="employeeRole">
+
+                        <option value="KASIR">Kasir</option>
+                        <option value="FINANCE">Finance</option>
+
+                    </select>
+                </label>
+
+                <div class="modal-action">
+
+                    <button
+                        id="cancelEmployee"
+                        class="secondary-button">
+
+                        Batal
+
+                    </button>
+
+                    <button
+                        id="saveEmployee"
+                        class="primary-button">
+
+                        Simpan
+
+                    </button>
+
+                </div>
 
             </div>
 

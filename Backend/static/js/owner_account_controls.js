@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const topbarRight = document.querySelector(".topbar-right");
     if (!topbarRight) return;
 
-    const DEFAULT_PHOTO = "/static/images/profile.png";
     let notifications = [];
 
     function ensureNotificationControls() {
@@ -98,16 +97,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     <h4 id="fullname">Loading...</h4>
                     <span id="role">OWNER</span>
                 </div>
-                <img id="profileImage" src="${DEFAULT_PHOTO}" alt="Profile">
             `;
             topbarRight.appendChild(profile);
         }
 
         profile.hidden = false;
-        const profileImage = profile.querySelector("img");
-        if (profileImage && !profileImage.id) {
-            profileImage.id = "profileImage";
-        }
     }
 
     function ensureAccountModals() {
@@ -122,11 +116,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             </button>
                         </div>
                         <div class="account-modal-body">
-                            <div class="account-photo">
-                                <img id="previewPhoto" src="${DEFAULT_PHOTO}" alt="Preview profil">
-                                <label for="photoInput">Ganti Foto</label>
-                                <input id="photoInput" type="file" accept="image/*" hidden>
-                            </div>
                             <div class="account-field">
                                 <label>Nama Lengkap</label>
                                 <input id="editFullname" type="text">
@@ -191,7 +180,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return {
             fullname: document.getElementById("fullname"),
             role: document.getElementById("role"),
-            profileImage: document.getElementById("profileImage"),
             notificationBtn: document.getElementById("notificationBtn"),
             notificationMenu: document.getElementById("notificationMenu"),
             notificationBadge: document.getElementById("notificationBadge"),
@@ -210,8 +198,6 @@ document.addEventListener("DOMContentLoaded", () => {
             editUsername: document.getElementById("editUsername"),
             editEmail: document.getElementById("editEmail"),
             editPhone: document.getElementById("editPhone"),
-            photoInput: document.getElementById("photoInput"),
-            previewPhoto: document.getElementById("previewPhoto"),
             changePasswordBtn: document.getElementById("changePasswordBtn"),
             passwordModal: document.getElementById("passwordModal"),
             closePasswordModal: document.getElementById("closePasswordModal"),
@@ -221,10 +207,6 @@ document.addEventListener("DOMContentLoaded", () => {
             newPassword: document.getElementById("newPassword"),
             confirmPassword: document.getElementById("confirmPassword")
         };
-    }
-
-    function photoUrl(user) {
-        return user?.photo || DEFAULT_PHOTO;
     }
 
     async function api(url, options = {}) {
@@ -304,8 +286,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!user) return;
         if (el.fullname) el.fullname.textContent = user.fullname || user.username || "User";
         if (el.role) el.role.textContent = user.role || "OWNER";
-        if (el.profileImage) el.profileImage.src = photoUrl(user);
-        if (el.previewPhoto) el.previewPhoto.src = photoUrl(user);
     }
 
     async function loadUser() {
@@ -317,8 +297,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function closeProfile() {
         const el = getElements();
         el.editProfileModal?.classList.remove("show");
-        if (el.photoInput) el.photoInput.value = "";
-        if (el.previewPhoto) el.previewPhoto.src = photoUrl(user);
     }
 
     function openProfile() {
@@ -328,7 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (el.editUsername) el.editUsername.value = user.username || "";
         if (el.editEmail) el.editEmail.value = user.email || "";
         if (el.editPhone) el.editPhone.value = user.phone || "";
-        if (el.previewPhoto) el.previewPhoto.src = photoUrl(user);
         el.settingsMenu?.classList.remove("active");
         el.editProfileModal?.classList.add("show");
     }
@@ -348,10 +325,6 @@ document.addEventListener("DOMContentLoaded", () => {
         formData.append("username", username);
         formData.append("email", el.editEmail?.value.trim() || "");
         formData.append("phone", el.editPhone?.value.trim() || "");
-
-        if (el.photoInput?.files?.[0]) {
-            formData.append("photo", el.photoInput.files[0]);
-        }
 
         const result = await api("/api/update-profile", {
             method: "POST",
@@ -447,12 +420,6 @@ document.addEventListener("DOMContentLoaded", () => {
         el.cancelPassword?.addEventListener("click", closePassword);
         el.savePassword?.addEventListener("click", () => {
             savePassword().catch(error => alert(error.message));
-        });
-        el.photoInput?.addEventListener("change", () => {
-            const file = el.photoInput.files?.[0];
-            if (file && el.previewPhoto) {
-                el.previewPhoto.src = URL.createObjectURL(file);
-            }
         });
         el.editProfileModal?.addEventListener("click", event => {
             if (event.target === el.editProfileModal) closeProfile();

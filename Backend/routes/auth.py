@@ -11,8 +11,6 @@ from model import Role, db, User
 
 import bcrypt
 
-import cloudinary.uploader
-
 import secrets
 
 from datetime import datetime, timedelta
@@ -21,10 +19,8 @@ from utils.email_service import send_reset_email
 
 from datetime import datetime
 
-from cloudinary_config import *
 from utils.auth import role_name_required
 
-ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 MANAGED_ACCOUNT_ROLES = {"FINANCE", "KASIR"}
 
 auth_bp = Blueprint(
@@ -50,33 +46,6 @@ def api_error(message, status=400):
     }), status
 
 
-def is_allowed_image(file_storage):
-    if not file_storage or not file_storage.filename:
-        return False
-
-    extension = file_storage.filename.rsplit(".", 1)[-1].lower()
-    return extension in ALLOWED_IMAGE_EXTENSIONS
-
-
-def upload_profile_photo(file_storage):
-    if not file_storage:
-        return None
-
-    if not is_allowed_image(file_storage):
-        raise ValueError("Format foto harus JPG, JPEG, PNG, atau WEBP")
-
-    upload = cloudinary.uploader.upload(
-        file_storage,
-        folder="argotelo/profile"
-    )
-
-    secure_url = upload.get("secure_url")
-    if not secure_url:
-        raise ValueError("Upload foto gagal")
-
-    return secure_url
-
-
 def verify_password(password, stored_hash):
     if not password or not stored_hash:
         return False
@@ -97,7 +66,6 @@ def serialize_user_account(user):
         "username": user.username,
         "email": user.email,
         "phone": user.phone,
-        "photo": user.photo,
         "role": user.role.role_name if user.role else "-",
         "is_active": bool(user.is_active),
         "created_at": user.created_at.isoformat() if user.created_at else None,
@@ -171,11 +139,6 @@ def register_owner():
     phone = request.form.get("phone")
 
 
-    photo_file = request.files.get(
-        "photo"
-    )
-
-
     # ==========================
     # CEK INPUT
     # ==========================
@@ -241,22 +204,6 @@ def register_owner():
 
 
     # ==========================
-    # UPLOAD FOTO
-    # ==========================
-
-
-    photo_url = None
-
-
-    if photo_file:
-        try:
-            photo_url = upload_profile_photo(photo_file)
-        except ValueError as error:
-            return api_error(str(error), 400)
-
-
-
-    # ==========================
     # PASSWORD HASH
     # ==========================
 
@@ -283,9 +230,7 @@ def register_owner():
 
         email=email,
 
-        phone=phone,
-
-        photo=photo_url
+        phone=phone
 
     )
 
@@ -355,9 +300,16 @@ def login():
 
     # CEK PASSWORD BCRYPT
 
-    if not verify_password(password, user.password):
+    is_valid = verify_password(password, user.password)
 
+    print("=" * 50)
+    print("USERNAME :", username)
+    print("INPUT PASSWORD :", password)
+    print("HASH DI DB :", user.password)
+    print("HASIL VERIFY :", is_valid)
+    print("=" * 50)
 
+    if not is_valid:
         return api_error("Password salah", 401)
 
 
@@ -380,7 +332,6 @@ def login():
             "id": user.id,
             "fullname": user.fullname,
             "username": user.username,
-            "photo": user.photo,
             "role": user.role.role_name
         }
     })
@@ -442,11 +393,6 @@ def me():
 
             "phone":
             user.phone,
-
-
-            "photo":
-            user.photo,
-
 
             "role_id":
             user.role_id,
@@ -657,12 +603,6 @@ def update_profile():
     )
 
 
-    photo_file = request.files.get(
-        "photo"
-    )
-
-
-
     if not fullname or not username:
         return api_error("Nama lengkap dan username wajib diisi", 400)
 
@@ -691,15 +631,6 @@ def update_profile():
 
     user.phone = phone
 
-
-
-    # jika ganti foto
-
-    if photo_file:
-        try:
-            user.photo = upload_profile_photo(photo_file)
-        except ValueError as error:
-            return api_error(str(error), 400)
 
     try:
         db.session.commit()
@@ -740,11 +671,6 @@ def update_profile():
 
             "phone":
             user.phone,
-
-
-            "photo":
-            user.photo,
-
 
             "role_id":
             user.role_id

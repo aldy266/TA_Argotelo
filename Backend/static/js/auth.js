@@ -287,34 +287,6 @@ if(registerForm){
 
 
 
-            const photoInput =
-            document.getElementById(
-                "photo"
-            );
-
-
-
-
-            if(
-                photoInput.files.length > 0
-            ){
-
-
-                formData.append(
-
-                    "photo",
-
-                    photoInput.files[0]
-
-                );
-
-
-            }
-
-
-
-
-
             const response =
             await fetch(
                 "/api/register-owner",

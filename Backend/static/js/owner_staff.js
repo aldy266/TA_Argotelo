@@ -40,8 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const allStaffSearch = document.getElementById("allStaffSearch");
     const allStaffList = document.getElementById("allStaffList");
     const scheduleButtons = [
-        document.getElementById("btn-top-schedule"),
-        document.getElementById("btn-new-schedule")
+        document.getElementById("btn-top-schedule")
     ].filter(Boolean);
     const scheduleModal = document.getElementById("scheduleModal");
     const scheduleModalTitle = document.getElementById("scheduleModalTitle");
@@ -94,57 +93,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     const shiftContainer = document.getElementById("shift-container");
     const approvalContainer = document.getElementById("approval-container");
 
+    const btnAddEmployee = document.getElementById("btnAddEmployee");
 
+    const employeeModal = document.getElementById("employeeModal");
 
-    // ===============================
-    // NOTIFICATION ELEMENT
-    // ===============================
+    const closeEmployeeModal =
+    document.getElementById("closeEmployeeModal");
 
-    const notificationBtn =
-        document.getElementById("notificationBtn");
+    const cancelEmployee =
+    document.getElementById("cancelEmployee");
 
+    const saveEmployee =
+    document.getElementById("saveEmployee");
 
-    const notificationMenu =
-        document.getElementById("notificationMenu");
-
-
-    const notificationBadge =
-        document.getElementById("notificationBadge");
-
-
-    const notificationSubtitle =
-        document.getElementById("notificationSubtitle");
-
-
-    const notificationList =
-        document.getElementById("notificationList");
-
-
-    const viewAllNotification =
-        document.getElementById("viewAllNotification");
-
-
-
-    // MODAL LIHAT SEMUA NOTIFIKASI
-
-    const stockNotificationModal =
-        document.getElementById("stockNotificationModal");
-
-
-    const allNotificationList =
-        document.getElementById("allNotificationList");
-
-
-    const allNotificationTotal =
-        document.getElementById("allNotificationTotal");
-
-
-    const closeStockNotification =
-        document.getElementById("closeStockNotification");
-
-
-    const closeStockNotificationBtn =
-        document.getElementById("closeStockNotificationBtn");
 
     // =====================================
     // STATE
@@ -158,6 +119,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     let selectedScheduleId = null;
     let selectedShiftId = null;
     let selectedAttendanceDate = "";
+    let currentUserRole = "";
+    let employeeData = [];
+    let filteredEmployeeData = [];
 
     // =====================================
     // UTILITIES
@@ -375,9 +339,49 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (response.success) {
                 if (fullnameEl) fullnameEl.textContent = response.user.fullname || "User";
                 if (roleEl) roleEl.textContent = response.user.role || "Role";
+                currentUserRole = String(response.user.role || "").toUpperCase();
             }
         } catch (error) {
             console.error("Error loading user:", error);
+        }
+    }
+
+    function isFinanceRole() {
+        return currentUserRole === "FINANCE";
+    }
+
+    function isOwnerRole() {
+        return currentUserRole === "OWNER";
+    }
+
+    function setHidden(selector, hidden) {
+        document.querySelectorAll(selector).forEach(element => {
+            element.hidden = hidden;
+        });
+    }
+
+    function applyRoleCapabilities() {
+        const financeMode = isFinanceRole();
+        const ownerMode = isOwnerRole();
+        const managementMode = financeMode || ownerMode;
+
+        document.body.dataset.staffMode = ownerMode
+            ? "owner-management"
+            : (financeMode ? "operational" : "readonly");
+
+        document.querySelector(".staff-layout")?.classList.toggle("approval-only", false);
+
+        setHidden(".statistics", !managementMode);
+        setHidden(".attendance-card", !managementMode);
+        setHidden(".summary-card", !managementMode);
+        setHidden(".shift-card", !managementMode);
+        setHidden(".approval-card", !ownerMode);
+        setHidden("#btn-import-staff", !financeMode);
+        setHidden("#btn-top-schedule", !financeMode);
+        setHidden("#btn-add-shift", !financeMode);
+
+        if (financeMode && statApproval) {
+            statApproval.textContent = "Menunggu approval Owner";
         }
     }
 
@@ -397,17 +401,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function updateStatisticsUI(stats) {
-        const { total_scheduled, total_staff, present_count, attendance_rate, late_count, avg_late_minutes, leave_count } = stats;
-        const staffTotal = Number.isFinite(Number(total_staff))
-            ? Number(total_staff)
-            : Number(total_scheduled || 0);
+        const { total_scheduled, present_count, attendance_rate, late_count, avg_late_minutes, leave_count } = stats;
+        const scheduledTotal = Number(total_scheduled || 0);
         
-        statPresent.textContent = `${present_count} / ${staffTotal}`;
+        statPresent.textContent = `${present_count} / ${scheduledTotal}`;
         statRate.textContent = `${attendance_rate}% Attendance`;
         
         if (late_count === 0) {
             statLate.textContent = "0 Staff";
             statAvgLate.textContent = "Tidak ada keterlambatan";
+            statAvgLate.classList.remove("danger");
         } else {
             statLate.textContent = `${late_count} Staff`;
             statAvgLate.textContent = `Rata-rata ${Math.round(avg_late_minutes)} menit`;
@@ -472,7 +475,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <tr>
                     <td colspan="7" 
                     style="text-align:center; padding:40px;">
-                        Belum ada data kehadiran.
+                        Belum ada Staff yang dijadwalkan hari ini.
                     </td>
                 </tr>
             `;
@@ -482,6 +485,77 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
         attendanceTable.innerHTML = filteredData.map(record => {
+            const lockedStatuses = ["LEAVE", "SICK", "ABSENT"];
+            const canClockIn = isFinanceRole()
+                && !record.clock_in
+                && !lockedStatuses.includes(record.status);
+            const canClockOut = isFinanceRole()
+                && record.clock_in
+                && !record.clock_out
+                && !lockedStatuses.includes(record.status)
+                && record.status !== "COMPLETED";
+            const canManageSchedule = isFinanceRole() || isOwnerRole();
+            const actionButtons = canManageSchedule ? `
+                        <button 
+                        class="edit-btn schedule-edit-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-pencil-square"></i>
+                            Edit 
+
+                        </button>
+
+
+                        ${isFinanceRole() && canClockIn ? `
+                        <button 
+                        class="secondary-button clock-in-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Clock In
+
+                        </button>
+                        ` : ""}
+
+
+                        ${isFinanceRole() && canClockOut ? `
+                        <button 
+                        class="secondary-button clock-out-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-box-arrow-right"></i>
+                            Clock Out
+
+                        </button>
+                        ` : ""}
+
+
+                        ${isFinanceRole() ? `
+                        <button 
+                        class="secondary-button leave-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-file-earmark-medical"></i>
+                            Izin
+
+                        </button>
+                        ` : ""}
+
+
+                        <button 
+                        class="delete-btn schedule-delete-btn"
+                        type="button"
+                        data-schedule-id="${record.schedule_id}">
+
+                            <i class="bi bi-trash3"></i>
+                            Hapus
+
+                        </button>
+            ` : `<span class="readonly-action">Read-only</span>`;
 
             return `
             <tr>
@@ -542,29 +616,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <td>
 
                     <div class="attendance-row-actions">
-
-
-                        <button 
-                        class="edit-btn schedule-edit-btn"
-                        type="button"
-                        data-schedule-id="${record.schedule_id}">
-
-                            <i class="bi bi-pencil-square"></i>
-                            Edit 
-
-                        </button>
-
-
-                        <button 
-                        class="delete-btn schedule-delete-btn"
-                        type="button"
-                        data-schedule-id="${record.schedule_id}">
-
-                            <i class="bi bi-trash3"></i>
-                            Hapus
-
-                        </button>
-
+                        ${actionButtons}
 
                     </div>
 
@@ -619,6 +671,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         const editButton = event.target.closest(".schedule-edit-btn");
         const leaveButton = event.target.closest(".leave-btn");
         const deleteButton = event.target.closest(".schedule-delete-btn");
+        const clockInButton = event.target.closest(".clock-in-btn");
+        const clockOutButton = event.target.closest(".clock-out-btn");
 
         if (editButton) {
             const record = findAttendanceRecord(editButton.dataset.scheduleId);
@@ -629,9 +683,46 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (leaveButton) {
+            if (!isFinanceRole()) return;
             const record = findAttendanceRecord(leaveButton.dataset.scheduleId);
             if (record) {
                 openLeaveModal(record);
+            }
+            return;
+        }
+
+        if (clockInButton) {
+            if (!isFinanceRole()) return;
+            clockInButton.disabled = true;
+            try {
+                const response = await apiRequest(`/api/staff/attendance/${clockInButton.dataset.scheduleId}/clock-in`, {
+                    method: "PATCH"
+                });
+                showToast(response.message || "Clock in berhasil");
+                await loadStatistics();
+                await loadMonthStatistics();
+                await loadAttendance(selectedAttendanceDate);
+                await loadShiftData();
+            } finally {
+                clockInButton.disabled = false;
+            }
+            return;
+        }
+
+        if (clockOutButton) {
+            if (!isFinanceRole()) return;
+            clockOutButton.disabled = true;
+            try {
+                const response = await apiRequest(`/api/staff/attendance/${clockOutButton.dataset.scheduleId}/clock-out`, {
+                    method: "PATCH"
+                });
+                showToast(response.message || "Clock out berhasil");
+                await loadStatistics();
+                await loadMonthStatistics();
+                await loadAttendance(selectedAttendanceDate);
+                await loadShiftData();
+            } finally {
+                clockOutButton.disabled = false;
             }
             return;
         }
@@ -668,7 +759,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         leaveStartDateInput.value = record.schedule_date || selectedAttendanceDate || getTodayInputValue();
         leaveEndDateInput.value = record.schedule_date || selectedAttendanceDate || getTodayInputValue();
         leaveReasonInput.value = "";
-        leaveAutoApprove.checked = true;
+        leaveAutoApprove.checked = false;
         leaveModal?.classList.remove("hidden");
         leaveTypeSelect?.focus();
     }
@@ -678,7 +769,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (leaveStaffId) leaveStaffId.value = "";
         if (leaveStaffName) leaveStaffName.textContent = "-";
         if (leaveReasonInput) leaveReasonInput.value = "";
-        if (leaveAutoApprove) leaveAutoApprove.checked = true;
+        if (leaveAutoApprove) leaveAutoApprove.checked = false;
     }
 
     async function saveLeaveData() {
@@ -702,7 +793,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     start_date: leaveStartDateInput.value,
                     end_date: leaveEndDateInput.value,
                     reason: leaveReasonInput.value.trim(),
-                    auto_approve: leaveAutoApprove.checked
+                    auto_approve: false
                 })
             });
 
@@ -715,7 +806,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             await loadStatistics();
             await loadMonthStatistics();
             await loadAttendance(selectedAttendanceDate);
-            //await loadLeaveRequests()
         } finally {
             saveLeave.disabled = false;
         }
@@ -740,6 +830,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                             <span>Shift</span>
                             <span>Jam</span>
                             <span>Toleransi</span>
+                            <span>Terjadwal</span>
                             <span>Aksi</span>
                         </div>
                         ${shiftData.map(shift => `
@@ -750,10 +841,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 </div>
                                 <span>${shift.start_time} - ${shift.end_time}</span>
                                 <span>${escapeHtml(shift.tolerance_minutes)} menit</span>
+                                <span>${escapeHtml(shift.today_staff_count || 0)} Staff Hari Ini</span>
                                 <div class="shift-action">
+                                    ${isFinanceRole() ? `
                                     <button class="edit-btn shift-edit-btn" type="button" data-shift-id="${shift.id}">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </button>
+                                    ` : `<span class="readonly-action">Read-only</span>`}
                                 </div>
                             </div>
                         `).join("")}
@@ -763,7 +857,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 shiftData = [];
                 shiftContainer.innerHTML = `
                     <div style="padding: 20px; text-align: center; color: var(--text-light);">
-                        <p>Tidak ada shift yang terdaftar</p>
+                        <p>Tidak ada shift yang terdaftar.</p>
                     </div>
                 `;
             }
@@ -799,11 +893,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                     return `
                         <div class="approval-item">
                             <div class="approval-left">
-                                <div class="approval-icon ${req.leave_type === 'SICK' ? 'warning' : 'primary'}">
+                                <div class="approval-icon ${req.leave_type === 'SICK' ? 'sick' : 'leave'}">
                                     <i class="bi bi-${typeInfo.icon}"></i>
                                 </div>
-                                <div>
-                                    <h5>${typeInfo.label} - ${escapeHtml(req.staff_name)}</h5>
+                                <div class="approval-info">
+                                    <strong>${typeInfo.label} - ${escapeHtml(req.staff_name)}</strong>
                                     <span>${timeLabel}</span>
                                 </div>
                             </div>
@@ -887,7 +981,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                     ` : ''}
                     <div class="menu-form-actions" style="margin-top: 12px;">
-                        <button type="button" class="cancel-btn" id="btn-reject-leave">Tolak</button>
+                        <button type="button" class="delete-btn" id="btn-reject-leave">Tolak</button>
                         <button type="button" class="save-btn" id="btn-approve-leave">Setujui</button>
                     </div>
                 </div>
@@ -898,7 +992,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const close = () => modal.remove();
         modal.querySelector(".modal-close").addEventListener("click", close);
-        modal.querySelector(".cancel-btn").addEventListener("click", close);
         
         modal.addEventListener("click", event => {
             if (event.target === modal) close();
@@ -909,7 +1002,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await apiRequest(`/api/staff/leave-request/${requestId}/approve`, { method: "PATCH" });
                 showToast("Permohonan disetujui");
                 close();
-                //await loadLeaveRequests();
+                await loadLeaveRequests();
                 await loadStatistics();
                 await loadMonthStatistics();
                 await loadAttendance();
@@ -923,7 +1016,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await apiRequest(`/api/staff/leave-request/${requestId}/reject`, { method: "PATCH" });
                 showToast("Permohonan ditolak");
                 close();
-                //await loadLeaveRequests();
+                await loadLeaveRequests();
                 await loadStatistics();
             } catch (error) {
                 console.error("Error rejecting leave:", error);
@@ -1024,7 +1117,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             : `<option value="">Belum ada Shift</option>`;
 
         if (scheduleModalTitle) {
-            scheduleModalTitle.textContent = selectedScheduleId ? "Edit Penjadwalan" : "Tambah Penjadwalan";
+            scheduleModalTitle.textContent = selectedScheduleId ? "Edit Jadwal Staff" : "Tambah Jadwal Staff";
         }
         if (saveSchedule) {
             saveSchedule.textContent = selectedScheduleId ? "Simpan Perubahan" : "Simpan Jadwal";
@@ -1050,7 +1143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         scheduleModal?.classList.add("hidden");
         selectedScheduleId = null;
         if (scheduleModalTitle) {
-            scheduleModalTitle.textContent = "Tambah Penjadwalan";
+            scheduleModalTitle.textContent = "Tambah Jadwal Staff";
         }
         if (saveSchedule) {
             saveSchedule.textContent = "Simpan Jadwal";
@@ -1137,7 +1230,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             selectedShiftId = null;
 
             if (shiftModalTitle) {
-                shiftModalTitle.textContent = "Tambah Shift Baru";
+                shiftModalTitle.textContent = "Tambah Shift";
             }
 
             shiftNameInput.value = "";
@@ -1431,6 +1524,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const addBtn = e.target.closest("#btn-add-shift");
 
         if (addBtn) {
+            if (!isFinanceRole()) return;
 
             openShiftModal(null);
 
@@ -1442,6 +1536,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const editBtn = e.target.closest(".shift-edit-btn");
 
         if (editBtn) {
+            if (!isFinanceRole()) return;
 
             openShiftModal(
                 editBtn.dataset.shiftId
@@ -1509,600 +1604,718 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             await initUser();
 
+            applyRoleCapabilities();
 
-            await loadStatistics();
-
-
-            await loadMonthStatistics();
-
-
-            await loadAttendance(selectedAttendanceDate);
+            if (isFinanceRole() || isOwnerRole()) {
+                await loadStatistics();
 
 
-            await loadShiftData();
+                await loadMonthStatistics();
 
 
-            //await loadLeaveRequests();
+                await loadAttendance(selectedAttendanceDate);
 
 
-            setupSearch();
+                await loadShiftData();
+
+
+                setupSearch();
+            }
+
+
+            if (isOwnerRole()) {
+                await loadLeaveRequests();
+            }
 
 
         }
 
         init();
 
-    // ===============================
-    // REVIEW APPROVAL MODAL
-    // ===============================
+    /* ==========================================================
+        MODAL RIWAYAT KEHADIRAN
+    ========================================================== */
 
+    const attendanceModal =
+        document.getElementById("attendanceModal");
 
-    const reviewModal = document.getElementById("reviewModal");
+    const btnViewAttendance =
+        document.getElementById("btnViewAttendance");
 
-    const closeReviewModal = document.getElementById("closeReviewModal");
+    const closeAttendanceModal =
+        document.getElementById("closeAttendanceModal");
 
+    console.log(attendanceModal);
+    console.log(btnViewAttendance);
+    console.log(closeAttendanceModal);
 
-    document.addEventListener("click", (e)=>{
+    let attendanceHistoryData = [];
 
+   async function loadAttendanceHistory() {
 
-        if(e.target.classList.contains("review-btn")){
+        const tbody = document.getElementById("attendanceHistoryTable");
 
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align:center">
+                    Memuat data...
+                </td>
+            </tr>
+        `;
 
-            reviewModal.classList.remove("hidden");
+        try {
 
+            const response = await fetch("/api/staff/attendance/history", {
+                credentials: "include"
+            });
 
-            document.getElementById("reviewName").value =
-            "Maya Putri";
+            const result = await response.json();
 
+            console.log("Attendance History:", result);
 
-            document.getElementById("reviewType").value =
-            "Izin Sakit";
+            if (!result.success) {
 
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align:center;color:red">
+                            ${result.message || "Gagal memuat data"}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
 
-            document.getElementById("reviewReason").value =
-            "Tidak masuk karena sakit";
+            if (!result.data || result.data.length === 0) {
 
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align:center">
+                            Belum ada data kehadiran
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            attendanceHistoryData = result.data;
+
+            renderAttendanceHistory(attendanceHistoryData);
+
+        } catch (err) {
+
+            console.error(err);
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center;color:red">
+                        Error mengambil data
+                    </td>
+                </tr>
+            `;
 
         }
 
+    }
 
-    });
+    function renderAttendanceHistory(data){
+
+        const tbody =
+            document.getElementById("attendanceHistoryTable");
+
+        tbody.innerHTML = "";
+
+        if(data.length===0){
+
+            tbody.innerHTML=`
+                <tr>
+                    <td colspan="6" style="text-align:center">
+                        Tidak ada data
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        data.forEach(item=>{
+
+            tbody.innerHTML+=`
+
+                <tr>
+
+                    <td>${item.name}</td>
+
+                    <td>${item.date}</td>
+
+                    <td>${item.clock_in ?? "-"}</td>
+
+                    <td>${item.clock_out ?? "-"}</td>
+
+                    <td>${item.shift ?? "-"}</td>
+
+                    <td>${formatAttendanceStatus(item.status)}</td>
+
+                </tr>
+
+            `;
+
+        });
+
+    }
+
+    function filterAttendanceHistory(){
+
+        const keyword =
+            document.getElementById("historySearch").value.toLowerCase();
+
+        const startDate =
+            document.getElementById("historyStartDate").value;
+
+        const endDate =
+            document.getElementById("historyEndDate").value;
+
+        const status =
+            document.getElementById("historyStatus").value;
+
+        let filtered=[...attendanceHistoryData];
+
+        if(keyword){
+
+            filtered=filtered.filter(item=>
+
+                (item.name || "")
+                .toLowerCase()
+                .includes(keyword)
+
+            );
+
+        }
+
+        if(startDate){
+
+            filtered=filtered.filter(item=>
+
+                item.date>=startDate
+
+            );
+
+        }
+
+        if(endDate){
+
+            filtered=filtered.filter(item=>
+
+                item.date<=endDate
+
+            );
+
+        }
+
+        if(status){
+
+            filtered=filtered.filter(item=>
+
+                (item.status || "").toUpperCase() === status
+
+            );
+
+        }
+
+        renderAttendanceHistory(filtered);
+
+    }
+
+    function formatAttendanceStatus(status){
+
+        switch(status){
+
+            case "PRESENT":
+                return '<span class="badge badge-success">Hadir</span>';
+
+            case "LATE":
+                return '<span class="badge badge-warning">Terlambat</span>';
+
+            case "LEAVE":
+                return '<span class="badge badge-info">Izin</span>';
+
+            case "SICK":
+                return '<span class="badge badge-purple">Sakit</span>';
+
+            case "NOT_CHECKED_IN":
+                return '<span class="badge badge-danger">Belum Hadir</span>';
+
+            default:
+                return `<span class="badge badge-danger">${status}</span>`;
+        }
+
+    }
+
+    async function loadEmployees() {
+
+        const tbody =
+            document.getElementById("employeeTable");
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="table-loading">
+                    Memuat data...
+                </td>
+            </tr>
+        `;
+
+        try {
+
+            const response = await fetch(
+                "/api/staff/accounts",
+                {
+                    credentials: "include"
+                }
+            );
+
+            const result = await response.json();
+
+            if (!result.success) {
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            Gagal memuat data
+                        </td>
+                    </tr>
+                `;
+
+                return;
+            }
+
+            employeeData = result.data;
+            filteredEmployeeData = [...employeeData];
+
+            renderEmployees();
+
+        }
+
+        catch (err) {
+
+            console.error(err);
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6">
+                        Error mengambil data
+                    </td>
+                </tr>
+            `;
+
+        }
+
+    }
+
+    function renderEmployees() {
+
+        const tbody =
+            document.getElementById("employeeTable");
+
+        tbody.innerHTML = "";
+
+        if (filteredEmployeeData.length === 0) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="table-loading">
+
+                        Tidak ada data
+
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+        filteredEmployeeData.forEach(item => {
+
+            tbody.innerHTML += `
+
+                <tr>
+
+                    <td>${item.name}</td>
+
+                    <td>${item.username}</td>
+
+                    <td>${item.role}</td>
+
+                    <td>
+
+                        <span class="employee-status ${item.status === 'ACTIVE' ? 'active' : 'inactive'}">
+
+                            ${item.status}
+
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        ${item.last_login ?? "-"}
+
+                    </td>
+
+                    <td>
+
+                        <div class="employee-action">
+
+                            <button
+                                class="edit"
+                                data-id="${item.id}">
+
+                                <i class="bi bi-pencil"></i>
+
+                            </button>
+
+                            <button
+                                class="delete"
+                                data-id="${item.id}">
+
+                                <i class="bi bi-trash"></i>
+
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        });
+
+    }
+
+    function filterEmployees(){
+
+        const keyword =
+            document.getElementById("employeeSearch")
+            .value
+            .toLowerCase();
+
+        const role =
+            document.getElementById("employeeRoleFilter")
+            .value;
+
+        filteredEmployeeData = employeeData.filter(item=>{
+
+            const matchKeyword =
+
+                item.name
+                .toLowerCase()
+                .includes(keyword)
+
+                ||
+
+                item.username
+                .toLowerCase()
+                .includes(keyword);
+
+            const matchRole =
+
+                role===""
+                ||
+
+                item.role===role;
+
+            return matchKeyword && matchRole;
+
+        });
+
+        renderEmployees();
+
+    }
+
+    console.log(document.getElementById("employeeModal"));
+    function openEmployeeModal() {
+        employeeModal.classList.remove("hidden");
+    }
+
+    function closeEmployee() {
+        employeeModal.classList.add("hidden");
+    }
+
+    btnAddEmployee?.addEventListener(
+        "click",
+        openEmployeeModal
+    );
+    
+    closeEmployeeModal?.addEventListener(
+        "click",
+        closeEmployee
+    );
+
+    cancelEmployee?.addEventListener(
+        "click",
+        closeEmployee
+    );
 
 
+    // ======================
+    // BUKA MODAL
+    // ======================
 
-    closeReviewModal?.addEventListener("click",()=>{
+    if (btnViewAttendance) {
 
-        reviewModal.classList.add("hidden");
+        btnViewAttendance.addEventListener("click", async () => {
 
-    });
+            attendanceModal.classList.remove("hidden");
+
+            await loadAttendanceHistory();
+
+        });
+
+    }
+
+
+    // ======================
+    // TUTUP MODAL
+    // ======================
+
+    if (closeAttendanceModal) {
+
+        closeAttendanceModal.addEventListener("click", () => {
+
+            attendanceModal.classList.add("hidden");
+
+        });
+
+    }
+
+
+    // ======================
+    // KLIK AREA GELAP
+    // ======================
+
+    if (attendanceModal) {
+
+        attendanceModal.addEventListener("click", (e) => {
+
+            if (e.target === attendanceModal) {
+
+                attendanceModal.classList.add("hidden");
+
+            }
+
+        });
+
+    }
 
     // ===============================
-    // STOCK NOTIFICATION ALERT
+    // FILTER RIWAYAT KEHADIRAN
     // ===============================
 
-    let stockAlerts = [];
-    let stockIndex = 0;
+    const historySearch =
+        document.getElementById("historySearch");
+
+    const historyStartDate =
+        document.getElementById("historyStartDate");
+
+    const historyEndDate =
+        document.getElementById("historyEndDate");
+
+    const historyStatus =
+        document.getElementById("historyStatus");
+
+    const resetHistoryFilter =
+        document.getElementById("resetHistoryFilter");
+
+    if (historySearch) {
+
+        historySearch.addEventListener(
+            "keyup",
+            filterAttendanceHistory
+        );
+
+    }
+
+    if (historyStartDate) {
+
+        historyStartDate.addEventListener(
+            "change",
+            filterAttendanceHistory
+        );
+
+    }
+
+    if (historyEndDate) {
+
+        historyEndDate.addEventListener(
+            "change",
+            filterAttendanceHistory
+        );
+
+    }
+
+    if (historyStatus) {
+
+        historyStatus.addEventListener(
+            "change",
+            filterAttendanceHistory
+        );
+
+    }
+
+    if (resetHistoryFilter) {
+
+        resetHistoryFilter.addEventListener("click", () => {
+
+            if (historySearch)
+                historySearch.value = "";
+
+            if (historyStartDate)
+                historyStartDate.value = "";
+
+            if (historyEndDate)
+                historyEndDate.value = "";
+
+            if (historyStatus)
+                historyStatus.value = "";
+
+            renderAttendanceHistory(attendanceHistoryData);
+
+        });
+
+    }
+
+    const employeeSearch =
+        document.getElementById("employeeSearch");
+
+        if(employeeSearch){
+
+            employeeSearch.addEventListener(
+                "keyup",
+                filterEmployees
+            );
+
+        }
+
+        const employeeRoleFilter =
+            document.getElementById("employeeRoleFilter");
+
+        if(employeeRoleFilter){
+
+            employeeRoleFilter.addEventListener(
+                "change",
+                filterEmployees
+            );
+
+        }
+
+    loadEmployees();
 
 
-    async function loadNotifications(){
+    saveEmployee?.addEventListener("click", async () => {
 
+        const fullname =
+            document.getElementById("employeeName").value.trim();
 
-        try{
+        const username =
+            document.getElementById("employeeUsername").value.trim();
 
+        const password =
+            document.getElementById("employeePassword").value.trim();
 
-            const response = await fetch("/api/dashboard", {
+        const role =
+            document.getElementById("employeeRole").value;
 
-                method:"POST",
+        if (!fullname || !username || !password) {
 
-                credentials:"include",
+            alert("Lengkapi semua data.");
 
-                headers:{
-                    "Content-Type":"application/json"
+            return;
+
+        }
+
+        try {
+
+            const response = await fetch("/api/staff/accounts", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
                 },
 
                 body: JSON.stringify({
-                    filter:"today"
+
+                    fullname,
+                    username,
+                    password,
+                    role
+
                 })
 
             });
 
+            const result = await response.json();
 
+            alert(result.message);
 
-            const result =
-                await response.json();
+            if (result.success) {
 
+                closeEmployeeForm();
 
+                loadEmployees();
 
-            stockAlerts =
-                result.data.notifications || [];
-
-
-
-            stockIndex = 0;
-
-
-
-            renderStockAlert();
-
-
-
-        }catch(error){
-
-
-            console.log(error);
-
-
-        }
-
-
-    }
-
-
-
-    function renderStockAlert(){
-
-
-        const alertText =
-        document.getElementById("stockAlertText");
-
-
-        const badge =
-        document.querySelector(".notification-badge");
-
-
-        if(!alertText) return;
-
-
-
-        if(stockAlerts.length === 0){
-
-
-            alertText.textContent =
-            "Semua stok aman";
-
-
-            if(badge){
-                badge.textContent = "0";
             }
 
+        } catch (err) {
 
-            return;
+            console.error(err);
 
-        }
-
-
-
-        const currentStock =
-        stockAlerts[stockIndex];
-
-
-
-        alertText.textContent =
-            `Stok ${currentStock.product} menipis`;
-
-
-
-        if(badge){
-
-            badge.textContent =
-            stockAlerts.length;
+            alert("Terjadi kesalahan.");
 
         }
-
-
-
-        // pindah stok berikutnya
-        stockIndex++;
-
-
-        if(stockIndex === stockAlerts.length){
-
-            stockIndex = 0;
-
-        }
-
-
-    }
-
-
-    // pertama buka halaman
-    loadNotifications();
-
-
-    // ganti stok setiap 3 detik
-    setInterval(()=>{
-
-        renderStockAlert();
-
-    },3000);
-
-
-    // update database setiap 30 detik
-    setInterval(()=>{
-
-        loadNotifications();
-
-    },30000);
-
-
-    // ===============================
-    // DROPDOWN NOTIFIKASI (3 DATA)
-    // ===============================
-
-    function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8(){
-
-
-        const list =
-        document.getElementById("notificationList");
-
-
-        const total =
-        document.getElementById("notificationSubtitle");
-
-
-        if(!list) return;
-
-
-        list.innerHTML = "";
-
-
-        if(total){
-
-            total.textContent =
-            `${stockAlerts.length} Notifikasi Aktif`;
-
-        }
-
-
-
-        if(stockAlerts.length === 0){
-
-            list.innerHTML = `
-                <div class="notification-item">
-                    Semua stok aman
-                </div>
-            `;
-
-            return;
-
-        }
-
-
-
-        stockAlerts.slice(0,3).forEach(item=>{
-
-
-            list.innerHTML += `
-
-            <div class="notification-item">
-
-                <div class="notif-icon">
-
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-
-                </div>
-
-
-                <div>
-
-                    <strong>
-                        Stok ${item.product} Menipis
-                    </strong>
-
-
-                    <p>
-                        Sisa : ${item.stock}
-                    </p>
-
-
-                    <small>
-                        Real-time
-                    </small>
-
-
-                </div>
-
-
-            </div>
-
-            `;
-
 
         });
 
+        function openEmployeeForm() {
+
+    employeeModal.classList.remove("hidden");
+
+}
+
+function closeEmployeeForm() {
+
+    employeeModal.classList.add("hidden");
+
+}
+
+document.addEventListener("click", async (e) => {
+
+    const btnDelete = e.target.closest(".delete");
+
+    if (!btnDelete) return;
+
+    const id = btnDelete.dataset.id;
+
+    if (!confirm("Nonaktifkan akun ini?")) return;
+
+    const response = await fetch(`/api/staff/accounts/${id}`, {
+
+        method: "DELETE"
+
+    });
+
+    const result = await response.json();
+
+    alert(result.message);
+
+    if (result.success) {
+
+        loadEmployees();
 
     }
 
-
-
-
-    // ===============================
-    // KLIK BELL
-    // ===============================
-
-    document
-    .getElementById("notificationBtn")
-    .addEventListener("click",function(e){
-
-
-        e.stopPropagation();
-
-
-        r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
-
-
-        document
-        .getElementById("notificationMenu")
-        .classList.toggle("active");
-
-
-    });
-
-
-
-
-    // ===============================
-    // TUTUP KLIK LUAR
-    // ===============================
-
-    document.addEventListener("click",()=>{
-
-
-        document
-        .getElementById("notificationMenu")
-        .classList.remove("active");
-
-
-    });
-
-
-
-    document
-    .getElementById("notificationMenu")
-    .addEventListener("click",(e)=>{
-
-
-        e.stopPropagation();
-
-
-    });
-
-
-    // ===============================
-    // LIHAT SEMUA MODAL
-    // ===============================
-
-    document
-    .getElementById("viewAllNotification")
-    .addEventListener("click",function(e){
-
-
-    e.stopPropagation();
-
-
-    document
-    .getElementById("notificationMenu")
-    .classList.remove("active");
-
-
-    openStockNotificationModal();
-
-
-    });
-
-    // ===============================
-    // MODAL SEMUA NOTIFIKASI
-    // ===============================
-
-    function openStockNotificationModal(){
-
-
-        const modal =
-        document.getElementById("stockNotificationModal");
-
-
-        const list =
-        document.getElementById("allNotificationList");
-
-
-        const total =
-        document.getElementById("allNotificationTotal");
-
-
-        if(!modal || !list) return;
-
-
-
-        list.innerHTML = "";
-
-
-
-        if(total){
-
-            total.textContent =
-            `${stockAlerts.length} Notifikasi`;
-
-        }
-
-
-
-        if(stockAlerts.length === 0){
-
-
-            list.innerHTML = `
-
-                <div class="notification-item">
-
-                    Semua stok aman
-
-                </div>
-
-            `;
-
-
-        }else{
-
-
-            stockAlerts.forEach(item=>{
-
-
-                list.innerHTML += `
-
-
-                <div class="notification-item">
-
-
-                    <div class="notif-icon">
-
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-
-                    </div>
-
-
-                    <div>
-
-
-                        <strong>
-
-                            Stok ${item.product} Menipis
-
-                        </strong>
-
-
-
-                        <p>
-
-                            Sisa : ${item.stock}
-
-                        </p>
-
-
-
-                        <small>
-
-                            Real-time
-
-                        </small>
-
-
-                    </div>
-
-
-                </div>
-
-
-                `;
-
-
-            });
-
-
-        }
-
-
-
-        modal.classList.remove("hidden");
-
-
-    }
-
-
-
-    // ===============================
-    // CLOSE MODAL NOTIFIKASI
-    // ===============================
-
-    document
-    .getElementById("closeStockNotification")
-    .addEventListener("click",()=>{
-
-
-        document
-        .getElementById("stockNotificationModal")
-        .classList.add("hidden");
-
-
-    });
-
-
-
-    document
-    .getElementById("closeStockNotificationBtn")
-    .addEventListener("click",()=>{
-
-
-        document
-        .getElementById("stockNotificationModal")
-        .classList.add("hidden");
-
-
-    });
-
-    // ===============================
-    // CLICK BELL
-    // ===============================
-
-    notificationBtn.addEventListener(
-        "click",
-        function(event){
-
-            event.stopPropagation();
-
-            notificationMenu.classList.toggle(
-                "active"
-            );
-
-        }
-    );
-
-
-    // ===============================
-    // LIHAT SEMUA
-    // ===============================
-
-    viewAllNotification.addEventListener(
-        "click",
-        function(){
-
-            notificationMenu.classList.remove(
-                "active"
-            );
-
-
-            notificationModal.classList.remove(
-                "hidden"
-            );
-
-        }
-    );
-
-
-    // ===============================
-    // CLOSE MODAL
-    // ===============================
-
-    closeNotification.addEventListener(
-        "click",
-        function(){
-
-            notificationModal.classList.add(
-                "hidden"
-            );
-
-        }
-    );
-
-
-    closeNotificationBtn.addEventListener(
-        "click",
-        function(){
-
-            notificationModal.classList.add(
-                "hidden"
-            );
-
-        }
-    );
+});
 
 });
 

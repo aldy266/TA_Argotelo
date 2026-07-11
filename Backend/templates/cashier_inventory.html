@@ -13,7 +13,6 @@ content="width=device-width, initial-scale=1.0">
 Inventory Kasir | Argotelo
 </title>
 
-
 <!-- FONT -->
 <link rel="preconnect"
 href="https://fonts.googleapis.com">
@@ -40,6 +39,65 @@ filename='css/cashier_inventory.css'
 ) }}">
 
 
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Kasir | Argotelo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        * { box-sizing:border-box; }
+        :root { --brown:#4B2E13; --soft:#FBF7F4; --line:#E8DDD5; --text:#2F1D0F; --muted:#83746A; --danger:#D92D20; --warning:#B45309; --success:#15803D; }
+        body { margin:0; font-family:"Poppins",sans-serif; background:var(--soft); color:var(--text); }
+        .page { display:grid; grid-template-columns:280px minmax(0,1fr); min-height:100vh; }
+        .sidebar { background:#fff; border-right:1px solid var(--line); padding:28px 20px; display:flex; flex-direction:column; }
+        .brand { font-size:20px; line-height:1.3; font-weight:800; margin:0 0 38px; }
+        .nav { display:grid; gap:8px; }
+        .nav a { display:flex; align-items:center; gap:12px; width:100%; min-height:48px; text-decoration:none; color:#5F5650; padding:0 16px; border-radius:8px; font-size:14px; font-weight:600; line-height:1.2; }
+        .nav a i { width:20px; height:20px; flex:0 0 20px; display:inline-flex; align-items:center; justify-content:center; font-size:16px; }
+        .nav a span { min-width:0; }
+        .nav a.active { background:var(--brown); color:#fff; }
+        .sidebar-footer { margin-top:auto; border-top:1px solid var(--line); padding-top:18px; display:grid; gap:8px; }
+        .logout { width:100%; min-height:48px; border:0; background:transparent; color:#D92D20; display:flex; align-items:center; gap:12px; font:inherit; font-size:14px; font-weight:600; line-height:1.2; cursor:pointer; padding:0 16px; border-radius:8px; }
+        .logout i { width:20px; height:20px; flex:0 0 20px; display:inline-flex; align-items:center; justify-content:center; font-size:16px; }
+        .topbar { height:66px; background:#fff; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:18px; padding:0 28px; }
+        .search-box { width:min(440px,100%); height:48px; background:#F5E7DE; border-radius:28px; display:flex; align-items:center; gap:12px; padding:0 18px; }
+        .search-box input { flex:1; border:0; outline:0; background:transparent; font:inherit; }
+        .topbar-right { display:flex; align-items:center; gap:12px; }
+        .stock-alert { display:flex; align-items:center; gap:8px; color:#C21D1D; background:#FFE5E5; padding:9px 15px; border-radius:999px; font-weight:700; font-size:13px; }
+        .profile { display:flex; align-items:center; gap:12px; padding-left:14px; border-left:1px solid var(--line); }
+        .profile h4 { margin:0; font-size:14px; }
+        .profile span { color:var(--muted); font-size:12px; }
+        .content { padding:28px; }
+        .header { display:flex; justify-content:space-between; gap:16px; align-items:flex-end; margin-bottom:22px; }
+        .header h1 { margin:0; font-size:26px; }
+        .header p { margin:6px 0 0; color:var(--muted); }
+        .toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .toolbar select, .toolbar button { height:42px; border:1px solid var(--line); background:#fff; border-radius:12px; padding:0 14px; font:inherit; font-weight:600; }
+        .toolbar button { cursor:pointer; color:var(--brown); }
+        .stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-bottom:22px; }
+        .stat-card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px; display:flex; gap:14px; align-items:center; }
+        .stat-icon { width:48px; height:48px; border-radius:14px; background:#F3E9E1; color:var(--brown); display:grid; place-items:center; font-size:20px; }
+        .stat-card span { color:var(--muted); font-size:13px; }
+        .stat-card h2 { margin:4px 0 0; font-size:24px; }
+        .table-card { background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+        table { width:100%; border-collapse:collapse; }
+        th { text-align:left; background:#F8EEE7; color:#7B6048; font-size:12px; letter-spacing:.04em; padding:15px 18px; }
+        td { padding:16px 18px; border-top:1px solid var(--line); vertical-align:middle; }
+        td strong { display:block; margin-bottom:3px; }
+        td small { color:var(--muted); }
+        .badge { display:inline-flex; align-items:center; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:800; }
+        .safe { background:#DCFCE7; color:var(--success); }
+        .warning { background:#FEF3C7; color:var(--warning); }
+        .danger { background:#FEE2E2; color:var(--danger); }
+        .empty { text-align:center; color:var(--muted); padding:42px 20px; }
+        .footer { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:14px 18px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+        .readonly-note { margin-top:18px; background:#FFF7ED; border:1px solid #FED7AA; color:#9A3412; border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:10px; font-weight:600; }
+        @media (max-width:900px) { .page { display:block; } .sidebar { border-right:0; border-bottom:1px solid var(--line); } .topbar, .header { height:auto; align-items:flex-start; flex-direction:column; padding:18px; } .content { padding:18px; } .stats { grid-template-columns:1fr; } table { min-width:720px; } .table-card { overflow:auto; } }
+    </style>
+
 </head>
 
 <body>
@@ -47,10 +105,11 @@ filename='css/cashier_inventory.css'
         <aside class="sidebar">
             <h1 class="brand">ARGOTELO SALATIGA</h1>
             <nav class="nav">
-                <a href="{{ url_for('cashier.pos') }}"><i class="bi bi-cash-register"></i><span>POS System</span></a>
+                <a href="{{ url_for('cashier.pos') }}"><i class="bi bi-calculator"></i><span>POS System</span></a>
                 <a href="{{ url_for('cashier.inventory') }}" class="active"><i class="bi bi-archive"></i><span>Inventory</span></a>
                 <a href="{{ url_for('cashier.transaction') }}"><i class="bi bi-receipt"></i><span>Riwayat Transaksi</span></a>
                 <a href="{{ url_for('cashier.attendance') }}"><i class="bi bi-receipt"></i><span>Absensi</span></a>
+
             </nav>
             <div class="sidebar-footer">
                 <button class="logout" id="logoutBtn" type="button"><i class="bi bi-box-arrow-right"></i><span>Sign Out</span></button>
@@ -70,7 +129,6 @@ filename='css/cashier_inventory.css'
                             <h4 id="cashierName">Memuat kasir...</h4>
                             <span id="cashierRole">KASIR</span>
                         </div>
-                        <img id="profileImage" src="{{ url_for('static', filename='images/profile.png') }}" alt="Profil">
                     </div>
                 </div>
             </header>
