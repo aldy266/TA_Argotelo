@@ -234,6 +234,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     function renderInventory() {
         if (!el.inventoryTable) return;
         const rows = filteredInventory();
+        const totalPages = Math.max(1, Math.ceil(rows.length / ITEMS_PER_PAGE));
+        state.page = Math.min(Math.max(1, state.page), totalPages);
         const start = (state.page - 1) * ITEMS_PER_PAGE;
         const pageRows = rows.slice(start, start + ITEMS_PER_PAGE);
 

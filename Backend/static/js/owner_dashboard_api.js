@@ -183,15 +183,35 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.attendanceInfo.textContent = `${stats.attendance_rate}% Kehadiran`;
     }
 
-    function renderChart(weeklySales) {
+    function renderChart(weeklySales = []) {
         const chart = document.querySelector(".chart-bars");
         if (!chart) return;
-        chart.innerHTML = weeklySales.map(item => `
+
+        if (!weeklySales.length) {
+            chart.classList.add("is-empty");
+            chart.innerHTML = "<div class=\"chart-empty\">Belum ada data penjualan.</div>";
+            return;
+        }
+
+        const hasSales = weeklySales.some(item => Number(item.total || 0) > 0);
+        chart.classList.toggle("is-empty", !hasSales);
+
+        chart.innerHTML = weeklySales.map(item => {
+            const total = Number(item.total || 0);
+            const height = total > 0 ? Math.max(Number(item.percentage || 0), 6) : 0;
+            return `
             <div class="chart-item">
-                <div class="bar" style="height:${Math.max(item.percentage, 4)}%"></div>
+                <div class="chart-bar-track">
+                    <div
+                        class="bar ${total > 0 ? "has-value" : ""}"
+                        style="height:${height}%"
+                        title="${escapeHtml(rupiah(total))}">
+                    </div>
+                </div>
                 <span>${escapeHtml(item.label)}</span>
             </div>
-        `).join("");
+        `;
+        }).join("") + (hasSales ? "" : "<div class=\"chart-empty\">Belum ada penjualan 7 hari terakhir.</div>");
     }
 
     function matchesSearch(values) {

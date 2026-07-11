@@ -17,6 +17,9 @@ href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.m
 <link rel="stylesheet"
 href="{{ url_for('static', filename='css/cashier_transaction.css') }}">
 
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/cashier_sidebar.css') }}">
+
 </head>
 
 
@@ -67,7 +70,7 @@ class="active">
 
 </a>
 
-<a href="{{ url_for('cashier.attendance') }}"><i class="bi bi-receipt"></i><span>Absensi</span></a>
+<a href="{{ url_for('cashier.attendance') }}"><i class="bi bi-calendar-check"></i><span>Absensi</span></a>
 
 
 </nav>
@@ -103,9 +106,7 @@ class="active">
 
 <i class="bi bi-search"></i>
 
-<input 
-id="transactionSearch"
-placeholder="Cari transaksi...">
+<input id="transactionSearch" placeholder="Cari transaksi...">
 
 </div>
 
@@ -143,6 +144,70 @@ placeholder="Cari transaksi...">
 
 
 </div>
+
+<section class="history-filter" aria-label="Filter riwayat transaksi">
+
+<div class="period-tabs" id="periodTabs">
+
+<button class="active" type="button" data-period="day">
+<i class="bi bi-calendar-day"></i>
+<span>Hari</span>
+</button>
+
+<button type="button" data-period="week">
+<i class="bi bi-calendar-week"></i>
+<span>Minggu</span>
+</button>
+
+<button type="button" data-period="month">
+<i class="bi bi-calendar-month"></i>
+<span>Bulan</span>
+</button>
+
+<button type="button" data-period="year">
+<i class="bi bi-calendar3"></i>
+<span>Tahun</span>
+</button>
+
+</div>
+
+<div class="period-field">
+
+<label id="periodLabel" for="periodInput">Tanggal</label>
+
+<div class="period-input">
+
+<i id="periodIcon" class="bi bi-calendar-day"></i>
+
+<input id="periodInput" type="date">
+
+</div>
+
+</div>
+
+<div class="period-actions">
+
+<button class="apply-period" id="applyPeriodBtn" type="button">
+<i class="bi bi-funnel"></i>
+<span>Terapkan</span>
+</button>
+
+<button class="reset-period" id="resetPeriodBtn" type="button">
+<i class="bi bi-arrow-counterclockwise"></i>
+<span>Reset</span>
+</button>
+
+</div>
+
+<div class="period-summary">
+
+<strong id="filterResultCount">0 transaksi</strong>
+
+<span id="filterPeriodText">Memuat periode...</span>
+
+</div>
+
+</section>
 
 
 

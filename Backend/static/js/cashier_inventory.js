@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", async () => {
     "use strict";
 
+    const ITEMS_PER_PAGE = 6;
+
     const el = {
         search: document.getElementById("inventorySearch"),
         stockFilter: document.getElementById("stockFilter"),
@@ -8,10 +10,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         refreshBtn: document.getElementById("refreshBtn"),
         table: document.getElementById("inventoryTable"),
         info: document.getElementById("inventoryInfo"),
+        pagination: document.getElementById("pagination"),
         totalItem: document.getElementById("totalItem"),
         criticalItem: document.getElementById("criticalItem"),
         safeItem: document.getElementById("safeItem"),
-        stockAlertText: document.getElementById("stockAlertText"),
         cashierName: document.getElementById("cashierName"),
         cashierRole: document.getElementById("cashierRole"),
         logoutBtn: document.getElementById("logoutBtn")
@@ -21,7 +23,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         rows: [],
         search: "",
         status: "ALL",
-        sort: "low"
+        sort: "low",
+        page: 1
     };
 
     function escapeHtml(value) {
@@ -83,16 +86,50 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.totalItem.textContent = state.rows.length;
         el.criticalItem.textContent = critical;
         el.safeItem.textContent = safe;
-        el.stockAlertText.textContent = critical
-            ? `${critical} stok kritis`
-            : "Semua stok aman";
+    }
+
+    function renderPagination(totalRows) {
+        if (!el.pagination) return;
+        const totalPages = Math.max(1, Math.ceil(totalRows / ITEMS_PER_PAGE));
+        state.page = Math.min(Math.max(1, state.page), totalPages);
+        el.pagination.innerHTML = "";
+
+        const createButton = (label, page, active = false, disabled = false) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = active ? "active" : "";
+            button.innerHTML = label;
+            button.disabled = disabled;
+            button.addEventListener("click", () => {
+                state.page = page;
+                render();
+            });
+            return button;
+        };
+
+        el.pagination.appendChild(createButton("&lt;", Math.max(1, state.page - 1), false, state.page === 1));
+        for (let page = 1; page <= totalPages; page += 1) {
+            if (page === 1 || page === totalPages || Math.abs(page - state.page) <= 1) {
+                el.pagination.appendChild(createButton(String(page), page, page === state.page));
+            } else if (page === state.page - 2 || page === state.page + 2) {
+                const dots = document.createElement("span");
+                dots.textContent = "...";
+                dots.className = "page-dots";
+                el.pagination.appendChild(dots);
+            }
+        }
+        el.pagination.appendChild(createButton("&gt;", Math.min(totalPages, state.page + 1), false, state.page === totalPages));
     }
 
     function render() {
         const rows = filteredRows();
+        const totalPages = Math.max(1, Math.ceil(rows.length / ITEMS_PER_PAGE));
+        state.page = Math.min(Math.max(1, state.page), totalPages);
+        const start = (state.page - 1) * ITEMS_PER_PAGE;
+        const pageRows = rows.slice(start, start + ITEMS_PER_PAGE);
         updateStats();
 
-        if (!rows.length) {
+        if (!pageRows.length) {
             el.table.innerHTML = `
                 <tr>
                     <td colspan="5" class="empty">
@@ -101,10 +138,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </tr>
             `;
             el.info.textContent = "Tidak ada data ditampilkan";
+            renderPagination(rows.length);
             return;
         }
 
-        el.table.innerHTML = rows.map(item => {
+        el.table.innerHTML = pageRows.map(item => {
             const status = stockStatus(item);
             return `
                 <tr>
@@ -119,7 +157,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </tr>
             `;
         }).join("");
-        el.info.textContent = `Menampilkan ${rows.length} dari ${state.rows.length} data inventory`;
+        const end = Math.min(start + pageRows.length, rows.length);
+        el.info.textContent = `Menampilkan ${start + 1}-${end} dari ${rows.length} data inventory`;
+        renderPagination(rows.length);
     }
 
     async function loadUser() {
@@ -139,14 +179,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     function bindEvents() {
         el.search.addEventListener("input", event => {
             state.search = event.target.value;
+            state.page = 1;
             render();
         });
         el.stockFilter.addEventListener("change", event => {
             state.status = event.target.value;
+            state.page = 1;
             render();
         });
         el.sortSelect.addEventListener("change", event => {
             state.sort = event.target.value;
+            state.page = 1;
             render();
         });
         el.refreshBtn.addEventListener("click", () => {

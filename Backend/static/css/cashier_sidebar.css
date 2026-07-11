@@ -1,0 +1,148 @@
+/* Shared cashier sidebar rules. Loaded after page CSS for consistent sizing. */
+.sidebar{
+    width:280px;
+    min-width:280px;
+    background:#fff;
+    border-right:1px solid #E8DDD5;
+    padding:28px 20px;
+    box-shadow:none;
+}
+
+.brand,
+.sidebar-logo{
+    margin:0 0 38px;
+}
+
+.brand,
+.sidebar-logo h2{
+    color:#2F1D0F;
+    font-size:20px;
+    font-weight:800;
+    line-height:1.3;
+    white-space:nowrap;
+}
+
+.sidebar-logo h2{
+    margin:0;
+}
+
+.nav,
+.sidebar-menu{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.nav a,
+.sidebar-menu a{
+    width:100%;
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:0 16px;
+    border-radius:8px;
+    color:#5F5650;
+    text-decoration:none;
+    font-size:14px;
+    font-weight:600;
+    line-height:1.2;
+    box-shadow:none;
+}
+
+.nav a i,
+.sidebar-menu a i{
+    width:20px;
+    height:20px;
+    flex:0 0 20px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+}
+
+.nav a span,
+.sidebar-menu a span{
+    min-width:0;
+    white-space:nowrap;
+}
+
+.nav a:hover,
+.sidebar-menu a:hover{
+    background:#F5E7DE;
+    color:#4B2E13;
+}
+
+.nav a.active,
+.nav a.active:hover,
+.sidebar-menu a.active,
+.sidebar-menu a.active:hover{
+    background:#4B2E13;
+    color:#fff;
+    box-shadow:none;
+}
+
+.sidebar-footer{
+    margin-top:auto;
+    border-top:1px solid #E8DDD5;
+    padding-top:18px;
+    display:grid;
+    gap:8px;
+}
+
+.sidebar-footer button,
+.sidebar-footer .logout{
+    width:100%;
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:0 16px;
+    border:0;
+    border-radius:8px;
+    background:transparent;
+    color:#D92D20;
+    font-family:"Poppins",sans-serif;
+    font-size:14px;
+    font-weight:600;
+    line-height:1.2;
+    text-decoration:none;
+    cursor:pointer;
+}
+
+.sidebar-footer button i,
+.sidebar-footer .logout i{
+    width:20px;
+    height:20px;
+    flex:0 0 20px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+}
+
+.sidebar-footer button:hover,
+.sidebar-footer .logout:hover{
+    background:#F5E7DE;
+}
+
+@media(max-width:900px){
+    .pos-page > .sidebar,
+    .page > .sidebar{
+        width:100%;
+        min-width:0;
+        border-right:0;
+        border-bottom:1px solid #E8DDD5;
+    }
+}
+
+@media(max-width:768px){
+    .wrapper > .sidebar{
+        display:none;
+    }
+
+    .wrapper > .main-content{
+        width:100%;
+        margin-left:0;
+    }
+}

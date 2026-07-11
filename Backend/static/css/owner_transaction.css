@@ -3133,6 +3133,7 @@ body{
 .pagination {
     display: flex;
     align-items: center;
+    justify-content:flex-end;
     gap: 8px;
     margin-top: 15px;
 }
@@ -3140,16 +3141,24 @@ body{
 
 .pagination button {
 
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
+    flex:0 0 36px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
 
-    border: none;
-    border-radius: 10px;
+    border:1px solid #E7DDD6;
+    border-radius: 8px;
 
-    background: #f3ebe6;
-    color: #5a2f0d;
+    background:#fff;
+    color:#4B2E13;
 
+    font-family:"Poppins",sans-serif;
+    font-size:13px;
     font-weight: 600;
+    line-height:1;
 
     cursor: pointer;
 
@@ -3158,7 +3167,7 @@ body{
 }
 
 
-.pagination button:hover {
+.pagination button:hover:not(:disabled) {
 
     background: #5a2f0d;
     color: white;
@@ -3179,6 +3188,18 @@ body{
     opacity: 0.4;
     cursor: not-allowed;
 
+}
+
+.pagination .page-dots{
+    min-width:24px;
+    height:36px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    color:#8A7568;
+    font-size:13px;
+    font-weight:600;
+    line-height:1;
 }
 
 /* =========================

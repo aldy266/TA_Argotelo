@@ -140,6 +140,18 @@ def decimal_quantity(value, field_name):
     return result
 
 
+def decimal_money(value, field_name):
+    try:
+        result = Decimal(str(value or 0).replace(",", "."))
+    except (InvalidOperation, TypeError):
+        raise ValueError(f"{field_name} tidak valid")
+
+    if result < 0:
+        raise ValueError(f"{field_name} tidak boleh negatif")
+
+    return result.quantize(Decimal("1"))
+
+
 def format_quantity(value):
     value = Decimal(value or 0)
     normalized = value.normalize()
@@ -248,6 +260,8 @@ def serialize_transaction(transaction, include_items=False):
         "tax": rupiah_value(transaction.tax),
         "total": rupiah_value(transaction.total),
         "payment_method": transaction.payment_method,
+        "cash_received": rupiah_value(transaction.cash_received),
+        "cash_change": rupiah_value(transaction.cash_change),
         "status": transaction.status.lower(),
         "items_summary": item_summary or "-",
         "items": items,
@@ -377,6 +391,7 @@ def dashboard_api():
 
     weekly_sales = []
     max_sales = Decimal("0")
+    day_labels = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"]
     for offset in range(6, -1, -1):
         day = today - timedelta(days=offset)
         total = db.session.query(func.coalesce(func.sum(Transaction.total), 0)).filter(
@@ -387,7 +402,7 @@ def dashboard_api():
         max_sales = max(max_sales, Decimal(total))
         weekly_sales.append({
             "date": day.isoformat(),
-            "label": day.strftime("%a"),
+            "label": day_labels[day.weekday()],
             "total": rupiah_value(total),
             "percentage": 0,
         })
@@ -755,7 +770,9 @@ def pos_checkout():
         return api_error("Keranjang masih kosong", 400)
     if not payment_method:
         return api_error("Metode pembayaran wajib dipilih", 400)
-    if payment_method not in {"CASH", "QRIS", "EWALLET", "DEBIT"}:
+    if payment_method in {"QRIS", "EWALLET"}:
+        payment_method = "CASHLESS"
+    if payment_method not in {"CASH", "CASHLESS", "DEBIT"}:
         return api_error("Metode pembayaran tidak valid", 400)
 
     subtotal = Decimal("0")
@@ -802,6 +819,19 @@ def pos_checkout():
     tax_rate = Decimal(str(current_app.config.get("POS_TAX_RATE", 0)))
     tax = (subtotal * tax_rate).quantize(Decimal("1")) if tax_rate else Decimal("0")
     total = subtotal + tax
+    cash_received = None
+    cash_change = None
+
+    if payment_method == "CASH":
+        try:
+            cash_received = decimal_money(payload.get("cash_received"), "Uang diterima")
+        except ValueError as error:
+            return api_error(str(error), 400)
+
+        if cash_received < total:
+            return api_error("Uang diterima kurang dari total pembayaran", 400)
+
+        cash_change = cash_received - total
 
     transaction = Transaction(
         transaction_number=f"ARG-{waktu_wib().strftime('%Y%m%d%H%M%S%f')}",
@@ -811,6 +841,8 @@ def pos_checkout():
         tax=tax,
         total=total,
         payment_method=payment_method,
+        cash_received=cash_received,
+        cash_change=cash_change,
         status="COMPLETED",
     )
 

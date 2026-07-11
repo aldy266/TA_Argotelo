@@ -29,8 +29,6 @@
         .search-box { width:min(420px,100%); height:48px; background:#F5E7DE; border-radius:28px; display:flex; align-items:center; gap:12px; padding:0 18px; }
         .search-box input { flex:1; border:0; outline:0; background:transparent; font:inherit; }
         .topbar-right { display:flex; align-items:center; gap:12px; }
-        .stock-alert { display:flex; align-items:center; gap:8px; color:#C21D1D; background:#FFE5E5; padding:9px 15px; border-radius:999px; font-weight:700; font-size:13px; }
-        .icon-button { width:42px; height:42px; border:0; border-radius:50%; background:#fff; box-shadow:0 8px 20px rgba(0,0,0,.06); cursor:pointer; }
         .profile { display:flex; align-items:center; gap:12px; padding-left:14px; border-left:1px solid var(--line); }
         .profile h4 { margin:0; font-size:14px; }
         .profile span { color:var(--muted); font-size:12px; }
@@ -72,18 +70,55 @@
         .summary { border-radius:18px; background:#FFFDFB; box-shadow:0 18px 38px rgba(75,46,19,.08); padding:20px; display:grid; gap:12px; }
         .summary-row { display:flex; justify-content:space-between; color:#5E5148; }
         .summary-total { border-top:1px solid var(--line); padding-top:12px; display:flex; justify-content:space-between; align-items:center; font-size:28px; font-weight:800; }
-        .payment-options { display:flex; gap:8px; flex-wrap:wrap; }
-        .payment-option { border:1px solid var(--line); background:#fff; border-radius:999px; padding:10px 14px; cursor:pointer; font-weight:600; }
-        .payment-option.active { background:var(--brown); color:#fff; border-color:var(--brown); }
-        .checkout-btn { height:56px; border:0; border-radius:14px; background:var(--brown); color:#fff; font:inherit; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 12px 24px rgba(75,46,19,.24); }
-        .checkout-btn:disabled { opacity:.55; cursor:not-allowed; }
+        .payment-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:6px; }
+        .payment-option { position:relative; min-height:44px; border:1px solid var(--line); background:#fff; border-radius:999px; padding:0 14px; cursor:pointer; font:inherit; font-size:13px; font-weight:700; color:#4B4038; display:inline-flex; align-items:center; justify-content:center; gap:8px; overflow:hidden; transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease, color .22s ease; }
+        .payment-option::after { content:""; position:absolute; inset:-35%; background:radial-gradient(circle, rgba(255,255,255,.42), transparent 58%); opacity:0; transform:scale(.7); transition:opacity .22s ease, transform .22s ease; pointer-events:none; }
+        .payment-option i { position:relative; z-index:1; font-size:15px; transition:transform .22s ease; }
+        .payment-option span { position:relative; z-index:1; white-space:nowrap; }
+        .payment-option:hover { transform:translateY(-2px); border-color:#C9AD99; box-shadow:0 10px 22px rgba(75,46,19,.12); }
+        .payment-option:hover i { transform:translateY(-1px) scale(1.08); }
+        .payment-option.active { background:#4B2E13; color:#fff; border-color:#4B2E13; box-shadow:0 12px 24px rgba(75,46,19,.22); }
+        .payment-option.active::after { opacity:0; transform:scale(.7); }
+        .payment-option.payment-option--tap { animation:paymentButtonPop .34s ease; }
+        .payment-option.payment-option--tap i { animation:paymentIconPop .34s ease; }
+        .cash-calculator { border:1px solid var(--line); background:#FFF8F2; border-radius:14px; padding:14px; display:grid; gap:12px; }
+        .cash-calculator[hidden] { display:none; }
+        .cash-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+        .cash-head strong { font-size:14px; }
+        .cash-head span { color:var(--muted); font-size:12px; }
+        .cash-input-row { display:grid; gap:6px; }
+        .cash-input-row label { color:#5E5148; font-size:12px; font-weight:700; }
+        .cash-input-wrap { height:44px; border:1px solid #DECBBE; background:#fff; border-radius:12px; display:flex; align-items:center; gap:8px; padding:0 12px; }
+        .cash-input-wrap span { color:var(--brown); font-weight:800; }
+        .cash-input-wrap input { width:100%; border:0; outline:0; font:inherit; font-weight:700; color:var(--text); }
+        .cash-quick { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+        .cash-quick button { min-height:36px; border:1px solid #DECBBE; background:#fff; border-radius:10px; color:var(--brown); font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+        .cash-quick button:hover { background:#F5E7DE; }
+        .cash-result { border-top:1px solid var(--line); padding-top:10px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+        .cash-result span { color:#5E5148; font-size:13px; }
+        .cash-result strong { font-size:18px; color:var(--success); }
+        .cash-result.negative strong { color:var(--danger); }
+        .cash-hint { min-height:17px; color:var(--muted); font-size:12px; font-weight:600; }
+        .cash-hint.error { color:var(--danger); }
+        .checkout-btn { position:relative; height:56px; border:0; border-radius:14px; background:#4B2E13; color:#fff; font:inherit; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 12px 24px rgba(75,46,19,.24); overflow:hidden; transition:transform .22s ease, box-shadow .22s ease, background .22s ease; }
+        .checkout-btn::after { content:""; position:absolute; inset:-40% -70%; background:linear-gradient(115deg, transparent 34%, rgba(255,255,255,.28) 50%, transparent 66%); transform:translateX(-60%); opacity:0; pointer-events:none; }
+        .checkout-btn:not(:disabled) { animation:checkoutBreath 2.6s ease-in-out infinite; }
+        .checkout-btn:not(:disabled):hover { transform:translateY(-2px); box-shadow:0 16px 30px rgba(75,46,19,.30); }
+        .checkout-btn:not(:disabled):hover::after { animation:checkoutShine .72s ease; }
+        .checkout-btn:not(:disabled):active { transform:translateY(1px) scale(.985); box-shadow:0 8px 18px rgba(75,46,19,.22); }
+        .checkout-btn:disabled { opacity:.55; cursor:not-allowed; animation:none; }
         .message { min-height:22px; color:var(--success); font-weight:600; }
         .message.error { color:var(--danger); }
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-        @media (prefers-reduced-motion:reduce) { .menu-card { animation:none; transition:none; } .menu-card img { transition:none; } }
+        @keyframes paymentButtonPop { 0% { transform:scale(.96); } 55% { transform:scale(1.04); } 100% { transform:scale(1); } }
+        @keyframes paymentIconPop { 0% { transform:scale(.82) rotate(-8deg); } 70% { transform:scale(1.16) rotate(4deg); } 100% { transform:scale(1) rotate(0); } }
+        @keyframes checkoutBreath { 0%, 100% { box-shadow:0 12px 24px rgba(75,46,19,.24); } 50% { box-shadow:0 16px 30px rgba(75,46,19,.32); } }
+        @keyframes checkoutShine { 0% { opacity:0; transform:translateX(-60%); } 25% { opacity:1; } 100% { opacity:0; transform:translateX(60%); } }
+        @media (prefers-reduced-motion:reduce) { .menu-card, .payment-option, .payment-option.payment-option--tap, .payment-option.payment-option--tap i, .checkout-btn { animation:none; transition:none; } .menu-card img, .payment-option i { transition:none; } }
         @media (max-width:1100px) { .pos-page { grid-template-columns:280px minmax(0,1fr); } .cart { grid-column:2; border-left:0; border-top:1px solid var(--line); } }
         @media (max-width:760px) { .pos-page { display:block; } .sidebar { position:static; } .topbar, .section-head { align-items:flex-start; flex-direction:column; height:auto; padding:18px; } .cart { border-left:0; } }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cashier_sidebar.css') }}">
 </head>
 
 <body>
@@ -94,7 +129,7 @@
                 <a href="{{ url_for('cashier.pos') }}" class="active"><i class="bi bi-calculator"></i><span>POS System</span></a>
                 <a href="{{ url_for('cashier.inventory') }}"><i class="bi bi-archive"></i><span>Inventory</span></a>
                 <a href="{{ url_for('cashier.transaction') }}"><i class="bi bi-receipt"></i><span>Riwayat Transaksi</span></a>
-                <a href="{{ url_for('cashier.attendance') }}"><i class="bi bi-receipt"></i><span>Absensi</span></a>
+                <a href="{{ url_for('cashier.attendance') }}"><i class="bi bi-calendar-check"></i><span>Absensi</span></a>
             </nav>
             <div class="sidebar-footer">
                 <button id="logoutBtn" type="button"><i class="bi bi-box-arrow-right"></i><span>Sign Out</span></button>
@@ -108,8 +143,6 @@
                     <input id="menuSearch" type="search" placeholder="Search Menu..." autocomplete="off">
                 </div>
                 <div class="topbar-right">
-                    <div class="stock-alert"><i class="bi bi-exclamation-triangle"></i><span id="stockAlertText">Memuat stok...</span></div>
-                    <button class="icon-button" type="button"><i class="bi bi-bell"></i></button>
                     <div class="profile">
                         <div>
                             <h4 id="cashierName">Memuat kasir...</h4>
@@ -154,10 +187,28 @@
                 <div>
                     <small>Metode Pembayaran</small>
                     <div class="payment-options" id="paymentOptions">
-                        <button class="payment-option active" type="button" data-method="CASH"><i class="bi bi-cash-stack"></i> Cash</button>
-                        <button class="payment-option" type="button" data-method="QRIS"><i class="bi bi-qr-code"></i> QRIS</button>
-                        <button class="payment-option" type="button" data-method="EWALLET"><i class="bi bi-wallet2"></i> E-Wallet</button>
+                        <button class="payment-option active" type="button" data-method="CASH"><i class="bi bi-cash-stack"></i><span>Cash</span></button>
+                        <button class="payment-option" type="button" data-method="CASHLESS"><i class="bi bi-qr-code-scan"></i><span>Cashless</span></button>
                     </div>
+                </div>
+                <div class="cash-calculator" id="cashCalculator">
+                    <div class="cash-head">
+                        <strong>Kalkulator Kembalian</strong>
+                        <span>Cash</span>
+                    </div>
+                    <div class="cash-input-row">
+                        <label for="cashReceived">Uang diterima</label>
+                        <div class="cash-input-wrap">
+                            <span>Rp</span>
+                            <input id="cashReceived" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="cash-quick" id="cashQuickButtons"></div>
+                    <div class="cash-result" id="cashResult">
+                        <span>Kembalian</span>
+                        <strong id="cashChange">Rp 0</strong>
+                    </div>
+                    <div class="cash-hint" id="cashHint">Masukkan nominal uang pelanggan.</div>
                 </div>
                 <button class="checkout-btn" id="checkoutBtn" type="button">Bayar Sekarang</button>
                 <p class="message" id="checkoutMessage"></p>

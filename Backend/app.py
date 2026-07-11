@@ -195,9 +195,58 @@ def remove_legacy_staff_schedule_unique_constraint():
         print(f"Skip staff schedule constraint migration: {error}")
 
 
+def ensure_transaction_cash_columns():
+    dialect = db.engine.dialect.name
+    required_columns = {
+        "cash_received": "DECIMAL(12, 2) NULL",
+        "cash_change": "DECIMAL(12, 2) NULL",
+    }
+
+    try:
+        if dialect in {"mysql", "mariadb"}:
+            existing = {
+                row[0]
+                for row in db.session.execute(text("""
+                    SELECT COLUMN_NAME
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = 'transactions'
+                      AND COLUMN_NAME IN ('cash_received', 'cash_change')
+                """)).fetchall()
+            }
+
+            for column, definition in required_columns.items():
+                if column not in existing:
+                    db.session.execute(text(
+                        f"ALTER TABLE transactions ADD COLUMN {column} {definition}"
+                    ))
+            db.session.commit()
+            return
+
+        if dialect == "sqlite":
+            existing = {
+                row[1]
+                for row in db.session.execute(text(
+                    "PRAGMA table_info('transactions')"
+                )).fetchall()
+            }
+
+            for column in required_columns:
+                if column not in existing:
+                    db.session.execute(text(
+                        f"ALTER TABLE transactions ADD COLUMN {column} NUMERIC(12, 2)"
+                    ))
+            db.session.commit()
+            return
+    except Exception as error:
+        db.session.rollback()
+        print(f"Skip transaction cash column migration: {error}")
+
+
 def initialize_database():
     db.create_all()
     remove_legacy_staff_schedule_unique_constraint()
+    ensure_transaction_cash_columns()
     seed_default_roles()
     seed_default_shifts()
 

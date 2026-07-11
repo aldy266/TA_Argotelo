@@ -570,11 +570,68 @@ tbody tr:hover{
 
     justify-content:space-between;
 
+    align-items:center;
+
+    gap:16px;
+
 
     color:#9A8577;
 
     font-size:13px;
 
+}
+
+.pagination{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.pagination button{
+    width:36px;
+    height:36px;
+    flex:0 0 36px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    border:1px solid #E2CFC2;
+    background:#fff;
+    border-radius:8px;
+    color:#4B2E13;
+    cursor:pointer;
+    font-family:"Poppins",sans-serif;
+    font-size:13px;
+    font-weight:600;
+    line-height:1;
+    transition:.25s;
+}
+
+.pagination button:hover:not(:disabled){
+    background:#F6E8DD;
+}
+
+.pagination button.active{
+    background:#5A2E0C;
+    border-color:#5A2E0C;
+    color:#fff;
+}
+
+.pagination button:disabled{
+    cursor:not-allowed;
+    opacity:.55;
+}
+
+.page-dots{
+    min-width:24px;
+    height:36px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    color:#9A8577;
+    font-size:13px;
+    font-weight:600;
+    line-height:1;
 }
 
 

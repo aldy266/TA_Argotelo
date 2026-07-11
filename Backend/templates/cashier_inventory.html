@@ -66,7 +66,6 @@ filename='css/cashier_inventory.css'
         .search-box { width:min(440px,100%); height:48px; background:#F5E7DE; border-radius:28px; display:flex; align-items:center; gap:12px; padding:0 18px; }
         .search-box input { flex:1; border:0; outline:0; background:transparent; font:inherit; }
         .topbar-right { display:flex; align-items:center; gap:12px; }
-        .stock-alert { display:flex; align-items:center; gap:8px; color:#C21D1D; background:#FFE5E5; padding:9px 15px; border-radius:999px; font-weight:700; font-size:13px; }
         .profile { display:flex; align-items:center; gap:12px; padding-left:14px; border-left:1px solid var(--line); }
         .profile h4 { margin:0; font-size:14px; }
         .profile span { color:var(--muted); font-size:12px; }
@@ -97,6 +96,7 @@ filename='css/cashier_inventory.css'
         .readonly-note { margin-top:18px; background:#FFF7ED; border:1px solid #FED7AA; color:#9A3412; border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:10px; font-weight:600; }
         @media (max-width:900px) { .page { display:block; } .sidebar { border-right:0; border-bottom:1px solid var(--line); } .topbar, .header { height:auto; align-items:flex-start; flex-direction:column; padding:18px; } .content { padding:18px; } .stats { grid-template-columns:1fr; } table { min-width:720px; } .table-card { overflow:auto; } }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cashier_sidebar.css') }}">
 
 </head>
 
@@ -108,7 +108,7 @@ filename='css/cashier_inventory.css'
                 <a href="{{ url_for('cashier.pos') }}"><i class="bi bi-calculator"></i><span>POS System</span></a>
                 <a href="{{ url_for('cashier.inventory') }}" class="active"><i class="bi bi-archive"></i><span>Inventory</span></a>
                 <a href="{{ url_for('cashier.transaction') }}"><i class="bi bi-receipt"></i><span>Riwayat Transaksi</span></a>
-                <a href="{{ url_for('cashier.attendance') }}"><i class="bi bi-receipt"></i><span>Absensi</span></a>
+                <a href="{{ url_for('cashier.attendance') }}"><i class="bi bi-calendar-check"></i><span>Absensi</span></a>
 
             </nav>
             <div class="sidebar-footer">
@@ -123,7 +123,6 @@ filename='css/cashier_inventory.css'
                     <input id="inventorySearch" type="search" placeholder="Cari bahan baku..." autocomplete="off">
                 </div>
                 <div class="topbar-right">
-                    <div class="stock-alert"><i class="bi bi-exclamation-triangle"></i><span id="stockAlertText">Memuat stok...</span></div>
                     <div class="profile">
                         <div>
                             <h4 id="cashierName">Memuat kasir...</h4>
@@ -187,7 +186,11 @@ filename='css/cashier_inventory.css'
                     </table>
                     <div class="footer">
                         <span id="inventoryInfo">Memuat data inventory</span>
-                        <span>Read-only</span>
+                        <div
+                            class="pagination"
+                            id="pagination"
+                            aria-label="Pagination inventory">
+                        </div>
                     </div>
                 </div>
 

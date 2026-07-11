@@ -705,35 +705,84 @@ body{
 .chart-bars{
     height:100%;
 
-    display:flex;
-    justify-content:space-evenly;
-    align-items:flex-end;
+    display:grid;
+    grid-template-columns:repeat(7,minmax(0,1fr));
+    align-items:stretch;
+    gap:12px;
+
+    position:relative;
 }
 
 .chart-item{
-    display:flex;
-    flex-direction:column;
+    min-width:0;
+    height:100%;
+
+    display:grid;
+    grid-template-rows:minmax(0,1fr) 18px;
     align-items:center;
-    gap:10px;
+    gap:8px;
+}
+
+.chart-bar-track{
+    width:100%;
+    height:100%;
+
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+
+    padding-top:12px;
 }
 
 .chart-item span{
     font-size:13px;
     color:#777;
+    line-height:1;
+    text-align:center;
 }
 
 .bar{
-    width:42px;
+    width:min(42px,70%);
 
     background:var(--primary);
 
     border-radius:10px 10px 0 0;
 
-    transition:.3s;
+    box-shadow:0 10px 18px rgba(75,46,19,.16);
+
+    transition:height .3s ease, opacity .3s ease;
+}
+
+.bar.has-value{
+    min-height:8px;
 }
 
 .bar:hover{
     opacity:.8;
+}
+
+.chart-empty{
+    position:absolute;
+    left:50%;
+    top:46%;
+    transform:translate(-50%,-50%);
+
+    width:max-content;
+    max-width:80%;
+    padding:10px 14px;
+
+    border:1px solid #E7DDD6;
+    border-radius:10px;
+    background:rgba(255,255,255,.78);
+    color:#7A6E66;
+
+    font-size:13px;
+    font-weight:600;
+    text-align:center;
+}
+
+.chart-bars.is-empty .bar{
+    box-shadow:none;
 }
 
 /* Tinggi Bar */

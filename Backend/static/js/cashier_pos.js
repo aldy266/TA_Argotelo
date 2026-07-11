@@ -16,9 +16,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const logoutBtn = document.getElementById("logoutBtn");
     const cashierName = document.getElementById("cashierName");
     const cashierRole = document.getElementById("cashierRole");
-    const stockAlertText = document.getElementById("stockAlertText");
     const checkoutMessage = document.getElementById("checkoutMessage");
     const menuCount = document.getElementById("menuCount");
+    const cashCalculator = document.getElementById("cashCalculator");
+    const cashReceived = document.getElementById("cashReceived");
+    const cashQuickButtons = document.getElementById("cashQuickButtons");
+    const cashResult = document.getElementById("cashResult");
+    const cashChange = document.getElementById("cashChange");
+    const cashHint = document.getElementById("cashHint");
 
     let menus = [];
     let paymentMethod = "CASH";
@@ -30,6 +35,92 @@ document.addEventListener("DOMContentLoaded", async () => {
             currency: "IDR",
             maximumFractionDigits: 0
         }).format(Number(value || 0));
+    }
+
+    function compactRupiah(value) {
+        return rupiah(value).replace("Rp", "").trim();
+    }
+
+    function numericValue(value) {
+        return Number(String(value || "").replace(/[^\d]/g, "")) || 0;
+    }
+
+    function getCartTotals() {
+        const items = Array.from(cart.values());
+        const subtotal = items.reduce((sum, item) => sum + Number(item.menu.price) * item.quantity, 0);
+        const tax = Math.round(subtotal * 0.10);
+        return {
+            items,
+            subtotal,
+            tax,
+            total: subtotal + tax
+        };
+    }
+
+    function formatCashInput() {
+        if (!cashReceived) return;
+        const value = numericValue(cashReceived.value);
+        cashReceived.value = value ? new Intl.NumberFormat("id-ID").format(value) : "";
+    }
+
+    function suggestedCashAmounts(total) {
+        if (!total) return [20000, 50000, 100000];
+        const suggestions = new Set([total]);
+        [5000, 10000, 20000, 50000].forEach(step => {
+            suggestions.add(Math.ceil(total / step) * step);
+        });
+        return [...suggestions]
+            .filter(value => value >= total)
+            .sort((a, b) => a - b)
+            .slice(0, 6);
+    }
+
+    function renderCashQuickButtons(total) {
+        if (!cashQuickButtons) return;
+        cashQuickButtons.innerHTML = suggestedCashAmounts(total).map(amount => `
+            <button type="button" data-cash="${amount}">
+                ${amount === total ? "Uang Pas" : compactRupiah(amount)}
+            </button>
+        `).join("");
+    }
+
+    function updateCheckoutButton(total = getCartTotals().total) {
+        const hasItems = cart.size > 0;
+        const paid = numericValue(cashReceived?.value);
+        const cashInsufficient = paymentMethod === "CASH" && hasItems && paid < total;
+        checkoutBtn.disabled = !hasItems || cashInsufficient;
+    }
+
+    function updateCashCalculator() {
+        if (!cashCalculator) return;
+        const { total } = getCartTotals();
+        const isCash = paymentMethod === "CASH";
+        cashCalculator.hidden = !isCash;
+        renderCashQuickButtons(total);
+
+        if (!isCash) {
+            updateCheckoutButton(total);
+            return;
+        }
+
+        const paid = numericValue(cashReceived?.value);
+        const change = Math.max(paid - total, 0);
+        const shortage = Math.max(total - paid, 0);
+        if (cashChange) cashChange.textContent = rupiah(change);
+        cashResult?.classList.toggle("negative", shortage > 0 && paid > 0);
+        if (cashHint) {
+            cashHint.classList.toggle("error", shortage > 0 && paid > 0);
+            if (!cart.size) {
+                cashHint.textContent = "Pilih menu untuk mulai menghitung.";
+            } else if (!paid) {
+                cashHint.textContent = "Masukkan nominal uang pelanggan.";
+            } else if (shortage > 0) {
+                cashHint.textContent = `Uang kurang ${rupiah(shortage)}.`;
+            } else {
+                cashHint.textContent = "Uang cukup. Kembalian siap diberikan.";
+            }
+        }
+        updateCheckoutButton(total);
     }
 
     function escapeHtml(value) {
@@ -68,18 +159,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         menus = result.data || [];
         renderCategoryOptions();
         renderMenus();
-    }
-
-    async function loadNotifications() {
-        try {
-            const result = await api("/api/notification");
-            const notifications = result.data || [];
-            stockAlertText.textContent = notifications.length
-                ? `${notifications.length} Stok Menipis`
-                : "Semua stok aman";
-        } catch {
-            stockAlertText.textContent = "Status stok tidak tersedia";
-        }
     }
 
     function renderCategoryOptions() {
@@ -153,7 +232,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderCart() {
-        const items = Array.from(cart.values());
+        const { items, subtotal, tax, total } = getCartTotals();
         if (!items.length) {
             cartList.innerHTML = "<div class=\"empty\"><i class=\"bi bi-cart-x\"></i>Keranjang masih kosong.<br>Pilih menu untuk memulai.</div>";
         } else {
@@ -178,12 +257,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             `).join("");
         }
 
-        const subtotal = items.reduce((sum, item) => sum + Number(item.menu.price) * item.quantity, 0);
-        const tax = Math.round(subtotal * 0.10);
         subtotalEl.textContent = rupiah(subtotal);
         taxEl.textContent = rupiah(tax);
-        totalEl.textContent = rupiah(subtotal + tax);
-        checkoutBtn.disabled = !items.length;
+        totalEl.textContent = rupiah(total);
+        updateCashCalculator();
     }
 
     function setCheckoutMessage(message, isError = false) {
@@ -200,6 +277,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             menu_item_id: item.menu.id,
             quantity: item.quantity
         }));
+        const { total } = getCartTotals();
 
 
         if (!items.length) {
@@ -227,6 +305,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             // ==========================
 
             if (paymentMethod === "CASH") {
+                const paid = numericValue(cashReceived?.value);
+                if (paid < total) {
+                    setCheckoutMessage(
+                        `Uang diterima kurang ${rupiah(total - paid)}`,
+                        true
+                    );
+                    updateCashCalculator();
+                    return;
+                }
 
 
                 const result = await api("/api/pos/checkout", {
@@ -238,6 +325,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                         items,
 
                         payment_method: paymentMethod,
+
+                        cash_received: paid,
 
                         customer_name: customerName.value
 
@@ -253,6 +342,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
                 customerName.value = "";
+                if (cashReceived) cashReceived.value = "";
+                updateCashCalculator();
 
 
                 window.open(
@@ -272,12 +363,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
             // ==========================
-            // QRIS / EWALLET MIDTRANS
+            // CASHLESS MIDTRANS
             // ==========================
 
 
             // ==========================
-            // QRIS / EWALLET MIDTRANS
+            // CASHLESS MIDTRANS
             // ==========================
 
             if (typeof snap === "undefined") {
@@ -298,10 +389,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     body: JSON.stringify({
 
-                        total: Number(
-                            totalEl.textContent
-                                .replace(/[^\d]/g, "")
-                        ),
+                        total,
 
                         customer_name:
                             customerName.value || "Umum"
@@ -347,6 +435,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     renderCart();
 
                     customerName.value = "";
+                    if (cashReceived) cashReceived.value = "";
+                    updateCashCalculator();
 
 
 
@@ -399,7 +489,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         } finally {
 
 
-            checkoutBtn.disabled = false;
+            updateCheckoutButton();
 
 
         }
@@ -424,7 +514,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     menuSearch.addEventListener("input", renderMenus);
     categoryFilter?.addEventListener("change", renderMenus);
     refreshBtn?.addEventListener("click", () => {
-        Promise.all([loadMenus(), loadNotifications()]).catch(error => setCheckoutMessage(error.message, true));
+        loadMenus().catch(error => setCheckoutMessage(error.message, true));
     });
     paymentOptions?.addEventListener("click", event => {
 
@@ -450,10 +540,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
         button.classList.add("active");
+        button.classList.remove("payment-option--tap");
+        void button.offsetWidth;
+        button.classList.add("payment-option--tap");
+        updateCashCalculator();
 
+    });
+    paymentOptions?.addEventListener("animationend", event => {
+        const button = event.target.closest(".payment-option");
+        button?.classList.remove("payment-option--tap");
+    });
+    cashReceived?.addEventListener("input", () => {
+        formatCashInput();
+        updateCashCalculator();
+        setCheckoutMessage("");
+    });
+    cashQuickButtons?.addEventListener("click", event => {
+        const button = event.target.closest("[data-cash]");
+        if (!button || !cashReceived) return;
+        cashReceived.value = new Intl.NumberFormat("id-ID").format(Number(button.dataset.cash || 0));
+        updateCashCalculator();
+        setCheckoutMessage("");
     });
     resetCartBtn.addEventListener("click", () => {
         cart.clear();
+        if (cashReceived) cashReceived.value = "";
         renderCart();
         setCheckoutMessage("");
     });
@@ -464,7 +575,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     await loadUser();
-    await Promise.all([loadMenus(), loadNotifications()]);
+    await loadMenus();
     renderCart();
-    setInterval(loadNotifications, 30000);
 });

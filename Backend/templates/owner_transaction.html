@@ -60,7 +60,7 @@
 
         <nav class="sidebar-menu">
 
-            <a href="{{ url_for('owner.owner_dashboard') }}">
+            <a href="{{ url_for('owner.owner_dashboard') }}" class="active">
 
                 <i class="bi bi-grid-fill"></i>
 
@@ -84,6 +84,7 @@
 
             </a>
 
+            {% if current_user_role == "OWNER" %}
             <a href="{{ url_for('owner.owner_menu') }}">
 
                 <i class="bi bi-card-list"></i>
@@ -91,15 +92,7 @@
                 <span>Menu Management</span>
 
             </a>
-
-            <a href="{{ url_for('owner.owner_transaction') }}"
-               class="active">
-
-                <i class="bi bi-clock-history"></i>
-
-                <span>Riwayat Transaksi</span>
-
-            </a>
+            {% endif %}
 
         </nav>
 
@@ -521,7 +514,7 @@
 
             <strong id="showingData">
 
-                1 - 10
+                0 - 0
 
             </strong>
 
@@ -537,45 +530,10 @@
 
         </div>
 
-        <div class="pagination">
-
-            <button
-                id="prevPage"
-                class="page-btn">
-
-                <i class="bi bi-chevron-left"></i>
-
-            </button>
-
-            <button
-                class="page-number active">
-
-                1
-
-            </button>
-
-            <button
-                class="page-number">
-
-                2
-
-            </button>
-
-            <button
-                class="page-number">
-
-                3
-
-            </button>
-
-            <button
-                id="nextPage"
-                class="page-btn">
-
-                <i class="bi bi-chevron-right"></i>
-
-            </button>
-
+        <div
+            class="pagination"
+            id="pagination"
+            aria-label="Pagination transaksi">
         </div>
 
     </div>
@@ -979,6 +937,7 @@
 <!-- JS -->
 <!-- ===================================== -->
 
+<script src="{{ url_for('static', filename='js/role_access_ui.js') }}"></script>
 <script src="{{ url_for('static',filename='js/owner_transaction_api.js') }}"></script>
 
 </body>

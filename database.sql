@@ -1,7 +1,7 @@
 -- Active: 1782482181680@@gateway01.ap-southeast-1.prod.aws.tidbcloud.com@4000@db_argotelo
 CREATE DATABASE Argotelo;
 
-USE Argotelo;
+USER Argotelo;
 
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -219,6 +219,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     tax DECIMAL(12, 2) NOT NULL DEFAULT 0,
     total DECIMAL(12, 2) NOT NULL DEFAULT 0,
     payment_method VARCHAR(40) NOT NULL,
+    cash_received DECIMAL(12, 2) NULL,
+    cash_change DECIMAL(12, 2) NULL,
     status ENUM('COMPLETED', 'CANCELLED') DEFAULT 'COMPLETED',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_transaction_cashier FOREIGN KEY (cashier_id) REFERENCES users (id) ON DELETE SET NULL,

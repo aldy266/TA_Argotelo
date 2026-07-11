@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         transactionCount: document.getElementById("transactionCount"),
         showingData: document.getElementById("showingData"),
         totalData: document.getElementById("totalData"),
+        pagination: document.getElementById("pagination"),
         transactionModal: document.getElementById("transactionModal"),
         transactionDetail: document.getElementById("transactionDetail"),
         closeTransactionModal: document.getElementById("closeTransactionModal"),
@@ -151,6 +152,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             .replaceAll(">", "&gt;")
             .replaceAll("\"", "&quot;")
             .replaceAll("'", "&#039;");
+    }
+
+    function formatPaymentMethod(value) {
+        const labels = {
+            CASH: "Cash",
+            CASHLESS: "Cashless",
+            QRIS: "QRIS",
+            EWALLET: "E-Wallet",
+            DEBIT: "Debit"
+        };
+        const key = String(value || "").toUpperCase();
+        return labels[key] || value || "-";
     }
 
     async function api(url, options = {}) {
@@ -468,6 +481,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.transactionCount.textContent =
             `Total ${transactions.length} Transaksi`;
 
+        const totalPages =
+            Math.max(1, Math.ceil(transactions.length / rowsPerPage));
+
+        currentPage =
+            Math.min(Math.max(1, currentPage), totalPages);
 
         const start =
             (currentPage - 1) * rowsPerPage;
@@ -496,6 +514,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </td>
 
             </tr>`;
+
+            renderPagination();
 
             return;
 
@@ -533,7 +553,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </td>
 
 
-                <td>${escapeHtml(item.payment_method)}</td>
+                <td>${escapeHtml(formatPaymentMethod(item.payment_method))}</td>
 
 
                 <td>
@@ -560,9 +580,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function renderPagination(){
-        
+
         const totalPages =
-            Math.ceil(transactions.length / rowsPerPage);
+            Math.max(1, Math.ceil(transactions.length / rowsPerPage));
+
+        currentPage =
+            Math.min(Math.max(1, currentPage), totalPages);
 
 
         const start =
@@ -587,53 +610,69 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 
-        const pagination =
-            document.getElementById("pagination");
-
-
-        if(!pagination) return;
+        if(!el.pagination) return;
 
 
         let html = `
 
         <button
+        class="page-nav"
+        type="button"
         ${currentPage === 1 ? "disabled":""}
         data-page="${currentPage - 1}">
 
-        &lt;
+        <i class="bi bi-chevron-left"></i>
 
         </button>
 
         `;
 
-
-        for(let i=1;i<=totalPages;i++){
-
+        if(!transactions.length){
             html += `
-
             <button
-            class="${i===currentPage?'active':''}"
-            data-page="${i}">
+            class="active"
+            type="button"
+            disabled
+            data-page="1">1</button>`;
+        }else{
+            let lastRenderedPage = 0;
+            for(let i=1;i<=totalPages;i++){
+                const isVisible =
+                    i === 1 ||
+                    i === totalPages ||
+                    Math.abs(i - currentPage) <= 1;
 
-            ${i}
+                if(!isVisible) continue;
 
-            </button>`;
+                if(lastRenderedPage && i - lastRenderedPage > 1){
+                    html += `<span class="page-dots">...</span>`;
+                }
 
+                html += `
+                <button
+                class="${i===currentPage?'active':''}"
+                type="button"
+                data-page="${i}">${i}</button>`;
+
+                lastRenderedPage = i;
+            }
         }
 
 
         html += `
 
         <button
+        class="page-nav"
+        type="button"
         ${currentPage === totalPages ? "disabled":""}
         data-page="${currentPage + 1}">
 
-        &gt;
+        <i class="bi bi-chevron-right"></i>
 
         </button>`;
 
 
-        pagination.innerHTML = html;
+        el.pagination.innerHTML = html;
 
 
     }
@@ -704,7 +743,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             <div class="detail-row">
                 <span>Pembayaran</span>
-                <b>${escapeHtml(trx.payment_method)}</b>
+                <b>${escapeHtml(formatPaymentMethod(trx.payment_method))}</b>
             </div>
 
             <div class="detail-row">
@@ -876,8 +915,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function bindEvents() {
-        el.searchTransaction.addEventListener("input", () => loadTransactions().catch(error => alert(error.message)));
-        el.filterBtn.addEventListener("click", () => loadTransactions().catch(error => alert(error.message)));
+        el.searchTransaction.addEventListener("input", () => {
+            currentPage = 1;
+            loadTransactions().catch(error => alert(error.message));
+        });
+        el.filterBtn.addEventListener("click", () => {
+            currentPage = 1;
+            loadTransactions().catch(error => alert(error.message));
+        });
         el.refreshBtn.addEventListener("click", () => loadTransactions().catch(error => alert(error.message)));
 
         el.transactionTableBody.addEventListener("click", event => {
@@ -1121,17 +1166,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         });
 
-        document.getElementById("pagination")?.addEventListener("click", e=>{
+        el.pagination?.addEventListener("click", e=>{
 
             const btn =
                 e.target.closest("button");
 
 
-            if(!btn) return;
+            if(!btn || btn.disabled) return;
 
 
             currentPage =
-                Number(btn.dataset.page);
+                Number(btn.dataset.page) || 1;
 
 
             renderTransactions();

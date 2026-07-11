@@ -438,6 +438,16 @@ class Transaction(db.Model):
         nullable=False
     )
 
+    cash_received = db.Column(
+        db.Numeric(12, 2),
+        nullable=True
+    )
+
+    cash_change = db.Column(
+        db.Numeric(12, 2),
+        nullable=True
+    )
+
     status = db.Column(
         db.Enum("COMPLETED", "CANCELLED"),
         default="COMPLETED"
