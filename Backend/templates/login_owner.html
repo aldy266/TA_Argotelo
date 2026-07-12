@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Owner | Argotelo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body class="login-page">
+    <div class="auth-container">
+        <div class="login-shell">
+            <div class="auth-card login-card">
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='images/logo RB.png') }}" alt="Argotelo Logo" class="logo">
+                </div>
+
+                <div class="auth-header">
+                    <h1>LOGIN OWNER</h1>
+                    <p>Akses khusus Owner Argotelo.</p>
+                </div>
+
+                <form class="auth-form" id="loginForm" data-login-scope="owner">
+                    <div class="form-group">
+                        <label for="username">USERNAME</label>
+                        <div class="input-group">
+                            <i class="bi bi-person"></i>
+                            <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="password-header">
+                            <label for="password">PASSWORD</label>
+                            <a href="/forgot-password">Forgot Password?</a>
+                        </div>
+                        <div class="input-group password-wrapper">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                            <button type="button" id="togglePassword" class="toggle-password" aria-label="Tampilkan password">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-login">
+                        Sign In to Dashboard <i class="bi bi-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/auth.js') }}?v=20260713-1"></script>
+</body>
+</html>

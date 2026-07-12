@@ -308,12 +308,12 @@ app.register_blueprint(attendance_bp)
 @app.route("/")
 @app.route("/owner/login")
 def login_page():
-    return render_template("login.html", login_scope="owner")
+    return render_template("login_owner.html")
 
 
 @app.route("/staff/login")
 def staff_login_page():
-    return render_template("login.html", login_scope="staff")
+    return render_template("login_staff.html")
 
 
 @app.route("/register")
