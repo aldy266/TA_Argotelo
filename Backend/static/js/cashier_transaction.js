@@ -617,7 +617,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         logoutBtn.addEventListener("click", async () => {
 
-            await fetch(
+            const response = await fetch(
                 "/api/logout",
                 {
                     method: "POST",
@@ -625,7 +625,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             );
 
-            window.location.href = "/";
+            const result = await response.json().catch(() => ({}));
+            window.location.href = result.redirect_url || "/staff/login";
 
         });
 

@@ -9,7 +9,7 @@ from flask import (
 )
 
 from model import Role, db, User
-from utils.roles import FINANCE_ROLE_CODES, OPERATIONAL_ROLE_CODES
+from utils.roles import FINANCE_ROLE_CODES, OPERATIONAL_ROLE_CODES, login_destination
 from utils.staff_profiles import ensure_staff_profile_for_user
 
 import bcrypt
@@ -280,6 +280,8 @@ def login():
         "password"
     )
 
+    login_scope = (data.get("login_scope") or "").strip().lower()
+
 
     if not username or not password:
         return api_error("Username dan password wajib diisi", 400)
@@ -317,6 +319,16 @@ def login():
     if not is_valid:
         return api_error("Password salah", 401)
 
+    role_name = (user.role.role_name if user.role else "").upper()
+
+    # Halaman login owner dan staff memakai endpoint yang sama, tetapi akun
+    # hanya boleh masuk melalui halaman yang sesuai dengan perannya.
+    if login_scope == "owner" and role_name != "OWNER":
+        return api_error("Akun ini adalah akun staff. Silakan login melalui halaman Staff.", 403)
+
+    if login_scope == "staff" and role_name == "OWNER":
+        return api_error("Akun Owner hanya dapat login melalui halaman Owner.", 403)
+
 
 
 
@@ -326,6 +338,7 @@ def login():
 
 
     session["role_id"] = user.role_id
+    session["login_scope"] = "owner" if role_name == "OWNER" else "staff"
 
 
 
@@ -337,8 +350,9 @@ def login():
             "id": user.id,
             "fullname": user.fullname,
             "username": user.username,
-            "role": user.role.role_name
-        }
+            "role": user.role.role_name,
+            "redirect_url": login_destination(role_name)
+        },
     })
 
 # ==========================
@@ -1001,15 +1015,22 @@ def reset_password():
 @auth_bp.route("/api/logout", methods=["GET", "POST"])
 def logout():
 
+    redirect_url = (
+        "/staff/login"
+        if session.get("login_scope") == "staff"
+        else "/"
+    )
+
     session.clear()
 
     if request.method == "GET":
 
-        return redirect("/")
+        return redirect(redirect_url)
 
     return jsonify({
         "success": True,
-        "message": "Logout berhasil"
+        "message": "Logout berhasil",
+        "redirect_url": redirect_url
     })
 
 # ==========================
@@ -1019,9 +1040,15 @@ def logout():
 @auth_bp.route("/logout")
 def logout_page():
 
+    redirect_url = (
+        "/staff/login"
+        if session.get("login_scope") == "staff"
+        else "/"
+    )
+
     session.clear()
 
-    return redirect("/")
+    return redirect(redirect_url)
 
 # ==========================
 # RESET PASSWORD PAGE

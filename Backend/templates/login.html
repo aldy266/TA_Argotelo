@@ -7,7 +7,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Login | AMSP</title>
+    <title>Login {{ "Owner" if login_scope == "owner" else "Staff" }} | Argotelo</title>
 
     <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,13 +44,19 @@
             <!-- Header -->
             <div class="auth-header">
 
-                <h1>ARGOTELO SALATIGA</h1>
-                <p>Selamat datang kembali. Silakan masuk untuk mulai bekerja.</p>
+                <h1>LOGIN {{ "OWNER" if login_scope == "owner" else "STAFF" }}</h1>
+                <p>
+                    {% if login_scope == "owner" %}
+                    Akses khusus Owner Argotelo.
+                    {% else %}
+                    Untuk Finance, Kasir, dan seluruh tim operasional Argotelo.
+                    {% endif %}
+                </p>
 
             </div>
 
             <!-- Form Login -->
-            <form class="auth-form" id="loginForm">
+            <form class="auth-form" id="loginForm" data-login-scope="{{ login_scope }}">
 
                 <!-- Username -->
                 <div class="form-group">
@@ -84,9 +90,11 @@
                             PASSWORD
                         </label>
 
+                        {% if login_scope == "owner" %}
                         <a href="/forgot-password">
                             Forgot Password?
                         </a>
+                        {% endif %}
 
                     </div>
 
@@ -124,8 +132,6 @@
                     <i class="bi bi-arrow-right"></i>
 
                 </button>
-
-                <!-- Register -->
 
             </form>
 
