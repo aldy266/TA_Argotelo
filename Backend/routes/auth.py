@@ -820,16 +820,6 @@ def forgot_password():
 
 
 
-    # hanya owner boleh reset sendiri
-
-    if not user.role or user.role.role_name != "OWNER":
-
-
-        return api_error("Silakan hubungi Owner untuk reset password", 403)
-
-
-
-
     now = datetime.now()
 
     if user.reset_token and user.reset_expired and user.reset_expired > now:
