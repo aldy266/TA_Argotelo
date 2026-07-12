@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const totalData =
         document.getElementById("totalData");
+    
 
 
 

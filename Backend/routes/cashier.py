@@ -1,15 +1,22 @@
 from flask import Blueprint, redirect, render_template, url_for, jsonify, request
 from utils.auth import role_name_required
-from model import db
+from routes.auth import verify_password
+from model import db, User
 from sqlalchemy import text
 from utils.midtrans_service import create_payment
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 cashier_bp = Blueprint(
     "cashier",
     __name__,
     url_prefix="/cashier"
 )
+
+
+def waktu_wib():
+    return datetime.now(ZoneInfo("Asia/Jakarta"))
 
 # ==========================
 # CASHIER DASHBOARD
@@ -162,12 +169,11 @@ def attendance_staff():
                 full_name,
                 position
             FROM staff
+            WHERE status = 'ACTIVE'
             ORDER BY full_name
         """))
 
-
         data=[]
-
 
         for row in result:
 
@@ -209,8 +215,86 @@ def attendance_check_in():
 
         data = request.json
 
-        staff_id = data["staff_id"]
+        staff_id = data.get("staff_id")
+        pin = data.get("pin")
 
+        if not staff_id or not pin:
+
+            return jsonify({
+
+                "success": False,
+                "message": "Nama karyawan dan PIN wajib diisi"
+
+            }),400
+        
+        # ==========================
+        # CEK USER DARI STAFF
+        # ==========================
+
+        staff = db.session.execute(text("""
+            SELECT user_id
+            FROM staff
+            WHERE id = :staff_id
+        """), {
+            "staff_id": staff_id
+        }).fetchone()
+
+        if not staff or not staff.user_id:
+
+            return jsonify({
+
+                "success": False,
+                "message": "Akun staff belum terhubung"
+
+            }),400
+
+
+        user = User.query.get(staff.user_id)
+
+        if not user:
+
+            return jsonify({
+
+                "success": False,
+                "message": "User tidak ditemukan"
+
+            }),404
+
+
+        if not verify_password(pin, user.password):
+
+            return jsonify({
+
+                "success": False,
+                "message": "PIN salah"
+
+            }),401
+            
+
+        # ==========================
+        # CARI JADWAL HARI INI
+        # ==========================
+
+        schedule = db.session.execute(text("""
+            SELECT id
+            FROM staff_schedules
+            WHERE
+                staff_id = :staff_id
+                AND schedule_date = CURDATE()
+        """), {
+            "staff_id": staff_id
+        }).fetchone()
+
+        if not schedule:
+
+            return jsonify({
+
+                "success": False,
+                "message": "Karyawan belum memiliki jadwal hari ini"
+
+            }),400
+
+        now = waktu_wib()
 
         db.session.execute(text("""
             INSERT INTO attendance
@@ -225,17 +309,19 @@ def attendance_check_in():
             VALUES
             (
                 :staff_id,
-                1,
+                :schedule_id,
                 CURDATE(),
-                NOW(),
+                :clock_in,
                 'PRESENT',
-                NOW()
+                :created_at
             )
         """),
         {
-            "staff_id": staff_id
+            "staff_id": staff_id,
+            "schedule_id": schedule.id,
+            "clock_in": now,
+            "created_at": now
         })
-
 
         db.session.commit()
 
@@ -258,6 +344,9 @@ def attendance_check_in():
             "message":str(e)
 
         }),500
+    
+
+    
 
 # ==========================
 # ABSEN PULANG
@@ -272,22 +361,25 @@ def attendance_check_out():
         data=request.json
 
         staff_id=data["staff_id"]
-
+    
+        now = waktu_wib()
 
         db.session.execute(text("""
             UPDATE attendance
 
             SET
-                clock_out=NOW(),
-                status='COMPLETED',
-                updated_at=NOW()
+            clock_out=:clock_out,
+            status='COMPLETED',
+            updated_at=:updated_at
 
             WHERE
                 staff_id=:staff_id
                 AND attendance_date=CURDATE()
         """),
         {
-            "staff_id":staff_id
+            "staff_id": staff_id,
+            "clock_out": now,
+            "updated_at": now
         })
 
 

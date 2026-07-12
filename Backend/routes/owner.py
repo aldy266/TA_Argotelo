@@ -1152,24 +1152,196 @@ def create_staff_account():
             "message": str(e)
         }), 500
 
-@owner_bp.route("/api/staff/accounts/<int:user_id>", methods=["DELETE"])
-def delete_staff_account(user_id):
+#nonaktifakn akun
+@owner_bp.route("/api/staff/accounts/<int:user_id>", methods=["GET","DELETE"])
+def staff_account(user_id):
+
+    if request.method == "GET":
+
+        row = db.session.execute(text("""
+
+            SELECT
+                users.id,
+                users.fullname,
+                users.username,
+                roles.role_name
+
+            FROM users
+
+            JOIN roles
+                ON users.role_id = roles.id
+
+            WHERE users.id=:id
+
+        """),{
+            "id":user_id
+        }).fetchone()
+
+        if not row:
+            return jsonify({
+                "success":False,
+                "message":"User tidak ditemukan"
+            }),404
+
+        return jsonify({
+            "success":True,
+            "data":{
+                "id":row.id,
+                "fullname":row.fullname,
+                "username":row.username,
+                "role":row.role_name
+            }
+        })
+
+    # DELETE
+    db.session.execute(text("""
+        UPDATE users
+        SET is_active=0
+        WHERE id=:id
+    """),{
+        "id":user_id
+    })
+
+    db.session.commit()
+
+    return jsonify({
+        "success":True,
+        "message":"Akun berhasil dinonaktifkan"
+    })
+
+@owner_bp.route("/api/staff/accounts/<int:user_id>", methods=["PUT"])
+def update_staff_account(user_id):
 
     try:
 
-        db.session.execute(text("""
-            UPDATE users
-            SET is_active = 0
+        data = request.get_json()
+
+        fullname = data.get("fullname", "").strip()
+        username = data.get("username", "").strip()
+        role = data.get("role", "").strip().upper()
+        password = data.get("password", "").strip()
+
+        if not fullname or not username or not role:
+
+            return jsonify({
+                "success": False,
+                "message": "Data belum lengkap"
+            }), 400
+
+        # cek user
+        user = db.session.execute(text("""
+            SELECT id
+            FROM users
             WHERE id = :id
         """), {
             "id": user_id
+        }).fetchone()
+
+        if not user:
+
+            return jsonify({
+                "success": False,
+                "message": "User tidak ditemukan"
+            }), 404
+
+        # cek username dipakai user lain
+        check = db.session.execute(text("""
+            SELECT id
+            FROM users
+            WHERE username = :username
+            AND id <> :id
+        """), {
+            "username": username,
+            "id": user_id
+        }).fetchone()
+
+        if check:
+
+            return jsonify({
+                "success": False,
+                "message": "Username sudah digunakan"
+            }), 400
+
+        # cari role
+        role_row = db.session.execute(text("""
+            SELECT id
+            FROM roles
+            WHERE UPPER(role_name)=:role
+        """), {
+            "role": role
+        }).fetchone()
+
+        if not role_row:
+
+            return jsonify({
+                "success": False,
+                "message": "Role tidak ditemukan"
+            }), 400
+
+        # update user
+        if password:
+
+            hashed = bcrypt.hashpw(
+                password.encode("utf-8"),
+                bcrypt.gensalt()
+            ).decode("utf-8")
+
+            db.session.execute(text("""
+                UPDATE users
+                SET
+                    fullname=:fullname,
+                    username=:username,
+                    role_id=:role_id,
+                    password=:password
+                WHERE id=:id
+            """), {
+
+                "fullname": fullname,
+                "username": username,
+                "role_id": role_row.id,
+                "password": hashed,
+                "id": user_id
+
+            })
+
+        else:
+
+            db.session.execute(text("""
+                UPDATE users
+                SET
+                    fullname=:fullname,
+                    username=:username,
+                    role_id=:role_id
+                WHERE id=:id
+            """), {
+
+                "fullname": fullname,
+                "username": username,
+                "role_id": role_row.id,
+                "id": user_id
+
+            })
+
+        # update staff
+        db.session.execute(text("""
+            UPDATE staff
+            SET
+                full_name=:fullname,
+                position=:role
+            WHERE user_id=:id
+        """), {
+
+            "fullname": fullname,
+            "role": role,
+            "id": user_id
+
         })
 
         db.session.commit()
 
         return jsonify({
             "success": True,
-            "message": "Akun berhasil dinonaktifkan"
+            "message": "Akun berhasil diperbarui"
         })
 
     except Exception as e:
@@ -1180,51 +1352,57 @@ def delete_staff_account(user_id):
             "success": False,
             "message": str(e)
         }), 500
-    
-@owner_bp.route("/api/staff/accounts/<int:user_id>", methods=["GET"])
-def get_staff_account(user_id):
 
-    row = db.session.execute(text("""
+#hapus akun
+@owner_bp.route("/api/staff/accounts/<int:user_id>/permanent", methods=["DELETE"])
+def permanent_delete_staff_account(user_id):
 
-        SELECT
-            users.id,
-            users.fullname,
-            users.username,
-            roles.role_name
+    try:
 
-        FROM users
+        # cek user
+        user = db.session.execute(text("""
+            SELECT id
+            FROM users
+            WHERE id = :id
+        """), {
+            "id": user_id
+        }).fetchone()
 
-        JOIN roles
-            ON users.role_id = roles.id
+        if not user:
 
-        WHERE users.id = :id
+            return jsonify({
+                "success": False,
+                "message": "User tidak ditemukan"
+            }), 404
 
-    """), {
+        # hapus data staff dulu
+        db.session.execute(text("""
+            DELETE FROM staff
+            WHERE user_id = :id
+        """), {
+            "id": user_id
+        })
 
-        "id": user_id
+        # hapus user
+        db.session.execute(text("""
+            DELETE FROM users
+            WHERE id = :id
+        """), {
+            "id": user_id
+        })
 
-    }).fetchone()
-
-    if not row:
+        db.session.commit()
 
         return jsonify({
+            "success": True,
+            "message": "Akun berhasil dihapus"
+        })
 
+    except Exception as e:
+
+        db.session.rollback()
+
+        return jsonify({
             "success": False,
-            "message": "User tidak ditemukan"
-
-        }),404
-
-    return jsonify({
-
-        "success": True,
-
-        "data":{
-
-            "id": row.id,
-            "fullname": row.fullname,
-            "username": row.username,
-            "role": row.role_name
-
-        }
-
-    })
+            "message": str(e)
+        }), 500

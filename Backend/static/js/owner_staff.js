@@ -120,7 +120,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     let employeeData = [];
     let filteredEmployeeData = [];
     let employeeCurrentPage = 1;
+    let editingUserId = null;
     const employeeRowsPerPage = 6;
+
 
     // =====================================
     // UTILITIES
@@ -2032,10 +2034,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                             </button>
 
                             <button
+                                class="disable"
+                                data-id="${item.id}">
+
+                                <i class="bi bi-person-lock"></i>
+
+                            </button>
+
+                            <button
                                 class="delete"
                                 data-id="${item.id}">
 
-                                <i class="bi bi-trash"></i>
+                                <i class="bi bi-trash3"></i>
 
                             </button>
 
@@ -2112,9 +2122,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     btnAddEmployee?.addEventListener(
         "click",
-        openEmployeeModal
+        openEmployeeForm
     );
-    
+        
     closeEmployeeModal?.addEventListener(
         "click",
         closeEmployee
@@ -2315,9 +2325,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         const role =
             document.getElementById("employeeRole").value;
 
-        if (!fullname || !username || !password) {
+        if (!fullname || !username || !role) {
 
-            alert("Lengkapi semua data.");
+            alert("Nama, Username, dan Role wajib diisi.");
+
+            return;
+
+        }
+
+        if (!editingUserId && !password) {
+
+            alert("Password wajib diisi.");
 
             return;
 
@@ -2325,9 +2343,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         try {
 
-            const response = await fetch("/api/staff/accounts", {
+            const url = editingUserId
+                ? `/api/staff/accounts/${editingUserId}`
+                : "/api/staff/accounts";
 
-                method: "POST",
+            const method = editingUserId
+                ? "PUT"
+                : "POST";
+
+            const response = await fetch(url, {
+
+                method,
 
                 headers: {
                     "Content-Type": "application/json"
@@ -2350,61 +2376,145 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (result.success) {
 
+                editingUserId = null;
+
                 closeEmployeeForm();
 
                 loadEmployees();
 
             }
 
-        } catch (err) {
+            } catch (err) {
 
-            console.error(err);
+                console.error(err);
 
-            alert("Terjadi kesalahan.");
+                alert("Terjadi kesalahan.");
 
-        }
+            }
 
-        });
+            });
 
-        function openEmployeeForm() {
+            function openEmployeeForm() {
 
-    employeeModal.classList.remove("hidden");
+        editingUserId = null;
 
-}
+        document.getElementById("employeeModalTitle").textContent = "Tambah Akun";
 
-function closeEmployeeForm() {
+        saveEmployee.textContent = "Simpan";
 
-    employeeModal.classList.add("hidden");
+        document.getElementById("employeeName").value = "";
+        document.getElementById("employeeUsername").value = "";
+        document.getElementById("employeePassword").value = "";
+        document.getElementById("employeeRole").value = "";
 
-}
-
-document.addEventListener("click", async (e) => {
-
-    const btnDelete = e.target.closest(".delete");
-
-    if (!btnDelete) return;
-
-    const id = btnDelete.dataset.id;
-
-    if (!confirm("Nonaktifkan akun ini?")) return;
-
-    const response = await fetch(`/api/staff/accounts/${id}`, {
-
-        method: "DELETE"
-
-    });
-
-    const result = await response.json();
-
-    alert(result.message);
-
-    if (result.success) {
-
-        loadEmployees();
+        employeeModal.classList.remove("hidden");
 
     }
 
-});
+    function closeEmployeeForm() {
+
+        employeeModal.classList.add("hidden");
+
+    }
+
+    document.addEventListener("click", async (e) => {
+
+        const btnDisable = e.target.closest(".disable");
+
+        if (!btnDisable) return;
+
+        const id = btnDisable.dataset.id;
+
+        if (!confirm("Nonaktifkan akun ini?")) return;
+
+        const response = await fetch(`/api/staff/accounts/${id}`, {
+
+            method: "DELETE"
+
+        });
+
+        const result = await response.json();
+
+        alert(result.message);
+
+        if (result.success) {
+
+            loadEmployees();
+
+        }
+
+    });
+
+    document.addEventListener("click", async (e) => {
+
+        const btnDelete = e.target.closest(".delete");
+
+        if (!btnDelete) return;
+
+        const id = btnDelete.dataset.id;
+
+        if (!confirm("Hapus akun ini secara permanen?\n\nData tidak dapat dikembalikan.")) {
+            return;
+        }
+
+        const response = await fetch(`/api/staff/accounts/${id}/permanent`, {
+
+            method: "DELETE"
+
+        });
+
+        const result = await response.json();
+
+        alert(result.message);
+
+        if (result.success) {
+
+            loadEmployees();
+
+        }
+
+    });
+
+    document.addEventListener("click", async (e) => {
+
+        const btnEdit = e.target.closest(".edit");
+
+        if (!btnEdit) return;
+
+        const id = btnEdit.dataset.id;
+
+            editingUserId = id;
+
+        const response = await fetch(`/api/staff/accounts/${id}`);
+
+        const result = await response.json();
+
+        if (!result.success) {
+
+            alert(result.message);
+
+            return;
+
+        }
+
+        document.getElementById("employeeName").value =
+            result.data.fullname;
+
+        document.getElementById("employeeUsername").value =
+            result.data.username;
+
+        document.getElementById("employeeRole").value =
+            result.data.role;
+
+        document.getElementById("employeePassword").value = "";
+
+        document.getElementById("employeeModalTitle").textContent = "Edit Akun";
+
+        saveEmployee.textContent = "Update";
+
+        employeeModal.classList.remove("hidden");
+
+    });
 
 });
 

@@ -3558,3 +3558,17 @@ html{
     font-size:14px;
 
 }
+
+.btn-disable{
+
+    background:#FFF4DB;
+
+    color:#B78103;
+
+}
+
+.btn-disable:hover{
+
+    background:#F4E2AA;
+
+}
