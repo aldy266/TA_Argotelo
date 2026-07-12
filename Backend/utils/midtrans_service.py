@@ -14,12 +14,6 @@ load_dotenv(
 server_key = os.getenv("MIDTRANS_SERVER_KEY")
 
 
-print("======================")
-print("MIDTRANS SERVER KEY:")
-print(server_key)
-print("======================")
-
-
 snap = midtransclient.Snap(
     is_production=False,
     server_key=server_key

@@ -86,9 +86,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function updateCheckoutButton(total = getCartTotals().total) {
         const hasItems = cart.size > 0;
+        const hasCustomerName = customerName.value.trim().length > 0;
         const paid = numericValue(cashReceived?.value);
         const cashInsufficient = paymentMethod === "CASH" && hasItems && paid < total;
-        checkoutBtn.disabled = !hasItems || cashInsufficient;
+        checkoutBtn.disabled = !hasItems || !hasCustomerName || cashInsufficient;
     }
 
     function updateCashCalculator() {
@@ -291,6 +292,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         }
 
+        const customer = customerName.value.trim();
+
+        if (!customer) {
+            customerName.classList.add("input-error");
+            customerName.focus();
+            setCheckoutMessage(
+                "Nama pelanggan wajib diisi",
+                true
+            );
+            updateCheckoutButton(total);
+            return;
+        }
 
 
         checkoutBtn.disabled = true;
@@ -328,7 +341,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                         cash_received: paid,
 
-                        customer_name: customerName.value
+                        customer_name: customer
 
                     })
 
@@ -342,6 +355,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
                 customerName.value = "";
+                customerName.classList.remove("input-error");
                 if (cashReceived) cashReceived.value = "";
                 updateCashCalculator();
 
@@ -392,15 +406,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                         total,
 
                         customer_name:
-                            customerName.value || "Umum"
+                            customer
 
                     })
                 }
             );
-
-
-            console.log("TOKEN MIDTRANS:", payment.token);
-
 
             snap.pay(payment.token, {
 
@@ -421,7 +431,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 payment_method: paymentMethod,
 
                                 customer_name:
-                                    customerName.value
+                                    customer
 
                             })
 
@@ -435,6 +445,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     renderCart();
 
                     customerName.value = "";
+                    customerName.classList.remove("input-error");
                     if (cashReceived) cashReceived.value = "";
                     updateCashCalculator();
 
@@ -562,8 +573,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateCashCalculator();
         setCheckoutMessage("");
     });
+    customerName?.addEventListener("input", () => {
+        customerName.classList.remove("input-error");
+        setCheckoutMessage("");
+        updateCheckoutButton();
+    });
     resetCartBtn.addEventListener("click", () => {
         cart.clear();
+        customerName.value = "";
+        customerName.classList.remove("input-error");
         if (cashReceived) cashReceived.value = "";
         renderCart();
         setCheckoutMessage("");

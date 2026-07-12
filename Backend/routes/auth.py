@@ -4,7 +4,8 @@ from flask import (
     request,
     jsonify,
     session,
-    render_template
+    render_template,
+    current_app
 )
 
 from model import Role, db, User
@@ -12,6 +13,8 @@ from model import Role, db, User
 import bcrypt
 
 import secrets
+
+import re
 
 from datetime import datetime, timedelta
 
@@ -22,6 +25,13 @@ from datetime import datetime
 from utils.auth import role_name_required
 
 MANAGED_ACCOUNT_ROLES = {"FINANCE", "KASIR"}
+EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+FORGOT_PASSWORD_SUCCESS_MESSAGE = (
+    "Link reset password berhasil dikirim. Silakan cek email atau folder spam."
+)
+FORGOT_PASSWORD_ERROR_MESSAGE = (
+    "Email reset password belum bisa dikirim. Coba lagi nanti atau hubungi admin."
+)
 
 auth_bp = Blueprint(
     "auth",
@@ -301,13 +311,6 @@ def login():
     # CEK PASSWORD BCRYPT
 
     is_valid = verify_password(password, user.password)
-
-    print("=" * 50)
-    print("USERNAME :", username)
-    print("INPUT PASSWORD :", password)
-    print("HASH DI DB :", user.password)
-    print("HASIL VERIFY :", is_valid)
-    print("=" * 50)
 
     if not is_valid:
         return api_error("Password salah", 401)
@@ -778,9 +781,24 @@ def forgot_password():
     data = request.get_json(silent=True) or {}
 
 
-    email = data.get(
-        "email"
-    )
+    email = (
+        data.get(
+            "email"
+        )
+        or ""
+    ).strip().lower()
+
+    if not email:
+        return api_error(
+            "Email wajib diisi.",
+            400
+        )
+
+    if not EMAIL_PATTERN.match(email):
+        return api_error(
+            "Format email tidak valid.",
+            400
+        )
 
 
     user = User.query.filter_by(
@@ -790,22 +808,15 @@ def forgot_password():
 
 
     if not user:
-
-
-        return jsonify({
-
-            "success":False,
-
-            "message":
-            "Email tidak ditemukan"
-
-        }),404
+        return api_success(
+            FORGOT_PASSWORD_SUCCESS_MESSAGE
+        )
 
 
 
     # hanya owner boleh reset sendiri
 
-    if user.role.role_name != "OWNER":
+    if not user.role or user.role.role_name != "OWNER":
 
 
         return api_error("Silakan hubungi Owner untuk reset password", 403)
@@ -849,9 +860,13 @@ def forgot_password():
             token
         )
     except Exception as error:
+        print("RESEND ERROR:", repr(error))
+        current_app.logger.exception(
+            "Gagal mengirim email reset password"
+        )
         return api_error(
-            f"Link reset password gagal dikirim: {error}",
-            502
+            FORGOT_PASSWORD_ERROR_MESSAGE,
+            500
         )
 
 
@@ -861,7 +876,7 @@ def forgot_password():
         "success":True,
 
         "message":
-        "Link reset password sudah dikirim ke email"
+        FORGOT_PASSWORD_SUCCESS_MESSAGE
 
     })
 

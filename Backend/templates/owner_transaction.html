@@ -60,11 +60,19 @@
 
         <nav class="sidebar-menu">
 
-            <a href="{{ url_for('owner.owner_dashboard') }}" class="active">
+            <a href="{{ url_for('owner.owner_dashboard') }}">
 
                 <i class="bi bi-grid-fill"></i>
 
                 <span>Dashboard</span>
+
+            </a>
+
+            <a href="{{ url_for('owner.owner_transaction') }}" class="active">
+
+                <i class="bi bi-receipt-cutoff"></i>
+
+                <span>Riwayat Transaksi</span>
 
             </a>
 
@@ -120,6 +128,27 @@
 <header class="topbar">
 
     <div class="topbar-left">
+
+        <div class="search-box transaction-topbar-search">
+
+            <i class="bi bi-search search-icon"></i>
+
+            <input
+                type="search"
+                id="topbarTransactionSearch"
+                placeholder="Cari transaksi, pelanggan, atau kasir..."
+                autocomplete="off">
+
+            <button
+                id="clearTopbarTransactionSearch"
+                class="clear-search"
+                type="button">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
 
     </div>
 
@@ -239,6 +268,8 @@
 
                     Ubah Password
 
+                </a>
+
                 <a href="#" 
                 
                     id="manageAccountsBtn">
@@ -315,16 +346,6 @@
             <div class="page-action">
 
                 <button
-                    class="refresh-btn"
-                    id="refreshBtn">
-
-                    <i class="bi bi-arrow-clockwise"></i>
-
-                    Refresh
-
-                </button>
-
-                <button
                     class="download-btn"
                     id="downloadReportBtn">
 
@@ -337,11 +358,103 @@
             </div>
 
         </section>
+
+        <section class="transaction-summary" aria-label="Ringkasan transaksi">
+
+            <article class="summary-card accent-brown">
+
+                <div class="summary-icon">
+
+                    <i class="bi bi-receipt"></i>
+
+                </div>
+
+                <div>
+
+                    <span>Total Transaksi</span>
+
+                    <strong id="summaryTotalTransactions">0</strong>
+
+                </div>
+
+            </article>
+
+            <article class="summary-card accent-green">
+
+                <div class="summary-icon">
+
+                    <i class="bi bi-cash-stack"></i>
+
+                </div>
+
+                <div>
+
+                    <span>Omzet</span>
+
+                    <strong id="summaryRevenue">Rp 0</strong>
+
+                </div>
+
+            </article>
+
+            <article class="summary-card accent-gold">
+
+                <div class="summary-icon">
+
+                    <i class="bi bi-graph-up-arrow"></i>
+
+                </div>
+
+                <div>
+
+                    <span>Rata-rata</span>
+
+                    <strong id="summaryAverage">Rp 0</strong>
+
+                </div>
+
+            </article>
+
+            <article class="summary-card accent-red">
+
+                <div class="summary-icon">
+
+                    <i class="bi bi-wallet2"></i>
+
+                </div>
+
+                <div>
+
+                    <span>Pembayaran Teratas</span>
+
+                    <strong id="summaryTopPayment">-</strong>
+
+                </div>
+
+            </article>
+
+        </section>
     <!-- ===================================== -->
 <!-- FILTER TRANSAKSI -->
 <!-- ===================================== -->
 
 <section class="filter-card">
+
+    <div class="filter-card-header">
+
+        <div>
+
+            <h2>
+
+                <i class="bi bi-funnel"></i>
+
+                Filter Data
+
+            </h2>
+
+        </div>
+
+    </div>
 
     <div class="filter-group">
 
@@ -358,7 +471,7 @@
                 <input
                     type="text"
                     id="searchTransaction"
-                    placeholder="Cari ID transaksi, pelanggan atau kasir...">
+                    placeholder="Cari ID, pelanggan, atau kasir...">
 
             </div>
 
@@ -447,9 +560,17 @@
 
 <section class="transaction-card">
 
-    <div class="card-header">
+    <div class="card-header transaction-list-header">
 
-        <div>
+        <div class="card-heading">
+
+            <span class="card-heading-icon">
+
+                <i class="bi bi-clock-history"></i>
+
+            </span>
+
+            <div>
 
             <h3>
 
@@ -464,6 +585,14 @@
             </small>
 
         </div>
+
+    </div>
+
+        <span class="active-filter-badge" id="activeFilterBadge">
+
+            Semua data
+
+        </span>
 
     </div>
 

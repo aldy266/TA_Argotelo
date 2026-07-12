@@ -631,9 +631,9 @@ def get_staff(user):
             "position": s.position,
             "phone": s.phone,
             "email": s.email,
-            "joined_at": s.joined_at.isoformat(),
+            "joined_at": s.joined_at.isoformat() if s.joined_at else None,
             "status": s.status,
-            "created_at": s.created_at.isoformat()
+            "created_at": s.created_at.isoformat() if s.created_at else None
         } for s in staff]
         
         return jsonify({
@@ -968,7 +968,7 @@ def update_shift(user, shift_id):
 # ====================================================
 
 @staff_bp.route("/schedule", methods=["POST"])
-@check_authorization("FINANCE")
+@check_authorization("OWNER", "FINANCE")
 def create_schedule(user):
     """Create staff schedule"""
     try:

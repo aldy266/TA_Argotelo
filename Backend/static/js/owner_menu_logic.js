@@ -10,17 +10,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         totalMenu: document.getElementById("totalMenu"),
         addMenuBtn: document.getElementById("addMenuBtn"),
         categoryFilter: document.getElementById("menuCategoryFilter"),
-        statusFilter: document.getElementById("menuStatusFilter")
+        statusFilter: document.getElementById("menuStatusFilter"),
+        stockAlertText: document.getElementById("stockAlertText")
     };
 
     const state = {
         menus: [],
         inventory: [],
+        notifications: [],
         currentPage: 1,
         keyword: "",
         category: "ALL",
         status: "ACTIVE",
-        loading: false
+        loading: false,
+        alertIndex: 0
     };
 
     function rupiah(value) {
@@ -38,6 +41,29 @@ document.addEventListener("DOMContentLoaded", async () => {
             .replaceAll(">", "&gt;")
             .replaceAll("\"", "&quot;")
             .replaceAll("'", "&#039;");
+    }
+
+    function stockQuantity(item) {
+        const match = String(item?.stock ?? "").replace(",", ".").match(/-?\d+(\.\d+)?/);
+        return match ? Number(match[0]) : null;
+    }
+
+    function stockAlertMessage(item) {
+        const quantity = stockQuantity(item);
+        const condition = quantity !== null && quantity <= 0 ? "habis" : "menipis";
+        return `Stok ${item.product} ${condition}`;
+    }
+
+    function setStockAlertState(isDanger) {
+        const alert = el.stockAlertText?.closest(".stock-alert");
+        const icon = alert?.querySelector("i");
+
+        alert?.classList.toggle("is-safe", !isDanger);
+        alert?.classList.toggle("is-danger", isDanger);
+
+        if (icon) {
+            icon.className = `bi ${isDanger ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill"}`;
+        }
     }
 
     async function api(url, options = {}) {
@@ -574,6 +600,34 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    async function loadNotifications() {
+        try {
+            const result = await api("/api/notification");
+            state.notifications = result.data || [];
+        } catch {
+            state.notifications = [];
+        }
+
+        rotateStockAlert();
+    }
+
+    function rotateStockAlert() {
+        if (!el.stockAlertText) return;
+
+        const hasStockWarning = state.notifications.length > 0;
+        setStockAlertState(hasStockWarning);
+
+        if (!hasStockWarning) {
+            state.alertIndex = 0;
+            el.stockAlertText.textContent = "Semua stok aman";
+            return;
+        }
+
+        const item = state.notifications[state.alertIndex % state.notifications.length];
+        el.stockAlertText.textContent = stockAlertMessage(item);
+        state.alertIndex += 1;
+    }
+
     function bindEvents() {
         el.searchInput?.addEventListener("input", event => {
             state.keyword = event.target.value;
@@ -638,5 +692,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     bindEvents();
-    await Promise.all([loadInventory(), loadMenus()]);
+    await Promise.all([loadInventory(), loadMenus(), loadNotifications()]);
+    setInterval(loadNotifications, 30000);
+    setInterval(rotateStockAlert, 4000);
 });

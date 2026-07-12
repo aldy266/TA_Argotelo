@@ -349,6 +349,35 @@ document.getElementById(
 
 if (forgotForm) {
 
+    const forgotMessage =
+    document.getElementById(
+        "forgotMessage"
+    );
+
+    const forgotButton =
+    forgotForm.querySelector(
+        ".btn-login"
+    );
+
+    const setForgotMessage = (message, isError = false) => {
+
+        if (!forgotMessage) return;
+
+        forgotMessage.textContent = message;
+        forgotMessage.classList.toggle(
+            "error",
+            isError
+        );
+        forgotMessage.classList.toggle(
+            "show",
+            Boolean(message)
+        );
+
+    };
+
+    const isValidEmail = email =>
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
 
     forgotForm.addEventListener(
         "submit",
@@ -365,10 +394,37 @@ if (forgotForm) {
             .value
             .trim();
 
+            setForgotMessage("");
+
+            if (!email) {
+                setForgotMessage(
+                    "Email wajib diisi.",
+                    true
+                );
+                return;
+            }
+
+            if (!isValidEmail(email)) {
+                setForgotMessage(
+                    "Format email tidak valid.",
+                    true
+                );
+                return;
+            }
+
+            if (forgotButton) {
+                forgotButton.disabled = true;
+                forgotButton.dataset.originalText =
+                forgotButton.innerHTML;
+                forgotButton.textContent =
+                "Mengirim...";
+            }
 
 
-            const response =
-            await fetch(
+            try {
+
+                const response =
+                await fetch(
 
                 "/api/forgot-password",
 
@@ -400,26 +456,49 @@ if (forgotForm) {
 
                 }
 
-            );
+                );
 
 
 
-            const result =
-            await response.json();
+                const result =
+                await response.json()
+                .catch(() => ({
+                    success:false,
+                    message:"Terjadi kesalahan server"
+                }));
+
+                const success =
+                response.ok &&
+                result.success === true;
+
+
+                setForgotMessage(
+                    result.message ||
+                    (
+                        success
+                        ? "Link reset password berhasil dikirim. Silakan cek email atau folder spam."
+                        : "Email reset password belum bisa dikirim. Coba lagi nanti atau hubungi admin."
+                    ),
+                    !success
+                );
 
 
 
-            alert(
-                result.message
-            );
+            } catch (error) {
 
+                setForgotMessage(
+                    "Tidak dapat menghubungi server. Coba lagi sebentar.",
+                    true
+                );
 
+            } finally {
 
-            if(result.success){
-
-
-                window.location.href="/";
-
+                if (forgotButton) {
+                    forgotButton.disabled = false;
+                    forgotButton.innerHTML =
+                    forgotButton.dataset.originalText ||
+                    "Kirim Reset Link";
+                }
 
             }
 

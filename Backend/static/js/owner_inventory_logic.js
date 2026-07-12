@@ -123,6 +123,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             .replaceAll("'", "&#039;");
     }
 
+    function stockQuantity(item) {
+        const match = String(item?.stock ?? "").replace(",", ".").match(/-?\d+(\.\d+)?/);
+        return match ? Number(match[0]) : null;
+    }
+
+    function stockAlertMessage(item) {
+        const quantity = stockQuantity(item);
+        const condition = quantity !== null && quantity <= 0 ? "habis" : "menipis";
+        return `Stok ${item.product} ${condition}`;
+    }
+
+    function setStockAlertState(isDanger) {
+        const alert = el.stockAlertText?.closest(".stock-alert");
+        const icon = alert?.querySelector("i");
+
+        alert?.classList.toggle("is-safe", !isDanger);
+        alert?.classList.toggle("is-danger", isDanger);
+        icon?.classList.toggle("bi-check-circle-fill", !isDanger);
+        icon?.classList.toggle("bi-exclamation-triangle-fill", isDanger);
+    }
+
     async function api(url, options = {}) {
         const response = await fetch(url, {
             credentials: "include",
@@ -478,12 +499,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function rotateStockAlert() {
         if (!el.stockAlertText) return;
-        if (!state.notifications.length) {
+
+        const hasStockWarning = state.notifications.length > 0;
+        setStockAlertState(hasStockWarning);
+
+        if (!hasStockWarning) {
+            state.alertIndex = 0;
             el.stockAlertText.textContent = "Semua stok aman";
             return;
         }
         const item = state.notifications[state.alertIndex % state.notifications.length];
-        el.stockAlertText.textContent = `Stok ${item.product} menipis`;
+        el.stockAlertText.textContent = stockAlertMessage(item);
         state.alertIndex += 1;
     }
 

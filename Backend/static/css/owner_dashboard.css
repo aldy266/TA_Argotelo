@@ -364,6 +364,26 @@ body{
 
 }
 
+.stock-alert.is-safe{
+    background:#E8F8EE;
+    border-color:#BDEACD;
+    color:#16844A;
+}
+
+.stock-alert.is-danger{
+    background:#FFF1F1;
+    border-color:#FFCACA;
+    color:#FF3B3B;
+}
+
+.stock-alert.is-safe i{
+    color:#16844A;
+}
+
+.stock-alert.is-danger i{
+    color:#FF3B3B;
+}
+
 .icon-button{
     width:42px;
     height:42px;
@@ -634,6 +654,7 @@ body{
     display:grid;
     grid-template-columns:2fr 1fr;
     gap:20px;
+    align-items:stretch;
 
     margin-bottom:30px;
 }
@@ -665,39 +686,37 @@ body{
 
 .sales-chart{
     height:100%;
-    overflow:hidden;
-}
-
-.detail-link{
-    text-decoration:none;
-    color:var(--text);
-
+    align-self:stretch;
+    min-height:0;
     display:flex;
-    align-items:center;
-    gap:8px;
-
-    font-size:14px;
-    font-weight:600;
-
-    transition:.3s;
+    flex-direction:column;
+    overflow:hidden;
+    padding-bottom:18px;
 }
 
-.detail-link:hover{
-    opacity:.7;
-}
-
-.detail-link i{
-    font-size:16px;
+.sales-chart .card-header{
+    margin-bottom:18px;
 }
 
 .chart-container{
-    height:250px;
+    height:auto;
+    min-height:210px;
+    flex:1;
 
-    background:#F6EAE1;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 100%),
+        repeating-linear-gradient(
+            to top,
+            rgba(75,46,19,.07) 0,
+            rgba(75,46,19,.07) 1px,
+            transparent 1px,
+            transparent 38px
+        ),
+        #F6EAE1;
 
-    border-radius:14px;
+    border-radius:12px;
 
-    padding:20px 15px 10px;
+    padding:14px 14px 10px;
 
     overflow:hidden;
 }
@@ -708,9 +727,19 @@ body{
     display:grid;
     grid-template-columns:repeat(7,minmax(0,1fr));
     align-items:stretch;
-    gap:12px;
+    gap:10px;
 
     position:relative;
+}
+
+.chart-bars::after{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:22px;
+    height:1px;
+    background:rgba(75,46,19,.18);
 }
 
 .chart-item{
@@ -718,9 +747,33 @@ body{
     height:100%;
 
     display:grid;
-    grid-template-rows:minmax(0,1fr) 18px;
+    grid-template-rows:20px minmax(0,1fr) 16px;
     align-items:center;
-    gap:8px;
+    gap:6px;
+
+    position:relative;
+    z-index:1;
+}
+
+.bar-value{
+    min-height:18px;
+    width:max-content;
+    max-width:100%;
+    justify-self:center;
+    padding:3px 6px;
+    border-radius:999px;
+    background:rgba(255,255,255,.68);
+    color:#5D3A1B;
+    font-size:10px;
+    font-weight:800;
+    line-height:1.1;
+    text-align:center;
+    white-space:nowrap;
+}
+
+.chart-item.is-zero .bar-value{
+    color:#B4A59A;
+    font-weight:700;
 }
 
 .chart-bar-track{
@@ -731,34 +784,35 @@ body{
     align-items:flex-end;
     justify-content:center;
 
-    padding-top:12px;
+    padding-top:2px;
 }
 
 .chart-item span{
-    font-size:13px;
+    font-size:12px;
     color:#777;
     line-height:1;
     text-align:center;
 }
 
 .bar{
-    width:min(42px,70%);
+    width:min(32px,62%);
 
-    background:var(--primary);
+    background:linear-gradient(180deg, #7A4A21 0%, #4B2E13 100%);
 
-    border-radius:10px 10px 0 0;
+    border-radius:8px 8px 0 0;
 
-    box-shadow:0 10px 18px rgba(75,46,19,.16);
+    box-shadow:0 10px 18px rgba(75,46,19,.2);
 
-    transition:height .3s ease, opacity .3s ease;
+    transition:height .35s ease, opacity .3s ease, transform .2s ease;
 }
 
 .bar.has-value{
-    min-height:8px;
+    min-height:12px;
 }
 
 .bar:hover{
     opacity:.8;
+    transform:translateY(-2px);
 }
 
 .chart-empty{
@@ -802,21 +856,43 @@ body{
 .product-list{
     display:flex;
     flex-direction:column;
-    gap:24px;
+    gap:16px;
 }
 
 .product-item{
     display:flex;
     align-items:center;
-    gap:16px;
+    gap:12px;
+    min-height:54px;
+}
+
+.product-rank{
+    width:24px;
+    height:24px;
+    flex:0 0 24px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:8px;
+    background:#F3E7DC;
+    color:#5A3518;
+    font-size:12px;
+    font-weight:800;
 }
 
 .product-item img{
-    width:58px;
-    height:58px;
+    width:48px;
+    height:48px;
 
-    border-radius:12px;
+    border-radius:10px;
     object-fit:cover;
+}
+
+.product-item .customer-avatar{
+    width:48px;
+    height:48px;
+    flex:0 0 48px;
+    border-radius:10px;
 }
 
 .product-info{

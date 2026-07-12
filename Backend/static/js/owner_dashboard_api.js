@@ -7,7 +7,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         notifications: [],
         dashboardData: null,
         search: "",
-        accounts: []
+        accounts: [],
+        stockAlertIndex: 0,
+        stockAlertTimer: null
     };
 
     const el = {
@@ -31,6 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         attendanceValue: document.getElementById("attendanceValue"),
         attendanceInfo: document.getElementById("attendanceInfo"),
         topProductList: document.getElementById("topProductList"),
+        salesChartSubtitle: document.getElementById("salesChartSubtitle"),
         transactionTableBody: document.getElementById("transactionTableBody"),
         transactionUpdateTime: document.getElementById("transactionUpdateTime"),
         notificationBadge: document.getElementById("notificationBadge"),
@@ -98,6 +101,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             .replaceAll("'", "&#039;");
     }
 
+    function stockQuantity(item) {
+        const match = String(item?.stock ?? "").replace(",", ".").match(/-?\d+(\.\d+)?/);
+        return match ? Number(match[0]) : null;
+    }
+
+    function stockAlertMessage(item) {
+        const quantity = stockQuantity(item);
+        const condition = quantity !== null && quantity <= 0 ? "habis" : "menipis";
+        return `Stok ${item.product} ${condition}`;
+    }
+
+    function setStockAlertState(isDanger) {
+        const alert = el.stockAlertText?.closest(".stock-alert");
+        const icon = alert?.querySelector("i");
+
+        alert?.classList.toggle("is-safe", !isDanger);
+        alert?.classList.toggle("is-danger", isDanger);
+        icon?.classList.toggle("bi-check-circle-fill", !isDanger);
+        icon?.classList.toggle("bi-exclamation-triangle-fill", isDanger);
+    }
+
     function formatDate(value) {
         if (!value) return "";
         const date = new Date(`${value}T00:00:00`);
@@ -106,6 +130,43 @@ document.addEventListener("DOMContentLoaded", async () => {
             month: "long",
             year: "numeric"
         });
+    }
+
+    function periodLabel(stats = state.dashboardData?.statistics) {
+        const start = stats?.period_start || "";
+        const end = stats?.period_end || "";
+
+        if (state.filter === "today") return "Hari ini";
+        if (state.filter === "week") return "Minggu ini";
+        if (state.filter === "month") return "Bulan ini";
+        if (start && end && start === end) return formatDate(start);
+        if (start && end) return `${formatDate(start)} - ${formatDate(end)}`;
+        return "Periode dipilih";
+    }
+
+    function updatePeriodText(stats) {
+        const label = periodLabel(stats);
+
+        if (el.dashboardPeriod) {
+            el.dashboardPeriod.textContent =
+                `Menampilkan performa kedai untuk ${label.toLowerCase()}.`;
+        }
+
+        if (el.salesChartSubtitle) {
+            el.salesChartSubtitle.textContent =
+                "Tren penjualan terbaru dengan skala visual yang lebih mudah dibaca.";
+        }
+    }
+
+    function compactRupiah(value) {
+        const number = Number(value || 0);
+        if (number >= 1000000) {
+            return `Rp ${(number / 1000000).toLocaleString("id-ID", { maximumFractionDigits: 1 })} jt`;
+        }
+        if (number >= 1000) {
+            return `Rp ${Math.round(number / 1000).toLocaleString("id-ID")} rb`;
+        }
+        return rupiah(number);
     }
 
     function setActiveFilter(button) {
@@ -170,17 +231,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function updateStatistics(stats) {
+        const label = periodLabel(stats);
+
+        updatePeriodText(stats);
+
         el.salesValue.textContent = rupiah(stats.sales);
-        el.salesInfo.textContent = "Periode dipilih";
+        el.salesInfo.textContent = label;
         el.transactionValue.textContent = stats.transaction_count;
-        el.transactionInfo.textContent = "Transaksi selesai";
-        el.incomeValue.textContent = rupiah(stats.monthly_income);
-        el.incomeInfo.textContent = "Pendapatan bulan berjalan";
+        el.transactionInfo.textContent = label;
+        el.incomeValue.textContent = rupiah(stats.period_income ?? stats.monthly_income);
+        el.incomeInfo.textContent = label;
+        el.incomeInfo.classList.remove("danger");
+        el.incomeInfo.classList.add("success");
         const totalStaff = Number.isFinite(Number(stats.total_staff))
             ? Number(stats.total_staff)
             : Number(stats.total_scheduled || 0);
         el.attendanceValue.textContent = `${stats.present_count} / ${totalStaff}`;
-        el.attendanceInfo.textContent = `${stats.attendance_rate}% Kehadiran`;
+        el.attendanceInfo.textContent = `${stats.attendance_rate}% Kehadiran - ${label}`;
     }
 
     function renderChart(weeklySales = []) {
@@ -195,12 +262,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const hasSales = weeklySales.some(item => Number(item.total || 0) > 0);
         chart.classList.toggle("is-empty", !hasSales);
+        const maxTotal = Math.max(...weeklySales.map(item => Number(item.total || 0)), 0);
 
         chart.innerHTML = weeklySales.map(item => {
             const total = Number(item.total || 0);
-            const height = total > 0 ? Math.max(Number(item.percentage || 0), 6) : 0;
+            const ratio = maxTotal ? total / maxTotal : 0;
+            const height = total > 0 ? Math.round(18 + (Math.sqrt(ratio) * 72)) : 0;
             return `
-            <div class="chart-item">
+            <div class="chart-item ${total > 0 ? "has-sales" : "is-zero"}">
+                <strong class="bar-value">${total > 0 ? compactRupiah(total) : "-"}</strong>
                 <div class="chart-bar-track">
                     <div
                         class="bar ${total > 0 ? "has-value" : ""}"
@@ -226,7 +296,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             item.name,
             item.variant,
             item.total
-        ]));
+        ])).slice(0, 5);
     }
 
     function filteredTransactions() {
@@ -250,8 +320,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             el.topProductList.innerHTML = `<div class="empty-state"><p>${message}</p></div>`;
             return;
         }
-        el.topProductList.innerHTML = products.map(item => `
+        el.topProductList.innerHTML = products.slice(0, 5).map((item, index) => `
             <div class="product-item">
+                <span class="product-rank">${index + 1}</span>
                 ${item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">` : "<div class=\"customer-avatar\">AR</div>"}
                 <div class="product-info">
                     <h4>${escapeHtml(item.name)}</h4>
@@ -259,7 +330,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
                 <div class="product-total">
                     <h5>${item.total} Porsi</h5>
-                    <span class="stable">Database</span>
                 </div>
             </div>
         `).join("");
@@ -302,23 +372,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (el.notificationBadge) el.notificationBadge.textContent = notifications.length;
         if (el.notificationSubtitle) el.notificationSubtitle.textContent = `${notifications.length} Notifikasi Aktif`;
         if (el.stockAlertText) {
+            const hasStockWarning = notifications.length > 0;
 
-            if (!notifications.length) {
+            setStockAlertState(hasStockWarning);
+
+            if (state.stockAlertTimer) {
+                clearInterval(state.stockAlertTimer);
+                state.stockAlertTimer = null;
+            }
+
+            if (!hasStockWarning) {
+                state.stockAlertIndex = 0;
                 el.stockAlertText.textContent = "Semua stok aman";
             } else {
-                let index = 0;
-                el.stockAlertText.textContent =
-                    `Stok ${notifications[index].product} menipis`;
-                setInterval(() => {
-                    index++;
-                    if(index >= notifications.length){
+                const rotateStockAlert = () => {
+                    const item = notifications[state.stockAlertIndex % notifications.length];
+                    el.stockAlertText.textContent = stockAlertMessage(item);
+                    state.stockAlertIndex++;
+                };
 
-                        index = 0;
-
-                    }
-                    el.stockAlertText.textContent =
-                        `Stok ${notifications[index].product} menipis`;
-                }, 3000);
+                rotateStockAlert();
+                state.stockAlertTimer = setInterval(rotateStockAlert, 3000);
 
             }
 
@@ -706,11 +780,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.downloadReportBtn?.addEventListener("click", () => {
             const params = selectedPeriodParams();
             window.location.href = `/api/transaction/export-excel${params.toString() ? `?${params}` : ""}`;
-        });
-        document.querySelector(".detail-link")?.addEventListener("click", event => {
-            event.preventDefault();
-            const params = selectedPeriodParams();
-            window.location.href = `/owner/transaction${params.toString() ? `?${params}` : ""}`;
         });
         document.querySelectorAll(".logout, .logout-setting").forEach(button => {
             button.addEventListener("click", async event => {

@@ -61,6 +61,11 @@
         <span>Dashboard</span>
     </a>
 
+    <a href="{{ url_for('owner.owner_transaction') }}">
+        <i class="bi bi-receipt-cutoff"></i>
+        <span>Riwayat Transaksi</span>
+    </a>
+
     <a href="{{ url_for('owner.owner_inventory') }}">
         <i class="bi bi-box-seam"></i>
         <span>Inventory</span>
@@ -471,19 +476,11 @@
                                     Grafik Penjualan Mingguan
                                 </h3>
 
-                                <p>
+                                <p id="salesChartSubtitle">
                                     Performa transaksi Argotelo selama 7 hari terakhir
                                 </p>
 
                             </div>
-
-                            <a href="#" class="detail-link">
-
-                                Lihat Detail
-
-                                <i class="bi bi-arrow-right"></i>
-
-                            </a>
 
                         </div>
 

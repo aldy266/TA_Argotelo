@@ -70,6 +70,11 @@
                         <span>Dashboard</span>
                     </a>
 
+                    <a href="{{ url_for('owner.owner_transaction') }}">
+                        <i class="bi bi-receipt-cutoff"></i>
+                        <span>Riwayat Transaksi</span>
+                    </a>
+
                     <a href="{{ url_for('owner.owner_inventory') }}">
                         <i class="bi bi-box-seam"></i>
                         <span>Inventory</span>
@@ -125,11 +130,11 @@
 
         <div class="topbar-right">
 
-            <div class="stock-alert">
+            <div class="stock-alert" id="stockAlert">
 
-                <i class="bi bi-exclamation-triangle"></i>
+                <i class="bi bi-exclamation-triangle-fill"></i>
 
-                <span>3 Stok Menipis</span>
+                <span id="stockAlertText">Memuat notifikasi...</span>
 
             </div>
 

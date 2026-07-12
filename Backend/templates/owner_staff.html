@@ -70,6 +70,11 @@
         <span>Dashboard</span>
     </a>
 
+    <a href="{{ url_for('owner.owner_transaction') }}">
+        <i class="bi bi-receipt-cutoff"></i>
+        <span>Riwayat Transaksi</span>
+    </a>
+
     <a href="{{ url_for('owner.owner_inventory') }}">
         <i class="bi bi-box-seam"></i>
         <span>Inventory</span>
@@ -298,11 +303,12 @@
                             <thead>
                                 <tr>
                                     <th>Nama</th>
-                                    <th>Tanggal</th>
                                     <th>Masuk</th>
                                     <th>Pulang</th>
                                     <th>Shift</th>
                                     <th>Status</th>
+                                    <th>Jam Kerja</th>
+                                    <th>Aksi</th>
                                 </tr>
                                 </thead>
 
@@ -453,7 +459,10 @@
 
                             <div>
 
-                                <h2>👥 Data Karyawan</h2>
+                                <h2>
+                                    <i class="bi bi-people-fill" aria-hidden="true"></i>
+                                    Data Karyawan
+                                </h2>
 
                                 <p>
                                     Kelola akun login staff Argotelo
@@ -558,7 +567,7 @@
 
                         <div class="employee-footer">
 
-                            <span id="employeeInfo">
+                            <span id="employeeInfo" aria-live="polite">
 
                                 Menampilkan 0 data
 
@@ -569,13 +578,15 @@
                                 <button
                                     id="employeePrev"
                                     class="secondary-button"
-                                    type="button">
+                                    type="button"
+                                    aria-label="Halaman sebelumnya"
+                                    disabled>
 
                                     <i class="bi bi-chevron-left"></i>
 
                                 </button>
 
-                                <span id="employeePage">
+                                <span id="employeePage" aria-live="polite">
 
                                     1 / 1
 
@@ -584,7 +595,9 @@
                                 <button
                                     id="employeeNext"
                                     class="secondary-button"
-                                    type="button">
+                                    type="button"
+                                    aria-label="Halaman berikutnya"
+                                    disabled>
 
                                     <i class="bi bi-chevron-right"></i>
 
@@ -1086,7 +1099,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/role_access_ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/owner_staff.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/owner_staff.js') }}?v=20260712-2"></script>
     <script src="{{ url_for('static', filename='js/owner_account_controls.js') }}"></script>
 
 </body>

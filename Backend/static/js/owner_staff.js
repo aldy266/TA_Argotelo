@@ -39,9 +39,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const closeAllStaffModal = document.getElementById("closeAllStaffModal");
     const allStaffSearch = document.getElementById("allStaffSearch");
     const allStaffList = document.getElementById("allStaffList");
-    const scheduleButtons = [
-        document.getElementById("btn-top-schedule")
-    ].filter(Boolean);
     const scheduleModal = document.getElementById("scheduleModal");
     const scheduleModalTitle = document.getElementById("scheduleModalTitle");
     const closeScheduleModal = document.getElementById("closeScheduleModal");
@@ -122,6 +119,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currentUserRole = "";
     let employeeData = [];
     let filteredEmployeeData = [];
+    let employeeCurrentPage = 1;
+    const employeeRowsPerPage = 6;
 
     // =====================================
     // UTILITIES
@@ -318,13 +317,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function getStatusLabel(status) {
         const labelMap = {
-            "PRESENT": "HADIR",
-            "LATE": "TERLAMBAT",
-            "LEAVE": "IZIN",
-            "SICK": "SAKIT",
-            "ABSENT": "TIDAK HADIR",
-            "NOT_CHECKED_IN": "BELUM HADIR",
-            "COMPLETED": "SELESAI"
+            "PRESENT": "Hadir",
+            "LATE": "Terlambat",
+            "LEAVE": "Izin",
+            "SICK": "Sakit",
+            "ABSENT": "Tidak Hadir",
+            "NOT_CHECKED_IN": "Belum Hadir",
+            "COMPLETED": "Selesai"
         };
         return labelMap[status] || status;
     }
@@ -377,7 +376,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         setHidden(".shift-card", !ownerMode);
         setHidden(".approval-card", !ownerMode);
         setHidden("#btn-import-staff", !financeMode);
-        setHidden("#btn-top-schedule", !financeMode);
+        setHidden("#btn-top-schedule", !managementMode);
         setHidden("#btn-add-shift", !ownerMode);
 
         if (financeMode && statApproval) {
@@ -1086,6 +1085,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =====================================
 
     async function openScheduleModal(record = null) {
+        if (!isFinanceRole() && !isOwnerRole()) {
+            showToast("Anda tidak memiliki akses untuk mengelola jadwal", "error");
+            return;
+        }
+
         selectedScheduleId = record?.schedule_id ? Number(record.schedule_id) : null;
 
         const [staffResponse, shiftResponse] = await Promise.all([
@@ -1152,6 +1156,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function saveScheduleData() {
+        if (!isFinanceRole() && !isOwnerRole()) {
+            showToast("Anda tidak memiliki akses untuk menyimpan jadwal", "error");
+            return;
+        }
+
         if (!scheduleStaffSelect.value || !scheduleShiftSelect.value || !scheduleDateInput.value || (!selectedScheduleId && !scheduleEndDateInput.value)) {
             showToast("Staff, Shift, dan tanggal jadwal wajib diisi", "error");
             return;
@@ -1493,10 +1502,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         loadAttendance(selectedDate).catch(error => console.error(error));
     });
 
-    scheduleButtons.forEach(button => {
-        button.addEventListener("click", () => {
-            openScheduleModal().catch(error => console.error(error));
-        });
+    document.addEventListener("click", event => {
+        const scheduleButtonTarget = event.target.closest("#btn-top-schedule");
+        if (!scheduleButtonTarget) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        openScheduleModal().catch(error => console.error(error));
     });
 
     closeScheduleModal?.addEventListener("click", closeSchedule);
@@ -1858,6 +1870,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const tbody =
             document.getElementById("employeeTable");
+        const employeeInfo =
+            document.getElementById("employeeInfo");
+        const employeePage =
+            document.getElementById("employeePage");
+        const employeePrev =
+            document.getElementById("employeePrev");
+        const employeeNext =
+            document.getElementById("employeeNext");
 
         tbody.innerHTML = `
             <tr>
@@ -1888,11 +1908,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </tr>
                 `;
 
+                if (employeeInfo) employeeInfo.textContent = "Menampilkan 0 data";
+                if (employeePage) employeePage.textContent = "1 / 1";
+                if (employeePrev) employeePrev.disabled = true;
+                if (employeeNext) employeeNext.disabled = true;
+
                 return;
             }
 
-            employeeData = result.data;
+            employeeData = Array.isArray(result.data) ? result.data : [];
             filteredEmployeeData = [...employeeData];
+            employeeCurrentPage = 1;
 
             renderEmployees();
 
@@ -1910,6 +1936,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </tr>
             `;
 
+            if (employeeInfo) employeeInfo.textContent = "Menampilkan 0 data";
+            if (employeePage) employeePage.textContent = "1 / 1";
+            if (employeePrev) employeePrev.disabled = true;
+            if (employeeNext) employeeNext.disabled = true;
+
         }
 
     }
@@ -1918,10 +1949,27 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const tbody =
             document.getElementById("employeeTable");
+        const employeeInfo =
+            document.getElementById("employeeInfo");
+        const employeePage =
+            document.getElementById("employeePage");
+        const employeePrev =
+            document.getElementById("employeePrev");
+        const employeeNext =
+            document.getElementById("employeeNext");
 
         tbody.innerHTML = "";
+        const totalData = filteredEmployeeData.length;
+        const totalPages = Math.max(
+            1,
+            Math.ceil(totalData / employeeRowsPerPage)
+        );
+        employeeCurrentPage = Math.min(
+            Math.max(employeeCurrentPage, 1),
+            totalPages
+        );
 
-        if (filteredEmployeeData.length === 0) {
+        if (totalData === 0) {
 
             tbody.innerHTML = `
                 <tr>
@@ -1933,27 +1981,33 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </tr>
             `;
 
+            if (employeeInfo) employeeInfo.textContent = "Menampilkan 0 data";
+            if (employeePage) employeePage.textContent = "1 / 1";
+            if (employeePrev) employeePrev.disabled = true;
+            if (employeeNext) employeeNext.disabled = true;
+
             return;
 
         }
 
-        filteredEmployeeData.forEach(item => {
+        const startIndex = (employeeCurrentPage - 1) * employeeRowsPerPage;
+        const endIndex = Math.min(startIndex + employeeRowsPerPage, totalData);
+        const currentRows = filteredEmployeeData.slice(startIndex, endIndex);
 
-            tbody.innerHTML += `
-
+        tbody.innerHTML = currentRows.map(item => `
                 <tr>
 
-                    <td>${item.name}</td>
+                    <td>${escapeHtml(item.name || "-")}</td>
 
-                    <td>${item.username}</td>
+                    <td>${escapeHtml(item.username || "-")}</td>
 
-                    <td>${item.role}</td>
+                    <td>${escapeHtml(item.role || "-")}</td>
 
                     <td>
 
                         <span class="employee-status ${item.status === 'ACTIVE' ? 'active' : 'inactive'}">
 
-                            ${item.status}
+                            ${escapeHtml(item.status || "-")}
 
                         </span>
 
@@ -1961,7 +2015,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     <td>
 
-                        ${item.last_login ?? "-"}
+                        ${escapeHtml(item.last_login ?? "-")}
 
                     </td>
 
@@ -1991,9 +2045,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 </tr>
 
-            `;
+            `).join("");
 
-        });
+        if (employeeInfo) {
+            employeeInfo.textContent = `Menampilkan ${startIndex + 1}-${endIndex} dari ${totalData} data`;
+        }
+        if (employeePage) {
+            employeePage.textContent = `${employeeCurrentPage} / ${totalPages}`;
+        }
+        if (employeePrev) {
+            employeePrev.disabled = employeeCurrentPage <= 1;
+        }
+        if (employeeNext) {
+            employeeNext.disabled = employeeCurrentPage >= totalPages;
+        }
 
     }
 
@@ -2009,35 +2074,34 @@ document.addEventListener("DOMContentLoaded", async () => {
             .value;
 
         filteredEmployeeData = employeeData.filter(item=>{
+            const name = String(item.name || "").toLowerCase();
+            const username = String(item.username || "").toLowerCase();
+            const itemRole = String(item.role || "");
 
             const matchKeyword =
 
-                item.name
-                .toLowerCase()
-                .includes(keyword)
+                name.includes(keyword)
 
                 ||
 
-                item.username
-                .toLowerCase()
-                .includes(keyword);
+                username.includes(keyword);
 
             const matchRole =
 
                 role===""
                 ||
 
-                item.role===role;
+                itemRole===role;
 
             return matchKeyword && matchRole;
 
         });
 
+        employeeCurrentPage = 1;
         renderEmployees();
 
     }
 
-    console.log(document.getElementById("employeeModal"));
     function openEmployeeModal() {
         employeeModal.classList.remove("hidden");
     }
@@ -2195,7 +2259,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if(employeeSearch){
 
             employeeSearch.addEventListener(
-                "keyup",
+                "input",
                 filterEmployees
             );
 
@@ -2212,6 +2276,27 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
 
         }
+
+        const employeePrev =
+            document.getElementById("employeePrev");
+        const employeeNext =
+            document.getElementById("employeeNext");
+
+        employeePrev?.addEventListener("click", () => {
+            if (employeeCurrentPage <= 1) return;
+            employeeCurrentPage -= 1;
+            renderEmployees();
+        });
+
+        employeeNext?.addEventListener("click", () => {
+            const totalPages = Math.max(
+                1,
+                Math.ceil(filteredEmployeeData.length / employeeRowsPerPage)
+            );
+            if (employeeCurrentPage >= totalPages) return;
+            employeeCurrentPage += 1;
+            renderEmployees();
+        });
 
     loadEmployees();
 

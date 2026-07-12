@@ -1613,6 +1613,150 @@ button:hover{
     font-weight: 600;
 }
 
+/* =====================================================
+                    ATTENDANCE TABLE POLISH
+===================================================== */
+
+.attendance-card{
+    overflow:hidden;
+}
+
+.attendance-card > .attendance-table{
+    border-collapse:separate;
+    border-spacing:0;
+}
+
+.attendance-card > .attendance-table thead{
+    background:transparent;
+}
+
+.attendance-card > .attendance-table thead th{
+    background:#F7F1EC;
+    border-bottom:1px solid #EADFD6;
+    color:#70645B;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.03em;
+    padding:16px;
+}
+
+.attendance-card > .attendance-table thead th:first-child{
+    border-radius:12px 0 0 12px;
+}
+
+.attendance-card > .attendance-table thead th:last-child{
+    border-radius:0 12px 12px 0;
+}
+
+.attendance-card > .attendance-table tbody td{
+    height:76px;
+    padding:16px;
+    border-bottom:1px solid #EFE5DE;
+    color:#2F1D0F;
+}
+
+.attendance-card > .attendance-table tbody tr:last-child td{
+    border-bottom:none;
+}
+
+.attendance-card > .attendance-table tbody tr:hover td{
+    background:#FFFCFA;
+}
+
+.attendance-card > .attendance-table th:nth-child(1),
+.attendance-card > .attendance-table td:nth-child(1){
+    width:22%;
+}
+
+.attendance-card > .attendance-table th:nth-child(2),
+.attendance-card > .attendance-table td:nth-child(2),
+.attendance-card > .attendance-table th:nth-child(3),
+.attendance-card > .attendance-table td:nth-child(3){
+    width:10%;
+    color:#5F5650;
+    font-variant-numeric:tabular-nums;
+}
+
+.attendance-card > .attendance-table th:nth-child(4),
+.attendance-card > .attendance-table td:nth-child(4){
+    width:16%;
+}
+
+.attendance-card > .attendance-table th:nth-child(5),
+.attendance-card > .attendance-table td:nth-child(5){
+    width:13%;
+}
+
+.attendance-card > .attendance-table th:nth-child(6),
+.attendance-card > .attendance-table td:nth-child(6){
+    width:11%;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+}
+
+.attendance-card > .attendance-table th:nth-child(7),
+.attendance-card > .attendance-table td:nth-child(7){
+    width:18%;
+    text-align:right;
+}
+
+.attendance-card > .attendance-table td:first-child strong{
+    display:block;
+    font-size:14px;
+    font-weight:700;
+    color:#1F1309;
+    line-height:1.35;
+}
+
+.attendance-card .shift-badge{
+    min-width:116px;
+    height:36px;
+    padding:0 16px;
+    background:#F5E4D8;
+    color:#5A3718;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.attendance-card .badge{
+    min-width:104px;
+    height:36px;
+    padding:0 14px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    white-space:nowrap;
+}
+
+.attendance-card .badge.secondary{
+    background:#F1F1F1;
+    color:#5F5F5F;
+}
+
+.attendance-card .attendance-row-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2, 88px);
+    justify-content:end;
+    gap:8px;
+}
+
+.attendance-card .attendance-row-actions .edit-btn,
+.attendance-card .attendance-row-actions .delete-btn,
+.attendance-card .attendance-row-actions .secondary-button{
+    width:88px;
+    min-width:88px;
+    height:34px;
+    min-height:34px;
+    padding:0 8px !important;
+    justify-content:center !important;
+    border-radius:9px !important;
+    font-size:11px !important;
+    line-height:1 !important;
+    box-shadow:none;
+}
+
 .primary-button {
     background: #5A3718 !important;
     color: white !important;
@@ -3212,6 +3356,132 @@ html{
 
 }
 
+.employee-card{
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:26px;
+    box-shadow:0 12px 28px rgba(75,46,19,.06);
+}
+
+.employee-header{
+    gap:18px;
+}
+
+.employee-header h2{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    line-height:1.2;
+}
+
+.employee-header h2 i{
+    width:26px;
+    height:26px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    color:#5A3718;
+    background:#F3E8DF;
+    border-radius:8px;
+    font-size:16px;
+}
+
+.employee-toolbar{
+    display:grid;
+    grid-template-columns:minmax(260px, 1fr) 180px;
+    align-items:center;
+    gap:14px;
+    margin-bottom:18px;
+}
+
+.employee-search{
+    min-width:0;
+}
+
+#employeeSearch,
+.employee-search input{
+    height:46px;
+    padding:0 16px 0 46px;
+    border-color:#E6D8CE;
+    background:#fff;
+}
+
+#employeeRoleFilter,
+.employee-toolbar select{
+    width:100%;
+    height:46px;
+    border-color:#E6D8CE;
+    background:#fff;
+}
+
+.employee-table-wrapper{
+    border-color:#EADFD6;
+    border-radius:14px;
+    background:#fff;
+}
+
+.employee-table{
+    min-width:820px;
+    table-layout:fixed;
+}
+
+.employee-table thead th{
+    padding:14px 16px;
+    background:#F6EDE6;
+    color:#5A3718;
+    letter-spacing:.02em;
+}
+
+.employee-table tbody td{
+    height:64px;
+    padding:14px 16px;
+    vertical-align:middle;
+}
+
+.employee-action{
+    justify-content:flex-start;
+}
+
+.employee-footer{
+    margin-top:0;
+    padding:16px 4px 0;
+    color:#6F6259;
+}
+
+#employeeInfo{
+    font-size:14px;
+    font-weight:500;
+}
+
+.pagination{
+    gap:10px;
+}
+
+.pagination .secondary-button{
+    width:42px;
+    height:42px;
+    justify-content:center !important;
+    padding:0 !important;
+}
+
+.pagination .secondary-button:disabled{
+    opacity:.45;
+    cursor:not-allowed !important;
+    transform:none !important;
+    background:#FAF7F4 !important;
+}
+
+.pagination .secondary-button:disabled:hover{
+    background:#FAF7F4 !important;
+    transform:none !important;
+}
+
+#employeePage{
+    min-width:58px;
+    text-align:center;
+    font-size:15px;
+}
+
 
 /* ==========================================================
    RESPONSIVE
@@ -3231,7 +3501,7 @@ html{
 
     .employee-toolbar{
 
-        flex-direction:column;
+        grid-template-columns:1fr;
 
         align-items:stretch;
 

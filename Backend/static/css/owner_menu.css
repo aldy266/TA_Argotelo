@@ -1588,6 +1588,28 @@ button:focus{
 
 }
 
+.stock-alert.is-safe{
+    background:#E8F8EE;
+    border-color:#BDEACD;
+    color:#16844A;
+    box-shadow:0 4px 10px rgba(22,132,74,.08);
+}
+
+.stock-alert.is-danger{
+    background:#FFF2F0;
+    border-color:#FFD8D5;
+    color:#D84A4A;
+    box-shadow:0 4px 10px rgba(229,72,77,.08);
+}
+
+.stock-alert.is-safe:hover{
+    background:#DDF5E7;
+}
+
+.stock-alert.is-danger:hover{
+    background:#FFEAE6;
+}
+
 .stock-alert i{
 
     font-size:15px;
@@ -1596,6 +1618,14 @@ button:focus{
 
     line-height:1;
 
+}
+
+.stock-alert.is-safe i{
+    color:#16844A;
+}
+
+.stock-alert.is-danger i{
+    color:#D84A4A;
 }
 
 /* ==========================================================

@@ -374,21 +374,24 @@ def dashboard_api():
         Transaction.status == "COMPLETED",
     ).count()
 
-    month_start = waktu_wib().date().replace(day=1)
-    monthly_income = db.session.query(func.coalesce(func.sum(Transaction.total), 0)).filter(
-        Transaction.created_at >= datetime.combine(month_start, time.min),
-        Transaction.created_at <= datetime.combine(waktu_wib().date(), time.max),
+    period_income = db.session.query(func.coalesce(func.sum(Transaction.total), 0)).filter(
+        Transaction.created_at >= start_dt,
+        Transaction.created_at <= end_dt,
         Transaction.status == "COMPLETED",
     ).scalar()
 
-    today = waktu_wib().date()
     total_staff = Staff.query.filter_by(status="ACTIVE").count()
-    total_scheduled = StaffSchedule.query.filter_by(schedule_date=today).count()
+    total_scheduled = db.session.query(func.count(func.distinct(StaffSchedule.staff_id))).filter(
+        StaffSchedule.schedule_date >= start_date,
+        StaffSchedule.schedule_date <= end_date,
+    ).scalar() or 0
     present_count = db.session.query(func.count(func.distinct(Attendance.staff_id))).filter(
-        Attendance.attendance_date == today,
+        Attendance.attendance_date >= start_date,
+        Attendance.attendance_date <= end_date,
         Attendance.status.in_(["PRESENT", "LATE", "COMPLETED"]),
     ).scalar() or 0
 
+    today = waktu_wib().date()
     weekly_sales = []
     max_sales = Decimal("0")
     day_labels = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"]
@@ -445,7 +448,8 @@ def dashboard_api():
         "statistics": {
             "sales": rupiah_value(sales_total),
             "transaction_count": transaction_count,
-            "monthly_income": rupiah_value(monthly_income),
+            "monthly_income": rupiah_value(period_income),
+            "period_income": rupiah_value(period_income),
             "present_count": present_count,
             "total_staff": total_staff,
             "total_scheduled": total_scheduled,
@@ -764,10 +768,12 @@ def pos_checkout():
     payload = request.get_json(silent=True) or {}
     items = payload.get("items") or []
     payment_method = (payload.get("payment_method") or "").strip().upper()
-    customer_name = (payload.get("customer_name") or "Umum").strip()
+    customer_name = (payload.get("customer_name") or "").strip()
 
     if not items:
         return api_error("Keranjang masih kosong", 400)
+    if not customer_name:
+        return api_error("Nama pelanggan wajib diisi", 400)
     if not payment_method:
         return api_error("Metode pembayaran wajib dipilih", 400)
     if payment_method in {"QRIS", "EWALLET"}:
@@ -836,7 +842,7 @@ def pos_checkout():
     transaction = Transaction(
         transaction_number=f"ARG-{waktu_wib().strftime('%Y%m%d%H%M%S%f')}",
         cashier_id=session.get("user_id"),
-        customer_name=customer_name or "Umum",
+        customer_name=customer_name,
         subtotal=subtotal,
         tax=tax,
         total=total,

@@ -52,11 +52,11 @@
         .menu-card.recipe-missing { opacity:.68; }
         .recipe-warning { grid-column:1/-1; color:#B45309; font-weight:700; }
         .add-btn:disabled { opacity:.45; cursor:not-allowed; }
-        .cart { background:#fff; border-left:1px solid var(--line); padding:28px 24px; display:flex; flex-direction:column; gap:18px; min-width:0; }
+        .cart { background:#fff; border-left:1px solid var(--line); padding:24px 22px; display:flex; flex-direction:column; gap:14px; min-width:0; }
         .cart-header { display:flex; justify-content:space-between; align-items:center; }
         .cart-header h2 { margin:0; font-size:22px; }
         .reset-link { border:0; background:transparent; color:#D92D20; font:inherit; font-weight:700; cursor:pointer; }
-        .cart-list { flex:1; min-height:270px; max-height:46vh; overflow:auto; display:grid; gap:12px; align-content:start; padding-right:4px; }
+        .cart-list { flex:0 1 auto; min-height:190px; max-height:38vh; overflow:auto; display:grid; gap:12px; align-content:start; padding-right:4px; }
         .empty { text-align:center; color:#B2A7A0; padding:44px 18px; }
         .empty i { display:block; font-size:48px; margin-bottom:10px; }
         .cart-item { border:1px solid var(--line); border-radius:14px; padding:14px; display:grid; gap:10px; }
@@ -67,7 +67,10 @@
         .qty-btn { width:30px; height:30px; border:0; border-radius:8px; background:#F3E9E1; cursor:pointer; font-weight:800; }
         .remove-btn { border:0; background:#FEE2E2; color:#D92D20; border-radius:8px; padding:8px 10px; cursor:pointer; }
         .input-field { height:44px; border:1px solid var(--line); border-radius:12px; padding:0 14px; font:inherit; }
-        .summary { border-radius:18px; background:#FFFDFB; box-shadow:0 18px 38px rgba(75,46,19,.08); padding:20px; display:grid; gap:12px; }
+        .input-field:required { border-color:#D8BFAF; }
+        .input-field:focus { outline:0; border-color:var(--brown); box-shadow:0 0 0 3px rgba(75,46,19,.08); }
+        .input-field.input-error { border-color:var(--danger); box-shadow:0 0 0 3px rgba(217,45,32,.08); }
+        .summary { border-radius:18px; background:#FFFDFB; box-shadow:0 18px 38px rgba(75,46,19,.08); padding:18px; display:grid; gap:10px; }
         .summary-row { display:flex; justify-content:space-between; color:#5E5148; }
         .summary-total { border-top:1px solid var(--line); padding-top:12px; display:flex; justify-content:space-between; align-items:center; font-size:28px; font-weight:800; }
         .payment-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:6px; }
@@ -107,7 +110,9 @@
         .checkout-btn:not(:disabled):hover::after { animation:checkoutShine .72s ease; }
         .checkout-btn:not(:disabled):active { transform:translateY(1px) scale(.985); box-shadow:0 8px 18px rgba(75,46,19,.22); }
         .checkout-btn:disabled { opacity:.55; cursor:not-allowed; animation:none; }
-        .message { min-height:22px; color:var(--success); font-weight:600; }
+        .message { min-height:0; margin:0; color:var(--success); font-size:13px; font-weight:600; }
+        .message:empty { display:none; }
+        .message:not(:empty) { min-height:20px; }
         .message.error { color:var(--danger); }
         @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         @keyframes paymentButtonPop { 0% { transform:scale(.96); } 55% { transform:scale(1.04); } 100% { transform:scale(1); } }
@@ -179,7 +184,7 @@
             <div class="cart-list" id="cartList">
                 <div class="empty"><i class="bi bi-cart-x"></i>Keranjang masih kosong.<br>Pilih menu untuk memulai.</div>
             </div>
-            <input class="input-field" id="customerName" type="text" placeholder="Nama pelanggan (opsional)">
+            <input class="input-field" id="customerName" type="text" placeholder="Nama pelanggan wajib" autocomplete="off" required>
             <div class="summary">
                 <div class="summary-row"><span>Subtotal</span><strong id="subtotal">Rp 0</strong></div>
                 <div class="summary-row"><span>Pajak (10%)</span><strong id="tax">Rp 0</strong></div>

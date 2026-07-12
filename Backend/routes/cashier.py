@@ -97,12 +97,16 @@ def create_midtrans_payment():
 
     try:
 
-        print("===== MIDTRANS MASUK =====")
+        data = request.get_json(silent=True) or {}
 
-        data = request.json
 
-        print(data)
+        customer_name = (data.get("customer_name") or "").strip()
 
+        if not customer_name:
+            return jsonify({
+                "success": False,
+                "message": "Nama pelanggan wajib diisi"
+            }), 400
 
         order_id = "ARG-" + str(int(time.time()))
 
@@ -110,11 +114,8 @@ def create_midtrans_payment():
         token = create_payment(
             order_id,
             data["total"],
-            data.get("customer_name", "Umum")
+            customer_name
         )
-
-
-        print("TOKEN:", token)
 
 
         return jsonify({
@@ -126,7 +127,7 @@ def create_midtrans_payment():
 
     except Exception as e:
 
-        print("MIDTRANS ERROR:", e)
+        print("MIDTRANS ERROR:", repr(e))
 
         return jsonify({
             "success": False,

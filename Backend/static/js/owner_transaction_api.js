@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const el = {
         fullname: document.getElementById("fullname"),
         role: document.getElementById("role"),
+        topbarTransactionSearch: document.getElementById("topbarTransactionSearch"),
+        clearTopbarTransactionSearch: document.getElementById("clearTopbarTransactionSearch"),
         searchTransaction: document.getElementById("searchTransaction"),
         startDate: document.getElementById("startDate"),
         endDate: document.getElementById("endDate"),
@@ -13,6 +15,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         refreshBtn: document.getElementById("refreshBtn"),
         transactionTableBody: document.getElementById("transactionTableBody"),
         transactionCount: document.getElementById("transactionCount"),
+        summaryTotalTransactions: document.getElementById("summaryTotalTransactions"),
+        summaryRevenue: document.getElementById("summaryRevenue"),
+        summaryAverage: document.getElementById("summaryAverage"),
+        summaryTopPayment: document.getElementById("summaryTopPayment"),
+        activeFilterBadge: document.getElementById("activeFilterBadge"),
         showingData: document.getElementById("showingData"),
         totalData: document.getElementById("totalData"),
         pagination: document.getElementById("pagination"),
@@ -166,6 +173,60 @@ document.addEventListener("DOMContentLoaded", async () => {
         return labels[key] || value || "-";
     }
 
+    function formatStatus(value) {
+        const labels = {
+            completed: "Selesai",
+            cancelled: "Dibatalkan",
+            cancel: "Dibatalkan",
+            process: "Diproses"
+        };
+        const key = String(value || "").toLowerCase();
+        return labels[key] || value || "-";
+    }
+
+    function customerInitials(value) {
+        return String(value || "Umum")
+            .trim()
+            .split(/\s+/)
+            .map(part => part.charAt(0))
+            .join("")
+            .slice(0, 2)
+            .toUpperCase() || "U";
+    }
+
+    function stockQuantity(item) {
+        const match = String(item?.stock ?? "").replace(",", ".").match(/-?\d+(\.\d+)?/);
+        return match ? Number(match[0]) : null;
+    }
+
+    function stockAlertMessage(item) {
+        const quantity = stockQuantity(item);
+        const condition = quantity !== null && quantity <= 0 ? "habis" : "menipis";
+        return `Stok ${item.product} ${condition}`;
+    }
+
+    function setStockAlertState(isDanger) {
+        const alert = el.stockAlertText?.closest(".stock-alert");
+        const icon = alert?.querySelector("i");
+
+        alert?.classList.toggle("is-safe", !isDanger);
+        alert?.classList.toggle("is-danger", isDanger);
+        icon?.classList.toggle("bi-check-circle-fill", !isDanger);
+        icon?.classList.toggle("bi-exclamation-triangle-fill", isDanger);
+    }
+
+    function syncSearchInputs(value) {
+        if (el.searchTransaction && el.searchTransaction.value !== value) {
+            el.searchTransaction.value = value;
+        }
+
+        if (el.topbarTransactionSearch && el.topbarTransactionSearch.value !== value) {
+            el.topbarTransactionSearch.value = value;
+        }
+
+        el.clearTopbarTransactionSearch?.classList.toggle("show", Boolean(value.trim()));
+    }
+
     async function api(url, options = {}) {
         const response = await fetch(url, {
             credentials: "include",
@@ -195,7 +256,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     function hydrateFiltersFromUrl() {
         const params = new URLSearchParams(window.location.search);
         if (params.has("search") && el.searchTransaction) {
-            el.searchTransaction.value = params.get("search") || "";
+            syncSearchInputs(params.get("search") || "");
         }
         if (params.has("start") && el.startDate) {
             el.startDate.value = params.get("start") || "";
@@ -207,7 +268,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             el.statusFilter.value = params.get("status") || "";
         }
         if (params.has("cashier") && el.cashierFilter) {
-            el.cashierFilter.value = params.get("cashier") || "";
+            const cashier = params.get("cashier") || "";
+            if (cashier) {
+                el.cashierFilter.add(new Option(cashier, cashier));
+            }
+            el.cashierFilter.value = cashier;
         }
     }
 
@@ -231,7 +296,97 @@ document.addEventListener("DOMContentLoaded", async () => {
         const qs = queryString();
         const result = await api(`/api/transaction${qs ? `?${qs}` : ""}`);
         transactions = result.data || [];
+        syncCashierOptions();
         renderTransactions();
+    }
+
+    function syncCashierOptions() {
+        if (!el.cashierFilter) return;
+
+        const selectedValue = el.cashierFilter.value;
+        const cashierNames = [...new Set(
+            transactions
+                .map(item => item.cashier)
+                .filter(name => name && name !== "-")
+        )].sort((a, b) => a.localeCompare(b, "id-ID"));
+
+        if (selectedValue && !cashierNames.includes(selectedValue)) {
+            cashierNames.unshift(selectedValue);
+        }
+
+        el.cashierFilter.innerHTML = `
+            <option value="">Semua Kasir</option>
+            ${cashierNames.map(name => `
+                <option value="${escapeHtml(name)}">
+                    ${escapeHtml(name)}
+                </option>
+            `).join("")}
+        `;
+
+        if (selectedValue) {
+            el.cashierFilter.value = selectedValue;
+        }
+    }
+
+    function renderTransactionSummary() {
+        const count = transactions.length;
+        const revenue = transactions.reduce(
+            (total, item) => total + Number(item.total || 0),
+            0
+        );
+        const average = count ? revenue / count : 0;
+
+        const paymentCounter = transactions.reduce((result, item) => {
+            const method = item.payment_method || "-";
+            result[method] = (result[method] || 0) + 1;
+            return result;
+        }, {});
+
+        const topPayment = Object.entries(paymentCounter)
+            .sort((a, b) => b[1] - a[1])[0];
+
+        if (el.summaryTotalTransactions) {
+            el.summaryTotalTransactions.textContent = count;
+        }
+
+        if (el.summaryRevenue) {
+            el.summaryRevenue.textContent = rupiah(revenue);
+        }
+
+        if (el.summaryAverage) {
+            el.summaryAverage.textContent = rupiah(average);
+        }
+
+        if (el.summaryTopPayment) {
+            el.summaryTopPayment.textContent = topPayment
+                ? `${formatPaymentMethod(topPayment[0])} (${topPayment[1]})`
+                : "-";
+        }
+    }
+
+    function renderActiveFilterBadge() {
+        if (!el.activeFilterBadge) return;
+
+        const filters = [];
+
+        if (el.searchTransaction?.value.trim()) {
+            filters.push("Pencarian aktif");
+        }
+
+        if (el.startDate?.value || el.endDate?.value) {
+            filters.push("Periode dipilih");
+        }
+
+        if (el.statusFilter?.value) {
+            filters.push(formatStatus(el.statusFilter.value));
+        }
+
+        if (el.cashierFilter?.value) {
+            filters.push(`Kasir ${el.cashierFilter.value}`);
+        }
+
+        el.activeFilterBadge.textContent =
+            filters.length ? filters.join(" / ") : "Semua data";
     }
 
     function renderNotifications() {
@@ -252,49 +407,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
 
-        // =========================
-        // ALERT MERAH MUTER
-        // =========================
-
         if (el.stockAlertText) {
+            const hasStockWarning = notifications.length > 0;
 
+            setStockAlertState(hasStockWarning);
 
-            if (!notifications.length) {
+            if (stockAlertTimer) {
+                clearInterval(stockAlertTimer);
+                stockAlertTimer = null;
+            }
 
+            if (!hasStockWarning) {
+                stockAlertIndex = 0;
 
                 el.stockAlertText.textContent =
                     "Semua stok aman";
 
 
             } else {
+                const rotateStockAlert = () => {
+                    const item = notifications[stockAlertIndex % notifications.length];
+                    el.stockAlertText.textContent = stockAlertMessage(item);
+                    stockAlertIndex++;
+                };
 
-
-                let index = 0;
-
-
-                el.stockAlertText.textContent =
-                    `Stok ${notifications[index].product} menipis`;
-
-
-
-                setInterval(() => {
-
-
-                    index++;
-
-
-                    if (index >= notifications.length) {
-
-                        index = 0;
-
-                    }
-
-
-                    el.stockAlertText.textContent =
-                        `Stok ${notifications[index].product} menipis`;
-
-
-                }, 3000);
+                rotateStockAlert();
+                stockAlertTimer = setInterval(rotateStockAlert, 3000);
 
 
             }
@@ -481,6 +619,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.transactionCount.textContent =
             `Total ${transactions.length} Transaksi`;
 
+        renderTransactionSummary();
+        renderActiveFilterBadge();
+
         const totalPages =
             Math.max(1, Math.ceil(transactions.length / rowsPerPage));
 
@@ -506,10 +647,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             <tr>
 
-                <td colspan="8"
-                style="text-align:center;padding:40px">
+                <td colspan="8">
 
-                Tidak ada transaksi.
+                    <div class="empty-state">
+
+                        <i class="bi bi-inbox"></i>
+
+                        <strong>Tidak ada transaksi</strong>
+
+                        <span>Ubah filter atau refresh untuk melihat data terbaru.</span>
+
+                    </div>
 
                 </td>
 
@@ -528,16 +676,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             <tr>
 
-                <td>${escapeHtml(item.transaction_number)}</td>
-
-                <td>${escapeHtml(item.date)}</td>
-
-                <td>${escapeHtml(item.customer_name || "Umum")}</td>
-
-                <td>${escapeHtml(item.cashier)}</td>
+                <td>
+                    <span class="transaction-id">
+                        ${escapeHtml(item.transaction_number)}
+                    </span>
+                </td>
 
                 <td>
-                    <strong>${rupiah(item.total)}</strong>
+                    <span class="date-cell">
+                        <i class="bi bi-calendar2-week"></i>
+                        ${escapeHtml(item.date)}
+                    </span>
+                </td>
+
+                <td>
+                    <div class="customer-mini">
+                        <span>${escapeHtml(customerInitials(item.customer_name))}</span>
+                        <strong>${escapeHtml(item.customer_name || "Umum")}</strong>
+                    </div>
+                </td>
+
+                <td>
+                    <span class="cashier-chip">
+                        ${escapeHtml(item.cashier)}
+                    </span>
+                </td>
+
+                <td>
+                    <strong class="amount-cell">${rupiah(item.total)}</strong>
                 </td>
 
                 <td>
@@ -547,20 +713,27 @@ document.addEventListener("DOMContentLoaded", async () => {
                         : "cancel"
                     }">
 
-                    ${escapeHtml(item.status.toUpperCase())}
+                    ${escapeHtml(formatStatus(item.status))}
 
                     </span>
                 </td>
 
 
-                <td>${escapeHtml(formatPaymentMethod(item.payment_method))}</td>
+                <td>
+                    <span class="payment-pill">
+                        ${escapeHtml(formatPaymentMethod(item.payment_method))}
+                    </span>
+                </td>
 
 
                 <td>
 
                     <button 
                     class="detail-btn"
-                    data-id="${item.id}">
+                    data-id="${item.id}"
+                    type="button"
+                    title="Lihat detail"
+                    aria-label="Lihat detail transaksi ${escapeHtml(item.transaction_number)}">
 
                         <i class="bi bi-eye-fill"></i>
 
@@ -915,15 +1088,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function bindEvents() {
-        el.searchTransaction.addEventListener("input", () => {
+        el.searchTransaction.addEventListener("input", event => {
+            syncSearchInputs(event.target.value);
             currentPage = 1;
             loadTransactions().catch(error => alert(error.message));
+        });
+        el.topbarTransactionSearch?.addEventListener("input", event => {
+            syncSearchInputs(event.target.value);
+            currentPage = 1;
+            loadTransactions().catch(error => alert(error.message));
+        });
+        el.clearTopbarTransactionSearch?.addEventListener("click", () => {
+            syncSearchInputs("");
+            currentPage = 1;
+            loadTransactions().catch(error => alert(error.message));
+            el.topbarTransactionSearch?.focus();
         });
         el.filterBtn.addEventListener("click", () => {
             currentPage = 1;
             loadTransactions().catch(error => alert(error.message));
         });
-        el.refreshBtn.addEventListener("click", () => loadTransactions().catch(error => alert(error.message)));
+        el.refreshBtn?.addEventListener("click", () => loadTransactions().catch(error => alert(error.message)));
 
         el.transactionTableBody.addEventListener("click", event => {
             const button = event.target.closest(".detail-btn");

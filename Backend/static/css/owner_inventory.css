@@ -260,6 +260,26 @@ body{
     font-weight:600;
 }
 
+.stock-alert.is-safe{
+    background:#E8F8EE;
+    border:1px solid #BDEACD;
+    color:#16844A;
+}
+
+.stock-alert.is-danger{
+    background:#FFE9E4;
+    border:1px solid #FFD4D4;
+    color:#D84A4A;
+}
+
+.stock-alert.is-safe i{
+    color:#16844A;
+}
+
+.stock-alert.is-danger i{
+    color:#D84A4A;
+}
+
 .icon-button{
 
     width:42px;
