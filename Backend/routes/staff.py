@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from model import db, Staff, Shift, StaffSchedule, Attendance, LeaveRequest, User
+from utils.roles import expand_role_names, role_form_code, role_group, role_label, role_sort_key
 
 staff_bp = Blueprint("staff_api", __name__, url_prefix="/api/staff")
 
@@ -55,13 +56,7 @@ def require_role(*roles):
     if not user:
         return None
     
-    aliases = {
-        "CASHIER": "KASIR"
-    }
-    allowed_roles = {
-        aliases.get(role.upper(), role.upper())
-        for role in roles
-    }
+    allowed_roles = expand_role_names(roles)
     user_role = user.role.role_name.upper()
 
     if user_role not in allowed_roles:
@@ -185,10 +180,35 @@ def sync_attendance_with_schedule(schedule, attendance=None):
     late_minutes = max(int((attendance.clock_in - tolerance_limit).total_seconds() // 60), 0)
     attendance.late_minutes = late_minutes
 
-    if not attendance.clock_out:
+    if attendance.clock_out:
+        attendance.work_minutes = calculate_work_minutes(
+            attendance.clock_in,
+            attendance.clock_out,
+            attendance.work_minutes
+        )
+        attendance.status = "COMPLETED"
+    else:
         attendance.status = "LATE" if late_minutes else "PRESENT"
 
     return attendance
+
+
+def calculate_work_minutes(clock_in, clock_out, stored_minutes=0):
+    if stored_minutes and stored_minutes > 0:
+        return int(stored_minutes)
+
+    if not clock_in or not clock_out:
+        return 0
+
+    return max(int((clock_out - clock_in).total_seconds() // 60), 0)
+
+
+def schedule_datetime_range(schedule):
+    start_at = datetime.combine(schedule.schedule_date, schedule.shift.start_time)
+    end_at = datetime.combine(schedule.schedule_date, schedule.shift.end_time)
+    if end_at <= start_at:
+        end_at += timedelta(days=1)
+    return start_at, end_at
 
 
 def leave_attendance_status(leave_type):
@@ -244,6 +264,20 @@ def get_schedule_attendance(schedule):
 
 
 def clock_in_schedule(schedule, now):
+    shift_start, shift_end = schedule_datetime_range(schedule)
+
+    if now < shift_start:
+        return None, (
+            f"Absen masuk belum dibuka. Jam kerja dimulai pukul {schedule.shift.start_time.strftime('%H:%M')}",
+            403
+        )
+
+    if now > shift_end:
+        return None, (
+            "Absen masuk sudah ditutup karena jam kerja telah selesai",
+            403
+        )
+
     attendance = get_schedule_attendance(schedule)
 
     if attendance.status in ["LEAVE", "SICK", "ABSENT"]:
@@ -252,7 +286,6 @@ def clock_in_schedule(schedule, now):
     if attendance.clock_in:
         return None, ("Staff sudah clock in", 409)
 
-    shift_start = datetime.combine(schedule.schedule_date, schedule.shift.start_time)
     tolerance_limit = shift_start + timedelta(
         minutes=schedule.shift.tolerance_minutes or 0
     )
@@ -267,6 +300,7 @@ def clock_in_schedule(schedule, now):
 
 def clock_out_schedule(schedule, now):
     attendance = Attendance.query.filter_by(schedule_id=schedule.id).first()
+    _shift_start, shift_end = schedule_datetime_range(schedule)
     if not attendance or not attendance.clock_in:
         return None, ("Staff belum clock in", 409)
 
@@ -275,6 +309,12 @@ def clock_out_schedule(schedule, now):
 
     if attendance.status in ["LEAVE", "SICK", "ABSENT"]:
         return None, ("Status kehadiran tidak dapat clock out", 409)
+
+    if now < shift_end:
+        return None, (
+            f"Absen pulang belum dibuka. Jam kerja selesai pukul {schedule.shift.end_time.strftime('%H:%M')}",
+            403
+        )
 
     attendance.clock_out = now
     attendance.work_minutes = int((now - attendance.clock_in).total_seconds() // 60)
@@ -1338,6 +1378,11 @@ def get_attendance(user):
         
         data = []
         for row in query:
+            work_minutes = calculate_work_minutes(
+                row.clock_in,
+                row.clock_out,
+                row.work_minutes or 0
+            )
             data.append({
                 "id": row.id,
                 "schedule_id": row.schedule_id,
@@ -1355,7 +1400,7 @@ def get_attendance(user):
                 "clock_out": row.clock_out.isoformat() if row.clock_out else None,
                 "status": row.status or "NOT_CHECKED_IN",
                 "late_minutes": row.late_minutes or 0,
-                "work_minutes": row.work_minutes or 0
+                "work_minutes": work_minutes
             })
         
         return jsonify({
@@ -1531,8 +1576,72 @@ def get_current_user_today_schedule(user):
     return schedule, None
 
 
+def serialize_current_attendance(schedule):
+    attendance = Attendance.query.filter_by(schedule_id=schedule.id).first()
+    if attendance:
+        sync_attendance_with_schedule(schedule, attendance)
+
+    now = waktu_wib()
+    shift_start, shift_end = schedule_datetime_range(schedule)
+    work_minutes = calculate_work_minutes(
+        attendance.clock_in if attendance else None,
+        attendance.clock_out if attendance else None,
+        attendance.work_minutes if attendance else 0
+    )
+
+    return {
+        "schedule_id": schedule.id,
+        "staff_name": schedule.staff.full_name,
+        "position": role_label(schedule.staff.user.role.role_name if schedule.staff.user and schedule.staff.user.role else schedule.staff.position),
+        "department": role_group(schedule.staff.user.role.role_name if schedule.staff.user and schedule.staff.user.role else schedule.staff.department),
+        "schedule_date": schedule.schedule_date.isoformat(),
+        "shift_name": schedule.shift.shift_name,
+        "start_time": schedule.shift.start_time.strftime("%H:%M"),
+        "end_time": schedule.shift.end_time.strftime("%H:%M"),
+        "status": attendance.status if attendance else "NOT_CHECKED_IN",
+        "clock_in": attendance.clock_in.isoformat() if attendance and attendance.clock_in else None,
+        "clock_out": attendance.clock_out.isoformat() if attendance and attendance.clock_out else None,
+        "work_minutes": work_minutes,
+        "can_clock_in": bool(attendance is None or not attendance.clock_in) and shift_start <= now <= shift_end,
+        "can_clock_out": bool(attendance and attendance.clock_in and not attendance.clock_out) and now >= shift_end,
+        "clock_in_locked_message": (
+            f"Absen masuk dibuka pukul {schedule.shift.start_time.strftime('%H:%M')}"
+            if now < shift_start else ""
+        ),
+        "clock_out_locked_message": (
+            f"Absen pulang dibuka pukul {schedule.shift.end_time.strftime('%H:%M')}"
+            if now < shift_end else ""
+        )
+    }
+
+
+@staff_bp.route("/attendance/me", methods=["GET"])
+@check_authorization("EMPLOYEE")
+def current_user_attendance(user):
+    try:
+        schedule, message = get_current_user_today_schedule(user)
+        if not schedule:
+            return jsonify({
+                "success": False,
+                "message": message
+            }), 404
+
+        data = serialize_current_attendance(schedule)
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "data": data
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
 @staff_bp.route("/attendance/clock-in", methods=["PATCH"])
-@check_authorization("FINANCE")
+@check_authorization("EMPLOYEE")
 def clock_in_current_user(user):
     """Clock in for the current logged-in staff profile."""
     try:
@@ -1561,7 +1670,8 @@ def clock_in_current_user(user):
                 "schedule_id": schedule.id,
                 "status": attendance.status,
                 "clock_in": attendance.clock_in.isoformat(),
-                "late_minutes": attendance.late_minutes
+                "late_minutes": attendance.late_minutes,
+                **serialize_current_attendance(schedule)
             }
         }), 200
     except Exception as e:
@@ -1573,7 +1683,7 @@ def clock_in_current_user(user):
 
 
 @staff_bp.route("/attendance/clock-out", methods=["PATCH"])
-@check_authorization("FINANCE")
+@check_authorization("EMPLOYEE")
 def clock_out_current_user(user):
     """Clock out for the current logged-in staff profile."""
     try:
@@ -1603,7 +1713,8 @@ def clock_out_current_user(user):
                 "status": attendance.status,
                 "clock_out": attendance.clock_out.isoformat(),
                 "late_minutes": attendance.late_minutes,
-                "work_minutes": attendance.work_minutes
+                "work_minutes": attendance.work_minutes,
+                **serialize_current_attendance(schedule)
             }
         }), 200
     except Exception as e:
@@ -2102,12 +2213,39 @@ def get_staff_accounts():
             "id": row.id,
             "name": row.full_name or "-",
             "username": row.username,
-            "role": row.role_name,
+            "role": role_form_code(row.role_name),
+            "role_label": role_label(row.role_name),
+            "role_group": role_group(row.role_name),
             "status": row.status,
             "last_login": row.updated_at.strftime("%d/%m/%Y %H:%M")
             if row.updated_at else "-"
 
         })
+
+    return jsonify({
+        "success": True,
+        "data": data
+    })
+
+
+@staff_bp.route("/roles", methods=["GET"])
+def get_staff_roles():
+    roles = db.session.execute(text("""
+        SELECT role_name, description
+        FROM roles
+        WHERE UPPER(role_name) NOT IN ('OWNER', 'KASIR', 'HRD')
+        ORDER BY role_name
+    """)).fetchall()
+
+    data = []
+    for row in roles:
+        data.append({
+            "code": row.role_name,
+            "label": role_label(row.role_name),
+            "group": role_group(row.role_name)
+        })
+
+    data.sort(key=lambda item: role_sort_key(item["code"]))
 
     return jsonify({
         "success": True,

@@ -109,6 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currentUserRole = "";
     let leaveDocumentsData = [];
     let editingLeaveRequestId = null;
+    let accountRoleOptions = [];
     let employeeData = [];
     let filteredEmployeeData = [];
     let employeeCurrentPage = 1;
@@ -178,6 +179,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!isoString) return "--:--";
         const date = new Date(isoString);
         return date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function calculateWorkMinutes(record) {
+        const storedMinutes = Number(record?.work_minutes || 0);
+        if (storedMinutes > 0) return storedMinutes;
+        if (!record?.clock_in || !record?.clock_out) return 0;
+
+        const start = new Date(record.clock_in);
+        const end = new Date(record.clock_out);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+
+        return Math.max(Math.floor((end - start) / 60000), 0);
+    }
+
+    function formatWorkDuration(record) {
+        const minutes = calculateWorkMinutes(record);
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        return `${String(hours).padStart(2, "0")}h ${String(remainingMinutes).padStart(2, "0")}m`;
     }
 
     function formatDate(dateString) {
@@ -340,11 +360,61 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function isFinanceRole() {
-        return currentUserRole === "FINANCE";
+        return ["FINANCE", "TIM_FINANCE"].includes(currentUserRole);
     }
 
     function isOwnerRole() {
         return currentUserRole === "OWNER";
+    }
+
+    function roleDisplayName(item) {
+        return item?.role_label || item?.role || "-";
+    }
+
+    function buildGroupedRoleOptions(options, includeAll = false) {
+        const groups = new Map();
+        options.forEach(role => {
+            const group = role.group || "Operasional";
+            if (!groups.has(group)) groups.set(group, []);
+            groups.get(group).push(role);
+        });
+
+        const html = [];
+        if (includeAll) {
+            html.push(`<option value="">Semua Role</option>`);
+        }
+
+        groups.forEach((roles, group) => {
+            html.push(`<optgroup label="${escapeHtml(group)}">`);
+            roles.forEach(role => {
+                html.push(`<option value="${escapeHtml(role.code)}">${escapeHtml(role.label)}</option>`);
+            });
+            html.push(`</optgroup>`);
+        });
+
+        return html.join("");
+    }
+
+    async function loadAccountRoles() {
+        try {
+            const response = await apiRequest("/api/staff/roles");
+            accountRoleOptions = response.data || [];
+
+            const roleSelect = document.getElementById("employeeRole");
+            const roleFilter = document.getElementById("employeeRoleFilter");
+
+            if (roleSelect) {
+                roleSelect.innerHTML = buildGroupedRoleOptions(accountRoleOptions, false);
+            }
+            if (roleFilter) {
+                roleFilter.innerHTML = buildGroupedRoleOptions([
+                    { code: "OWNER", label: "Owner & Agency Service", group: "Manajemen" },
+                    ...accountRoleOptions
+                ], true);
+            }
+        } catch (error) {
+            console.error("Error loading account roles:", error);
+        }
     }
 
     function setHidden(selector, hidden) {
@@ -579,18 +649,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 <td>
 
-                    ${
-                        record.work_minutes > 0 
-                        ?
-                        Math.floor(record.work_minutes / 60)
-                        + "h " +
-                        (record.work_minutes % 60)
-                        + "m"
-
-                        :
-
-                        "00h 00m"
-                    }
+                    ${formatWorkDuration(record)}
 
                 </td>
 
@@ -1690,6 +1749,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
             if (isOwnerRole()) {
+                await loadAccountRoles();
                 await loadLeaveRequests();
                 await loadEmployees();
             }
@@ -2052,7 +2112,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     <td>${escapeHtml(item.username || "-")}</td>
 
-                    <td>${escapeHtml(item.role || "-")}</td>
+                    <td>${escapeHtml(roleDisplayName(item))}</td>
 
                     <td>
 
@@ -2136,6 +2196,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const name = String(item.name || "").toLowerCase();
             const username = String(item.username || "").toLowerCase();
             const itemRole = String(item.role || "");
+            const itemRoleLabel = String(roleDisplayName(item)).toLowerCase();
 
             const matchKeyword =
 
@@ -2143,7 +2204,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 ||
 
-                username.includes(keyword);
+                username.includes(keyword)
+
+                ||
+
+                itemRoleLabel.includes(keyword);
 
             const matchRole =
 
@@ -2451,7 +2516,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("employeeName").value = "";
         document.getElementById("employeeUsername").value = "";
         document.getElementById("employeePassword").value = "";
-        document.getElementById("employeeRole").value = "";
+        document.getElementById("employeeRole").value = accountRoleOptions[0]?.code || "TIM_TOKO";
 
         employeeModal.classList.remove("hidden");
 

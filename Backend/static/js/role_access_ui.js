@@ -27,19 +27,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         const user = await currentUser();
         const role = String(user.role || "").toUpperCase();
+        const financeRoles = ["FINANCE", "TIM_FINANCE"];
+        const operationalRoles = [
+            "KASIR",
+            "HRD",
+            "QC",
+            "TRAINER_BD",
+            "TIM_TRAINER_BD",
+            "GUDANG_PENGIRIMAN",
+            "TIM_GUDANG",
+            "KOORDINATOR_TOKO",
+            "TIM_TOKO",
+            "KOORDINATOR_PRODUKSI",
+            "TIM_PRODUKSI",
+            "KOOR_IPAL_BAHAN_BAKU",
+            "TIM_IPAL_BAHAN_BAKU",
+            "KOOR_PRODUK_OLAHAN",
+            "TIM_PRODUK_OLAHAN"
+        ];
         document.body.dataset.role = role;
 
         document.querySelectorAll(".owner-only").forEach(element => {
             element.hidden = role !== "OWNER";
         });
 
-        if (role === "FINANCE") {
+        if (financeRoles.includes(role)) {
             hideNavByHref("/owner/menu");
         }
 
-        if (role === "KASIR") {
-            const nav = document.querySelector(".sidebar-menu");
-            ensureCashierPosLink(nav);
+        if (operationalRoles.includes(role)) {
             hideNavByHref("/owner/dashboard");
             hideNavByHref("/owner/staff");
             hideNavByHref("/owner/menu");

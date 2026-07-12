@@ -587,19 +587,27 @@
                                 </option>
 
                                 <option value="OWNER">
-                                    Owner
+                                    Owner & Agency Service
                                 </option>
 
                                 <option value="FINANCE">
                                     Finance
                                 </option>
 
-                                <option value="KASIR">
-                                    Kasir
+                                <option value="TIM_FINANCE">
+                                    Tim Finance
                                 </option>
 
-                                <option value="HRD">
-                                    HRD
+                                <option value="QC">
+                                    QC
+                                </option>
+
+                                <option value="KOORDINATOR_TOKO">
+                                    Koordinator Toko
+                                </option>
+
+                                <option value="TIM_TOKO">
+                                    Tim Toko
                                 </option>
 
                             </select>
@@ -1093,8 +1101,21 @@
                     Role
                     <select id="employeeRole">
 
-                        <option value="KASIR">Kasir</option>
                         <option value="FINANCE">Finance</option>
+                        <option value="TIM_FINANCE">Tim Finance</option>
+                        <option value="QC">QC</option>
+                        <option value="TRAINER_BD">Trainer & Business Development</option>
+                        <option value="TIM_TRAINER_BD">Tim Trainer & BD</option>
+                        <option value="GUDANG_PENGIRIMAN">Gudang dan Pengiriman</option>
+                        <option value="TIM_GUDANG">Tim Gudang</option>
+                        <option value="KOORDINATOR_TOKO">Koordinator Toko</option>
+                        <option value="TIM_TOKO">Tim Toko</option>
+                        <option value="KOORDINATOR_PRODUKSI">Koordinator Produksi</option>
+                        <option value="TIM_PRODUKSI">Tim Produksi</option>
+                        <option value="KOOR_IPAL_BAHAN_BAKU">Koor IPAL & Bahan Baku</option>
+                        <option value="TIM_IPAL_BAHAN_BAKU">Tim IPAL & Bahan Baku</option>
+                        <option value="KOOR_PRODUK_OLAHAN">Koor Produk Olahan</option>
+                        <option value="TIM_PRODUK_OLAHAN">Tim Produk Olahan</option>
 
                     </select>
                 </label>
@@ -1125,8 +1146,8 @@
 
     </div>
 
-    <script src="{{ url_for('static', filename='js/role_access_ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/owner_staff.js') }}?v=20260712-7"></script>
+    <script src="{{ url_for('static', filename='js/role_access_ui.js') }}?v=20260712-3"></script>
+    <script src="{{ url_for('static', filename='js/owner_staff.js') }}?v=20260712-9"></script>
     <script src="{{ url_for('static', filename='js/owner_account_controls.js') }}"></script>
 
 </body>

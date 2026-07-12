@@ -9,6 +9,7 @@ from flask import (
 )
 
 from model import Role, db, User
+from utils.roles import FINANCE_ROLE_CODES, OPERATIONAL_ROLE_CODES
 
 import bcrypt
 
@@ -24,7 +25,7 @@ from datetime import datetime
 
 from utils.auth import role_name_required
 
-MANAGED_ACCOUNT_ROLES = {"FINANCE", "KASIR"}
+MANAGED_ACCOUNT_ROLES = FINANCE_ROLE_CODES | OPERATIONAL_ROLE_CODES
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 FORGOT_PASSWORD_SUCCESS_MESSAGE = (
     "Link reset password berhasil dikirim. Silakan cek email atau folder spam."
