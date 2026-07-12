@@ -7,6 +7,7 @@ from utils.midtrans_service import create_payment
 import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from routes.staff import clock_in_schedule, clock_out_schedule
 
 cashier_bp = Blueprint(
     "cashier",
@@ -295,33 +296,41 @@ def attendance_check_in():
             }),400
 
         now = waktu_wib()
+        
+        # ==========================
+        # CEK SUDAH ABSEN MASUK
+        # ==========================
 
-        db.session.execute(text("""
-            INSERT INTO attendance
-            (
-                staff_id,
-                schedule_id,
-                attendance_date,
-                clock_in,
-                status,
-                created_at
-            )
-            VALUES
-            (
-                :staff_id,
-                :schedule_id,
-                CURDATE(),
-                :clock_in,
-                'PRESENT',
-                :created_at
-            )
-        """),
-        {
-            "staff_id": staff_id,
-            "schedule_id": schedule.id,
-            "clock_in": now,
-            "created_at": now
-        })
+        attendance = db.session.execute(text("""
+            SELECT id
+            FROM attendance
+            WHERE schedule_id = :schedule_id
+        """), {
+            "schedule_id": schedule.id
+        }).fetchone()
+
+        if attendance:
+
+            return jsonify({
+
+                "success": False,
+                "message": "Karyawan sudah melakukan absen masuk"
+
+            }),400
+
+        attendance, error = clock_in_schedule(schedule, now)
+
+        if error:
+
+            message, status_code = error
+
+            return jsonify({
+
+                "success": False,
+                "message": message
+
+            }), status_code
+
 
         db.session.commit()
 
@@ -344,9 +353,7 @@ def attendance_check_in():
             "message":str(e)
 
         }),500
-    
 
-    
 
 # ==========================
 # ABSEN PULANG
@@ -364,24 +371,62 @@ def attendance_check_out():
     
         now = waktu_wib()
 
+        # Cari jadwal hari ini
+        schedule = db.session.execute(text("""
+            SELECT id
+            FROM staff_schedules
+            WHERE
+                staff_id = :staff_id
+                AND schedule_date = CURDATE()
+        """), {
+            "staff_id": staff_id
+        }).fetchone()
+
+        if not schedule:
+
+            return jsonify({
+                "success": False,
+                "message": "Karyawan belum memiliki jadwal hari ini"
+            }), 400
+
+
+        # Pastikan sudah absen masuk
+        attendance = db.session.execute(text("""
+            SELECT id, clock_out
+            FROM attendance
+            WHERE schedule_id = :schedule_id
+        """), {
+            "schedule_id": schedule.id
+        }).fetchone()
+
+        if not attendance:
+
+            return jsonify({
+                "success": False,
+                "message": "Karyawan belum melakukan absen masuk"
+            }), 400
+
+        if attendance.clock_out:
+
+            return jsonify({
+                "success": False,
+                "message": "Karyawan sudah melakukan absen pulang"
+            }), 400
+
+
         db.session.execute(text("""
             UPDATE attendance
-
             SET
-            clock_out=:clock_out,
-            status='COMPLETED',
-            updated_at=:updated_at
-
+                clock_out = :clock_out,
+                status = 'COMPLETED',
+                updated_at = :updated_at
             WHERE
-                staff_id=:staff_id
-                AND attendance_date=CURDATE()
-        """),
-        {
-            "staff_id": staff_id,
+                schedule_id = :schedule_id
+        """), {
+            "schedule_id": schedule.id,
             "clock_out": now,
             "updated_at": now
         })
-
 
         db.session.commit()
 
