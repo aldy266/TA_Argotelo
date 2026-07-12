@@ -1,0 +1,34 @@
+<div id="attendanceModal" class="attendance-modal" hidden aria-hidden="true">
+    <div class="attendance-modal__backdrop" data-attendance-close></div>
+    <section class="attendance-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="attendanceModalTitle">
+        <header class="attendance-modal__header">
+            <div>
+                <span class="attendance-modal__eyebrow">Absensi Pribadi</span>
+                <h2 id="attendanceModalTitle">Absensi Karyawan</h2>
+                <p id="attendanceTodayLabel">Memuat tanggal...</p>
+            </div>
+            <button class="attendance-modal__close" type="button" aria-label="Tutup" data-attendance-close>
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </header>
+
+        <div class="attendance-modal__details">
+            <div><small>Nama</small><strong id="attendanceStaffName">Memuat...</strong></div>
+            <div><small>Jabatan</small><strong id="attendanceStaffPosition">-</strong></div>
+            <div><small>Shift Hari Ini</small><strong id="attendanceShiftName">-</strong></div>
+            <div><small>Jam Kerja</small><strong id="attendanceShiftTime">-</strong></div>
+        </div>
+
+        <div class="attendance-modal__actions">
+            <button id="attendanceClockInBtn" class="attendance-modal__clock-in" type="button"><i class="bi bi-box-arrow-in-right"></i> Absen Masuk</button>
+            <button id="attendanceClockOutBtn" class="attendance-modal__clock-out" type="button"><i class="bi bi-box-arrow-left"></i> Absen Pulang</button>
+        </div>
+
+        <div class="attendance-modal__status">
+            <span>Masuk <b id="attendanceTimeIn">-</b></span>
+            <span>Pulang <b id="attendanceTimeOut">-</b></span>
+            <span>Jam Kerja <b id="attendanceWorkDuration">00h 00m</b></span>
+        </div>
+        <p id="attendanceMessage" class="attendance-modal__message" role="status"></p>
+    </section>
+</div>

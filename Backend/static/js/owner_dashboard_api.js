@@ -243,10 +243,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         el.incomeInfo.textContent = label;
         el.incomeInfo.classList.remove("danger");
         el.incomeInfo.classList.add("success");
-        const totalStaff = Number.isFinite(Number(stats.total_staff))
-            ? Number(stats.total_staff)
-            : Number(stats.total_scheduled || 0);
-        el.attendanceValue.textContent = `${stats.present_count} / ${totalStaff}`;
+        const totalScheduled = Number(stats.total_scheduled || 0);
+        el.attendanceValue.textContent = `${stats.present_count} / ${totalScheduled}`;
         el.attendanceInfo.textContent = `${stats.attendance_rate}% Kehadiran - ${label}`;
     }
 

@@ -20,6 +20,9 @@ href="{{ url_for('static', filename='css/cashier_transaction.css') }}">
 <link rel="stylesheet"
 href="{{ url_for('static', filename='css/cashier_sidebar.css') }}">
 
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/attendance_modal.css') }}">
+
 </head>
 
 
@@ -70,7 +73,7 @@ class="active">
 
 </a>
 
-<a href="{{ url_for('employee_attendance_page') }}">
+<a href="#" class="js-attendance-trigger">
 
 <i class="bi bi-person-check"></i>
 
@@ -282,7 +285,10 @@ Memuat transaksi...
 </div>
 
 
+{% include '_attendance_modal.html' %}
+
 <script src="{{ url_for('static', filename='js/cashier_transaction.js') }}"></script>
+<script src="{{ url_for('static', filename='js/attendance_modal.js') }}"></script>
 
 
 </body>

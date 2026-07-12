@@ -1731,19 +1731,29 @@ def clock_out_current_user(user):
 @staff_bp.route("/statistics/today", methods=["GET"])
 @check_authorization("OWNER", "FINANCE", "HRD")
 def get_today_statistics(user):
-    """Get today's statistics"""
+    """Get attendance statistics for today or the requested schedule date."""
     try:
-        today = waktu_wib().date()
+        selected_date = (request.args.get("date") or "").strip()
+        if selected_date:
+            try:
+                attendance_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+            except ValueError:
+                return jsonify({
+                    "success": False,
+                    "message": "Format tanggal tidak valid"
+                }), 400
+        else:
+            attendance_date = waktu_wib().date()
         
         total_staff = db.session.query(func.count(Staff.id)).filter(
             Staff.status == "ACTIVE"
         ).scalar() or 0
 
-        # Total scheduled active staff for today
+        # Total scheduled active staff for the selected date
         total_scheduled = db.session.query(func.count(StaffSchedule.id)).join(
             Staff, StaffSchedule.staff_id == Staff.id
         ).filter(
-            StaffSchedule.schedule_date == today,
+            StaffSchedule.schedule_date == attendance_date,
             Staff.status == "ACTIVE"
         ).scalar() or 0
         
@@ -1753,7 +1763,7 @@ def get_today_statistics(user):
         ).join(
             Staff, StaffSchedule.staff_id == Staff.id
         ).filter(
-            Attendance.attendance_date == today,
+            Attendance.attendance_date == attendance_date,
             Staff.status == "ACTIVE",
             Attendance.status.in_(["PRESENT", "LATE", "COMPLETED"])
         ).scalar() or 0
@@ -1764,7 +1774,7 @@ def get_today_statistics(user):
         ).join(
             Staff, StaffSchedule.staff_id == Staff.id
         ).filter(
-            Attendance.attendance_date == today,
+            Attendance.attendance_date == attendance_date,
             Staff.status == "ACTIVE",
             Attendance.late_minutes > 0
         ).scalar() or 0
@@ -1775,7 +1785,7 @@ def get_today_statistics(user):
         ).join(
             Staff, StaffSchedule.staff_id == Staff.id
         ).filter(
-            Attendance.attendance_date == today,
+            Attendance.attendance_date == attendance_date,
             Staff.status == "ACTIVE",
             Attendance.late_minutes > 0
         ).scalar() or 0
@@ -1786,7 +1796,7 @@ def get_today_statistics(user):
         ).join(
             Staff, StaffSchedule.staff_id == Staff.id
         ).filter(
-            Attendance.attendance_date == today,
+            Attendance.attendance_date == attendance_date,
             Staff.status == "ACTIVE",
             Attendance.status.in_(["LEAVE", "SICK"])
         ).scalar() or 0

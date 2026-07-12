@@ -124,6 +124,7 @@
         @media (max-width:760px) { .pos-page { display:block; } .sidebar { position:static; } .topbar, .section-head { align-items:flex-start; flex-direction:column; height:auto; padding:18px; } .cart { border-left:0; } }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cashier_sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/attendance_modal.css') }}">
 </head>
 
 <body>
@@ -134,7 +135,7 @@
                 <a href="{{ url_for('cashier.pos') }}" class="active"><i class="bi bi-calculator"></i><span>POS System</span></a>
                 <a href="{{ url_for('cashier.inventory') }}"><i class="bi bi-archive"></i><span>Inventory</span></a>
                 <a href="{{ url_for('cashier.transaction') }}"><i class="bi bi-receipt"></i><span>Riwayat Transaksi</span></a>
-                <a href="{{ url_for('employee_attendance_page') }}"><i class="bi bi-person-check"></i><span>Absensi</span></a>
+                <a href="#" class="js-attendance-trigger"><i class="bi bi-person-check"></i><span>Absensi</span></a>
             </nav>
             <div class="sidebar-footer">
                 <button id="logoutBtn" type="button"><i class="bi bi-box-arrow-right"></i><span>Sign Out</span></button>
@@ -220,6 +221,7 @@
             </div>
         </aside>
     </main>
+    {% include '_attendance_modal.html' %}
     <!-- MIDTRANS SNAP SANDBOX -->
     <script
         type="text/javascript"
@@ -230,6 +232,7 @@
 
     <!-- POS LOGIC -->
     <script src="{{ url_for('static', filename='js/cashier_pos.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/attendance_modal.js') }}"></script>
 
 </body>
 </html>

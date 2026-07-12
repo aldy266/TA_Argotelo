@@ -97,6 +97,7 @@ filename='css/cashier_inventory.css'
         @media (max-width:900px) { .page { display:block; } .sidebar { border-right:0; border-bottom:1px solid var(--line); } .topbar, .header { height:auto; align-items:flex-start; flex-direction:column; padding:18px; } .content { padding:18px; } .stats { grid-template-columns:1fr; } table { min-width:720px; } .table-card { overflow:auto; } }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cashier_sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/attendance_modal.css') }}">
 
 </head>
 
@@ -108,7 +109,7 @@ filename='css/cashier_inventory.css'
                 <a href="{{ url_for('cashier.pos') }}"><i class="bi bi-calculator"></i><span>POS System</span></a>
                 <a href="{{ url_for('cashier.inventory') }}" class="active"><i class="bi bi-archive"></i><span>Inventory</span></a>
                 <a href="{{ url_for('cashier.transaction') }}"><i class="bi bi-receipt"></i><span>Riwayat Transaksi</span></a>
-                <a href="{{ url_for('employee_attendance_page') }}"><i class="bi bi-person-check"></i><span>Absensi</span></a>
+                <a href="#" class="js-attendance-trigger"><i class="bi bi-person-check"></i><span>Absensi</span></a>
 
             </nav>
             <div class="sidebar-footer">
@@ -202,7 +203,9 @@ filename='css/cashier_inventory.css'
         </main>
     </div>
 
+    {% include '_attendance_modal.html' %}
     <script src="{{ url_for('static', filename='js/cashier_inventory.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/attendance_modal.js') }}"></script>
 </body>
 
 </html>

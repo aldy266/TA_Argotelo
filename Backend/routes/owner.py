@@ -381,14 +381,21 @@ def dashboard_api():
         Transaction.status == "COMPLETED",
     ).scalar()
 
-    total_staff = Staff.query.filter_by(status="ACTIVE").count()
-    total_scheduled = db.session.query(func.count(func.distinct(StaffSchedule.staff_id))).filter(
+    total_scheduled = db.session.query(func.count(StaffSchedule.id)).join(
+        Staff, StaffSchedule.staff_id == Staff.id
+    ).filter(
         StaffSchedule.schedule_date >= start_date,
         StaffSchedule.schedule_date <= end_date,
+        Staff.status == "ACTIVE",
     ).scalar() or 0
-    present_count = db.session.query(func.count(func.distinct(Attendance.staff_id))).filter(
+    present_count = db.session.query(func.count(func.distinct(Attendance.schedule_id))).join(
+        StaffSchedule, Attendance.schedule_id == StaffSchedule.id
+    ).join(
+        Staff, StaffSchedule.staff_id == Staff.id
+    ).filter(
         Attendance.attendance_date >= start_date,
         Attendance.attendance_date <= end_date,
+        Staff.status == "ACTIVE",
         Attendance.status.in_(["PRESENT", "LATE", "COMPLETED"]),
     ).scalar() or 0
 
@@ -452,9 +459,8 @@ def dashboard_api():
             "monthly_income": rupiah_value(period_income),
             "period_income": rupiah_value(period_income),
             "present_count": present_count,
-            "total_staff": total_staff,
             "total_scheduled": total_scheduled,
-            "attendance_rate": round((present_count / total_staff) * 100, 1) if total_staff else 0,
+            "attendance_rate": round((present_count / total_scheduled) * 100, 1) if total_scheduled else 0,
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat(),
         },

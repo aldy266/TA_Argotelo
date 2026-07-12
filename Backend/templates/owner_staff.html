@@ -31,6 +31,8 @@
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/owner_staff.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/attendance_modal.css') }}">
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/owner_account_controls.css') }}">
@@ -86,7 +88,7 @@
     </a>
 
     {% if current_user_role in ["FINANCE", "TIM_FINANCE"] %}
-    <a href="{{ url_for('employee_attendance_page') }}">
+    <a href="#" class="js-attendance-trigger">
         <i class="bi bi-person-check"></i>
         <span>Absensi</span>
     </a>
@@ -135,7 +137,7 @@
 
                     <span>
 
-                        Hadir Hari Ini
+                        Hadir
 
                     </span>
 
@@ -1153,9 +1155,16 @@
 
     </div>
 
+{% if current_user_role in ["FINANCE", "TIM_FINANCE"] %}
+{% include '_attendance_modal.html' %}
+{% endif %}
+
     <script src="{{ url_for('static', filename='js/role_access_ui.js') }}?v=20260712-3"></script>
-    <script src="{{ url_for('static', filename='js/owner_staff.js') }}?v=20260712-9"></script>
+    <script src="{{ url_for('static', filename='js/owner_staff.js') }}?v=20260712-11"></script>
     <script src="{{ url_for('static', filename='js/owner_account_controls.js') }}"></script>
+{% if current_user_role in ["FINANCE", "TIM_FINANCE"] %}
+    <script src="{{ url_for('static', filename='js/attendance_modal.js') }}"></script>
+{% endif %}
 
 </body>
 

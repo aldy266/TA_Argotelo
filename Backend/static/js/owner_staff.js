@@ -153,6 +153,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             const response = await fetch(url, {
                 ...options,
+                cache: "no-store",
                 headers: options.body instanceof FormData
                     ? { ...options.headers }
                     : {
@@ -453,10 +454,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     // LOAD STATISTICS
     // =====================================
 
-    async function loadStatistics() {
+    async function loadStatistics(dateValue = selectedAttendanceDate || getTodayInputValue()) {
         try {
-            const response = await apiRequest("/api/staff/statistics/today");
-            if (response.success) {
+            const response = await apiRequest(
+                `/api/staff/statistics/today?date=${encodeURIComponent(dateValue)}`
+            );
+            if (response.success && dateValue === selectedAttendanceDate) {
                 updateStatisticsUI(response.data);
             }
         } catch (error) {
@@ -521,11 +524,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             selectedAttendanceDate = dateValue;
             updateAttendanceDateLabel();
             const response = await apiRequest(`/api/staff/attendance?date=${encodeURIComponent(selectedAttendanceDate)}`);
+            if (dateValue !== selectedAttendanceDate) return;
             if (response.success) {
                 attendanceData = response.data;
                 filteredData = [...attendanceData];
                 renderAttendanceTable();
             }
+            await loadStatistics(selectedAttendanceDate);
         } catch (error) {
             console.error("Error loading attendance:", error);
         }
