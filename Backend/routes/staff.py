@@ -1,11 +1,13 @@
 import io
 import re
 from pathlib import Path
+from uuid import uuid4
 
 from flask import Blueprint, request, jsonify, session, send_file
 from datetime import datetime, timedelta, date, time
 from functools import wraps
 from sqlalchemy import func, text
+from werkzeug.utils import secure_filename
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from model import db, Staff, Shift, StaffSchedule, Attendance, LeaveRequest, User
@@ -25,10 +27,13 @@ STAFF_IMPORT_HEADERS = [
 STAFF_IMPORT_REQUIRED = ["employee_code", "full_name", "department"]
 ALLOWED_STAFF_STATUS = {"ACTIVE", "INACTIVE"}
 MAX_IMPORT_SIZE = 5 * 1024 * 1024
+MAX_LEAVE_DOCUMENT_SIZE = 5 * 1024 * 1024
+ALLOWED_LEAVE_DOCUMENT_EXTENSIONS = {"pdf", "jpg", "jpeg", "png", "webp", "doc", "docx"}
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 BASE_DIR = Path(__file__).resolve().parents[1]
 SAMPLE_DATA_DIR = BASE_DIR / "sample_data"
 DUMMY_STAFF_FILE = SAMPLE_DATA_DIR / "data_dummy_staff.xlsx"
+LEAVE_DOCUMENT_DIR = BASE_DIR / "static" / "uploads" / "leave_documents"
 
 # ====================================================
 # AUTHORIZATION HELPERS
@@ -407,6 +412,61 @@ def validate_import_file(file_storage):
         return "Ukuran file maksimal 5 MB."
 
     return None
+
+
+def validate_leave_document(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+
+    filename = secure_filename(file_storage.filename)
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+
+    if extension not in ALLOWED_LEAVE_DOCUMENT_EXTENSIONS:
+        return "Format surat izin harus PDF, gambar, DOC, atau DOCX."
+
+    current_pos = file_storage.stream.tell()
+    file_storage.stream.seek(0, io.SEEK_END)
+    size = file_storage.stream.tell()
+    file_storage.stream.seek(current_pos)
+
+    if size > MAX_LEAVE_DOCUMENT_SIZE:
+        return "Ukuran surat izin maksimal 5 MB."
+
+    return None
+
+
+def save_leave_document(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+
+    validation_error = validate_leave_document(file_storage)
+    if validation_error:
+        raise ValueError(validation_error)
+
+    LEAVE_DOCUMENT_DIR.mkdir(parents=True, exist_ok=True)
+    filename = secure_filename(file_storage.filename)
+    extension = filename.rsplit(".", 1)[-1].lower()
+    saved_name = f"{waktu_wib().strftime('%Y%m%d%H%M%S')}-{uuid4().hex[:10]}.{extension}"
+    save_path = LEAVE_DOCUMENT_DIR / saved_name
+    file_storage.save(save_path)
+    return f"/static/uploads/leave_documents/{saved_name}"
+
+
+def serialize_leave_request(leave_req):
+    return {
+        "id": leave_req.id,
+        "staff_id": leave_req.staff_id,
+        "staff_name": leave_req.staff.full_name,
+        "leave_type": leave_req.leave_type,
+        "start_date": leave_req.start_date.isoformat(),
+        "end_date": leave_req.end_date.isoformat(),
+        "reason": leave_req.reason,
+        "document_url": leave_req.document_url,
+        "status": leave_req.status,
+        "created_at": leave_req.created_at.isoformat() if leave_req.created_at else None,
+        "reviewed_at": leave_req.reviewed_at.isoformat() if leave_req.reviewed_at else None,
+        "reviewer": leave_req.reviewer.fullname if leave_req.reviewer else None
+    }
 
 
 def row_is_empty(row_values):
@@ -1713,24 +1773,38 @@ def get_month_statistics(user):
 def get_leave_requests(user):
     """Get pending leave requests"""
     try:
-        requests = LeaveRequest.query.filter_by(status="PENDING").all()
-        
-        data = [{
-            "id": r.id,
-            "staff_id": r.staff_id,
-            "staff_name": r.staff.full_name,
-            "leave_type": r.leave_type,
-            "start_date": r.start_date.isoformat(),
-            "end_date": r.end_date.isoformat(),
-            "reason": r.reason,
-            "document_url": r.document_url,
-            "status": r.status,
-            "created_at": r.created_at.isoformat()
-        } for r in requests]
+        requests = LeaveRequest.query.filter_by(status="PENDING").order_by(
+            LeaveRequest.created_at.desc()
+        ).all()
+        data = [serialize_leave_request(r) for r in requests]
         
         return jsonify({
             "success": True,
             "data": data
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@staff_bp.route("/leave-request/manage", methods=["GET"])
+@check_authorization("FINANCE", "OWNER")
+def manage_leave_requests(user):
+    """Get leave request documents for finance management."""
+    try:
+        status = normalize_cell(request.args.get("status")).upper()
+        query = LeaveRequest.query
+
+        if status in {"PENDING", "APPROVED", "REJECTED"}:
+            query = query.filter(LeaveRequest.status == status)
+
+        requests = query.order_by(LeaveRequest.created_at.desc()).limit(200).all()
+
+        return jsonify({
+            "success": True,
+            "data": [serialize_leave_request(r) for r in requests]
         }), 200
     except Exception as e:
         return jsonify({
@@ -1744,7 +1818,9 @@ def get_leave_requests(user):
 def create_leave_request(user):
     """Create leave/sick request for a staff member"""
     try:
-        data = request.get_json(silent=True) or {}
+        is_multipart = request.content_type and request.content_type.startswith("multipart/form-data")
+        data = request.form if is_multipart else (request.get_json(silent=True) or {})
+        document_file = request.files.get("document") if is_multipart else None
 
         if not data.get("staff_id") or not data.get("leave_type"):
             return jsonify({
@@ -1788,6 +1864,7 @@ def create_leave_request(user):
                 "message": "Rentang izin maksimal 1 tahun"
             }), 400
 
+        document_url = save_leave_document(document_file) if document_file else None
         auto_approve = False
         leave_req = LeaveRequest(
             staff_id=staff.id,
@@ -1795,7 +1872,7 @@ def create_leave_request(user):
             start_date=start_date,
             end_date=end_date,
             reason=normalize_cell(data.get("reason")) or None,
-            document_url=normalize_cell(data.get("document_url")) or None,
+            document_url=document_url or normalize_cell(data.get("document_url")) or None,
             status="APPROVED" if auto_approve else "PENDING",
             reviewed_by=user.id if auto_approve else None,
             reviewed_at=waktu_wib() if auto_approve else None
@@ -1825,15 +1902,92 @@ def create_leave_request(user):
                 "leave_type": leave_req.leave_type,
                 "start_date": leave_req.start_date.isoformat(),
                 "end_date": leave_req.end_date.isoformat(),
+                "document_url": leave_req.document_url,
                 "status": leave_req.status,
                 "applied_count": applied_count
             }
         }), 201
-    except ValueError:
+    except ValueError as e:
         db.session.rollback()
         return jsonify({
             "success": False,
-            "message": "Data izin/sakit tidak valid"
+            "message": str(e) or "Data izin/sakit tidak valid"
+        }), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@staff_bp.route("/leave-request/<int:request_id>", methods=["PATCH", "PUT"])
+@check_authorization("FINANCE")
+def update_leave_request(user, request_id):
+    """Update a finance-created leave request and optionally replace its document."""
+    try:
+        leave_req = LeaveRequest.query.get(request_id)
+        if not leave_req:
+            return jsonify({
+                "success": False,
+                "message": "Surat izin tidak ditemukan"
+            }), 404
+
+        if leave_req.status != "PENDING":
+            return jsonify({
+                "success": False,
+                "message": "Surat izin yang sudah disetujui atau ditolak tidak dapat diedit"
+            }), 409
+
+        is_multipart = request.content_type and request.content_type.startswith("multipart/form-data")
+        data = request.form if is_multipart else (request.get_json(silent=True) or {})
+        document_file = request.files.get("document") if is_multipart else None
+
+        leave_type = normalize_cell(data.get("leave_type") or leave_req.leave_type).upper()
+        if leave_type not in {"SICK", "LEAVE", "PERMISSION"}:
+            return jsonify({
+                "success": False,
+                "message": "Jenis izin tidak valid"
+            }), 400
+
+        start_date_value = data.get("start_date") or leave_req.start_date.isoformat()
+        end_date_value = data.get("end_date") or start_date_value
+        start_date = datetime.fromisoformat(start_date_value).date()
+        end_date = datetime.fromisoformat(end_date_value).date()
+
+        if end_date < start_date:
+            return jsonify({
+                "success": False,
+                "message": "Tanggal selesai tidak boleh sebelum tanggal mulai"
+            }), 400
+
+        if (end_date - start_date).days > 366:
+            return jsonify({
+                "success": False,
+                "message": "Rentang izin maksimal 1 tahun"
+            }), 400
+
+        document_url = save_leave_document(document_file) if document_file else None
+
+        leave_req.leave_type = leave_type
+        leave_req.start_date = start_date
+        leave_req.end_date = end_date
+        leave_req.reason = normalize_cell(data.get("reason")) or None
+        if document_url:
+            leave_req.document_url = document_url
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Surat izin berhasil diperbarui",
+            "data": serialize_leave_request(leave_req)
+        }), 200
+    except ValueError as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e) or "Data surat izin tidak valid"
         }), 400
     except Exception as e:
         db.session.rollback()

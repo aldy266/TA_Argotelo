@@ -18,22 +18,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const searchInput = document.querySelector(".attendance-search input");
     const attendanceTable = document.querySelector(".attendance-table tbody");
     const logoutBtn = document.querySelector(".logout");
-    const importStaffBtn = document.getElementById("btn-import-staff");
-    const staffImportModal = document.getElementById("staffImportModal");
-    const closeImportModal = document.getElementById("closeImportModal");
-    const cancelImport = document.getElementById("cancelImport");
-    const staffExcelInput = document.getElementById("staffExcelInput");
-    const selectedExcelName = document.getElementById("selectedExcelName");
-    const submitImport = document.getElementById("submitImport");
-    const importResultModal = document.getElementById("importResultModal");
-    const closeImportResult = document.getElementById("closeImportResult");
-    const closeImportResultButton = document.getElementById("closeImportResultButton");
-    const resultTotal = document.getElementById("resultTotal");
-    const resultImported = document.getElementById("resultImported");
-    const resultSkipped = document.getElementById("resultSkipped");
-    const resultFailed = document.getElementById("resultFailed");
-    const importErrorSection = document.getElementById("importErrorSection");
-    const importErrorList = document.getElementById("importErrorList");
     const viewAllStaff = document.getElementById("view-all-staff");
     const allStaffModal = document.getElementById("allStaffModal");
     const closeAllStaffModal = document.getElementById("closeAllStaffModal");
@@ -71,6 +55,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const leaveEndDateInput = document.getElementById("leaveEndDateInput");
     const leaveReasonInput = document.getElementById("leaveReasonInput");
     const leaveAutoApprove = document.getElementById("leaveAutoApprove");
+    const leaveDocumentInput = document.getElementById("leaveDocumentInput");
+    const leaveDocumentName = document.getElementById("leaveDocumentName");
+    const leaveDocumentsCard = document.getElementById("leaveDocumentsCard");
+    const refreshLeaveDocuments = document.getElementById("refreshLeaveDocuments");
+    const leaveDocumentSearch = document.getElementById("leaveDocumentSearch");
+    const leaveDocumentStatus = document.getElementById("leaveDocumentStatus");
+    const leaveDocumentsTable = document.getElementById("leaveDocumentsTable");
     
     // Statistics
     const statPresent = document.getElementById("stat-present");
@@ -110,13 +101,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let attendanceData = [];
     let filteredData = [];
-    let selectedImportFile = null;
     let allStaffData = [];
     let shiftData = [];
     let selectedScheduleId = null;
     let selectedShiftId = null;
     let selectedAttendanceDate = "";
     let currentUserRole = "";
+    let leaveDocumentsData = [];
+    let editingLeaveRequestId = null;
     let employeeData = [];
     let filteredEmployeeData = [];
     let employeeCurrentPage = 1;
@@ -377,7 +369,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         setHidden(".summary-card", !managementMode);
         setHidden(".shift-card", !ownerMode);
         setHidden(".approval-card", !ownerMode);
-        setHidden("#btn-import-staff", !financeMode);
+        setHidden(".employee-card", !ownerMode);
+        setHidden("#leaveDocumentsCard", !financeMode);
         setHidden("#btn-top-schedule", !managementMode);
         setHidden("#btn-add-shift", !ownerMode);
 
@@ -487,9 +480,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         attendanceTable.innerHTML = filteredData.map(record => {
             const lockedStatuses = ["LEAVE", "SICK", "ABSENT"];
-            const canClockIn = isFinanceRole()
-                && !record.clock_in
-                && !lockedStatuses.includes(record.status);
             const canClockOut = isFinanceRole()
                 && record.clock_in
                 && !record.clock_out
@@ -498,37 +488,26 @@ document.addEventListener("DOMContentLoaded", async () => {
             const canManageSchedule = isFinanceRole() || isOwnerRole();
             const actionButtons = canManageSchedule ? `
                         <button 
-                        class="edit-btn schedule-edit-btn"
+                        class="edit-btn schedule-edit-btn action-icon"
                         type="button"
+                        title="Edit jadwal"
+                        aria-label="Edit jadwal ${escapeHtml(record.full_name)}"
                         data-schedule-id="${record.schedule_id}">
 
                             <i class="bi bi-pencil-square"></i>
-                            Edit 
 
                         </button>
-
-
-                        ${isFinanceRole() && canClockIn ? `
-                        <button 
-                        class="secondary-button clock-in-btn"
-                        type="button"
-                        data-schedule-id="${record.schedule_id}">
-
-                            <i class="bi bi-box-arrow-in-right"></i>
-                            Clock In
-
-                        </button>
-                        ` : ""}
 
 
                         ${isFinanceRole() && canClockOut ? `
                         <button 
-                        class="secondary-button clock-out-btn"
+                        class="secondary-button clock-out-btn action-icon"
                         type="button"
+                        title="Clock out"
+                        aria-label="Clock out ${escapeHtml(record.full_name)}"
                         data-schedule-id="${record.schedule_id}">
 
                             <i class="bi bi-box-arrow-right"></i>
-                            Clock Out
 
                         </button>
                         ` : ""}
@@ -536,24 +515,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                         ${isFinanceRole() ? `
                         <button 
-                        class="secondary-button leave-btn"
+                        class="secondary-button leave-btn action-icon"
                         type="button"
+                        title="Izin / sakit"
+                        aria-label="Ajukan izin atau sakit untuk ${escapeHtml(record.full_name)}"
                         data-schedule-id="${record.schedule_id}">
 
                             <i class="bi bi-file-earmark-medical"></i>
-                            Izin
 
                         </button>
                         ` : ""}
 
 
                         <button 
-                        class="delete-btn schedule-delete-btn"
+                        class="delete-btn schedule-delete-btn action-icon"
                         type="button"
+                        title="Hapus jadwal"
+                        aria-label="Hapus jadwal ${escapeHtml(record.full_name)}"
                         data-schedule-id="${record.schedule_id}">
 
                             <i class="bi bi-trash3"></i>
-                            Hapus
 
                         </button>
             ` : `<span class="readonly-action">Read-only</span>`;
@@ -672,7 +653,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         const editButton = event.target.closest(".schedule-edit-btn");
         const leaveButton = event.target.closest(".leave-btn");
         const deleteButton = event.target.closest(".schedule-delete-btn");
-        const clockInButton = event.target.closest(".clock-in-btn");
         const clockOutButton = event.target.closest(".clock-out-btn");
 
         if (editButton) {
@@ -688,24 +668,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             const record = findAttendanceRecord(leaveButton.dataset.scheduleId);
             if (record) {
                 openLeaveModal(record);
-            }
-            return;
-        }
-
-        if (clockInButton) {
-            if (!isFinanceRole()) return;
-            clockInButton.disabled = true;
-            try {
-                const response = await apiRequest(`/api/staff/attendance/${clockInButton.dataset.scheduleId}/clock-in`, {
-                    method: "PATCH"
-                });
-                showToast(response.message || "Clock in berhasil");
-                await loadStatistics();
-                await loadMonthStatistics();
-                await loadAttendance(selectedAttendanceDate);
-                await loadShiftData();
-            } finally {
-                clockInButton.disabled = false;
             }
             return;
         }
@@ -754,6 +716,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =====================================
 
     function openLeaveModal(record) {
+        editingLeaveRequestId = null;
         leaveStaffId.value = record.id;
         leaveStaffName.textContent = `${record.full_name} - ${record.shift_name}`;
         leaveTypeSelect.value = "PERMISSION";
@@ -761,16 +724,61 @@ document.addEventListener("DOMContentLoaded", async () => {
         leaveEndDateInput.value = record.schedule_date || selectedAttendanceDate || getTodayInputValue();
         leaveReasonInput.value = "";
         leaveAutoApprove.checked = false;
+        resetLeaveDocumentInput();
+        leaveModal?.classList.remove("hidden");
+        leaveTypeSelect?.focus();
+    }
+
+    function openEditLeaveModal(requestItem) {
+        editingLeaveRequestId = requestItem.id;
+        leaveStaffId.value = requestItem.staff_id;
+        leaveStaffName.textContent = requestItem.staff_name || "-";
+        leaveTypeSelect.value = requestItem.leave_type || "PERMISSION";
+        leaveStartDateInput.value = requestItem.start_date || getTodayInputValue();
+        leaveEndDateInput.value = requestItem.end_date || requestItem.start_date || getTodayInputValue();
+        leaveReasonInput.value = requestItem.reason || "";
+        resetLeaveDocumentInput();
+        if (leaveDocumentName) {
+            leaveDocumentName.textContent = requestItem.document_url
+                ? "Lampiran lama tetap dipakai"
+                : "Pilih file surat";
+        }
         leaveModal?.classList.remove("hidden");
         leaveTypeSelect?.focus();
     }
 
     function closeLeave() {
         leaveModal?.classList.add("hidden");
+        editingLeaveRequestId = null;
         if (leaveStaffId) leaveStaffId.value = "";
         if (leaveStaffName) leaveStaffName.textContent = "-";
         if (leaveReasonInput) leaveReasonInput.value = "";
         if (leaveAutoApprove) leaveAutoApprove.checked = false;
+        resetLeaveDocumentInput();
+    }
+
+    function resetLeaveDocumentInput() {
+        if (leaveDocumentInput) leaveDocumentInput.value = "";
+        if (leaveDocumentName) leaveDocumentName.textContent = "Pilih file surat";
+    }
+
+    function validateLeaveDocument(file) {
+        if (!file) return true;
+
+        const allowedExtensions = ["pdf", "jpg", "jpeg", "png", "webp", "doc", "docx"];
+        const extension = file.name.split(".").pop().toLowerCase();
+
+        if (!allowedExtensions.includes(extension)) {
+            showToast("Format surat izin harus PDF, gambar, DOC, atau DOCX.", "error");
+            return false;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            showToast("Ukuran surat izin maksimal 5 MB.", "error");
+            return false;
+        }
+
+        return true;
     }
 
     async function saveLeaveData() {
@@ -784,18 +792,28 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
+        const documentFile = leaveDocumentInput?.files?.[0] || null;
+        if (!validateLeaveDocument(documentFile)) return;
+
+        const formData = new FormData();
+        formData.append("staff_id", Number(leaveStaffId.value));
+        formData.append("leave_type", leaveTypeSelect.value);
+        formData.append("start_date", leaveStartDateInput.value);
+        formData.append("end_date", leaveEndDateInput.value);
+        formData.append("reason", leaveReasonInput.value.trim());
+        formData.append("auto_approve", "false");
+        if (documentFile) {
+            formData.append("document", documentFile);
+        }
+
         saveLeave.disabled = true;
         try {
-            const response = await apiRequest("/api/staff/leave-request", {
-                method: "POST",
-                body: JSON.stringify({
-                    staff_id: Number(leaveStaffId.value),
-                    leave_type: leaveTypeSelect.value,
-                    start_date: leaveStartDateInput.value,
-                    end_date: leaveEndDateInput.value,
-                    reason: leaveReasonInput.value.trim(),
-                    auto_approve: false
-                })
+            const url = editingLeaveRequestId
+                ? `/api/staff/leave-request/${editingLeaveRequestId}`
+                : "/api/staff/leave-request";
+            const response = await apiRequest(url, {
+                method: editingLeaveRequestId ? "PATCH" : "POST",
+                body: formData
             });
 
             selectedAttendanceDate = leaveStartDateInput.value;
@@ -807,6 +825,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             await loadStatistics();
             await loadMonthStatistics();
             await loadAttendance(selectedAttendanceDate);
+            if (isFinanceRole()) {
+                await loadLeaveDocuments();
+            }
         } finally {
             saveLeave.disabled = false;
         }
@@ -927,6 +948,110 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         } catch (error) {
             console.error("Error loading leave requests:", error);
+        }
+    }
+
+    function getLeaveTypeLabel(type) {
+        const leaveTypeMap = {
+            "SICK": "Sakit",
+            "LEAVE": "Cuti",
+            "PERMISSION": "Izin"
+        };
+        return leaveTypeMap[type] || type || "-";
+    }
+
+    function getLeaveStatusLabel(status) {
+        const statusMap = {
+            "PENDING": "Menunggu",
+            "APPROVED": "Disetujui",
+            "REJECTED": "Ditolak"
+        };
+        return statusMap[status] || status || "-";
+    }
+
+    function renderLeaveDocuments() {
+        if (!leaveDocumentsTable) return;
+
+        const keyword = (leaveDocumentSearch?.value || "").toLowerCase().trim();
+        const selectedStatus = leaveDocumentStatus?.value || "";
+        const rows = leaveDocumentsData.filter(item => {
+            const searchable = [
+                item.staff_name,
+                item.reason,
+                getLeaveTypeLabel(item.leave_type),
+                getLeaveStatusLabel(item.status)
+            ].join(" ").toLowerCase();
+            const matchKeyword = !keyword || searchable.includes(keyword);
+            const matchStatus = !selectedStatus || item.status === selectedStatus;
+            return matchKeyword && matchStatus;
+        });
+
+        if (!rows.length) {
+            leaveDocumentsTable.innerHTML = `
+                <tr>
+                    <td colspan="7" class="table-loading">
+                        Belum ada surat izin yang sesuai.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        leaveDocumentsTable.innerHTML = rows.map(item => {
+            const dateRange = item.start_date === item.end_date
+                ? formatDate(item.start_date)
+                : `${formatDate(item.start_date)} - ${formatDate(item.end_date)}`;
+            const attachment = item.document_url
+                ? `<a class="leave-document-link" href="${escapeHtml(item.document_url)}" target="_blank" rel="noopener">
+                        <i class="bi bi-paperclip"></i>
+                        Lihat
+                   </a>`
+                : `<span class="leave-document-empty">Belum ada</span>`;
+            const action = item.status === "PENDING"
+                ? `<button class="leave-document-edit" type="button" data-id="${item.id}">
+                        <i class="bi bi-pencil-square"></i>
+                        Edit
+                   </button>`
+                : `<span class="readonly-action">-</span>`;
+
+            return `
+                <tr data-leave-id="${item.id}">
+                    <td>
+                        <strong>${escapeHtml(item.staff_name || "-")}</strong>
+                        <span>${escapeHtml(item.created_at ? formatDate(String(item.created_at).slice(0, 10)) : "-")}</span>
+                    </td>
+                    <td>${escapeHtml(getLeaveTypeLabel(item.leave_type))}</td>
+                    <td>${dateRange}</td>
+                    <td>${escapeHtml(item.reason || "-")}</td>
+                    <td>${attachment}</td>
+                    <td>
+                        <span class="leave-status ${String(item.status || "").toLowerCase()}">
+                            ${escapeHtml(getLeaveStatusLabel(item.status))}
+                        </span>
+                    </td>
+                    <td>${action}</td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    async function loadLeaveDocuments() {
+        if (!isFinanceRole() || !leaveDocumentsTable) return;
+
+        leaveDocumentsTable.innerHTML = `
+            <tr>
+                <td colspan="7" class="table-loading">
+                    Memuat surat izin...
+                </td>
+            </tr>
+        `;
+
+        try {
+            const response = await apiRequest("/api/staff/leave-request/manage");
+            leaveDocumentsData = response.data || [];
+            renderLeaveDocuments();
+        } catch (error) {
+            console.error("Error loading leave documents:", error);
         }
     }
 
@@ -1353,85 +1478,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // =====================================
-    // IMPORT EXCEL
-    // =====================================
-
-    function openImportModal() {
-        selectedImportFile = null;
-        staffExcelInput.value = "";
-        selectedExcelName.textContent = "Belum ada file dipilih";
-        submitImport.disabled = true;
-        staffImportModal.classList.remove("hidden");
-    }
-
-    function closeImport() {
-        staffImportModal?.classList.add("hidden");
-    }
-
-    function showImportResult(data) {
-        resultTotal.textContent = data.total_rows || 0;
-        resultImported.textContent = data.imported || 0;
-        resultSkipped.textContent = data.skipped || 0;
-        resultFailed.textContent = data.failed || 0;
-
-        const errors = data.errors || [];
-        if (errors.length) {
-            importErrorSection.classList.remove("hidden");
-            importErrorList.innerHTML = errors.map(error => `
-                <div class="import-error-item">
-                    <strong>Baris ${escapeHtml(error.row)}</strong>
-                    ${error.employee_code ? ` - ${escapeHtml(error.employee_code)}` : ""}
-                    <br>
-                    ${escapeHtml(error.message)}
-                </div>
-            `).join("");
-        } else {
-            importErrorSection.classList.add("hidden");
-            importErrorList.innerHTML = "";
-        }
-
-        importResultModal.classList.remove("hidden");
-    }
-
-    function closeImportResultModal() {
-        importResultModal?.classList.add("hidden");
-    }
-
-    async function submitImportFile() {
-        if (!selectedImportFile) {
-            showToast("File Excel belum dipilih.", "error");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("file", selectedImportFile);
-
-        submitImport.disabled = true;
-        submitImport.textContent = "Mengimport...";
-
-        try {
-            const response = await apiRequest("/api/staff/import-excel", {
-                method: "POST",
-                body: formData
-            });
-            closeImport();
-            showToast(response.message || "Import data Staff selesai");
-            showImportResult(response.data || {});
-            await loadStatistics();
-            await loadMonthStatistics();
-            await loadAttendance();
-            await loadShiftData();
-            if (!allStaffModal.classList.contains("hidden")) {
-                await loadAllStaff(true);
-                renderAllStaffList();
-            }
-        } finally {
-            submitImport.disabled = false;
-            submitImport.textContent = "Import Data";
-        }
-    }
-
-    // =====================================
     // TODAY'S DATE
     // =====================================
 
@@ -1455,41 +1501,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.location.href = "/";
         });
     }
-
-    importStaffBtn?.addEventListener("click", openImportModal);
-    closeImportModal?.addEventListener("click", closeImport);
-    cancelImport?.addEventListener("click", closeImport);
-
-    staffExcelInput?.addEventListener("change", event => {
-        const file = event.target.files[0];
-
-        if (!file) {
-            selectedImportFile = null;
-            selectedExcelName.textContent = "Belum ada file dipilih";
-            submitImport.disabled = true;
-            return;
-        }
-
-        if (!file.name.toLowerCase().endsWith(".xlsx")) {
-            selectedImportFile = null;
-            staffExcelInput.value = "";
-            selectedExcelName.textContent = "Format file harus .xlsx.";
-            submitImport.disabled = true;
-            showToast("Format file harus .xlsx.", "error");
-            return;
-        }
-
-        selectedImportFile = file;
-        selectedExcelName.textContent = file.name;
-        submitImport.disabled = false;
-    });
-
-    submitImport?.addEventListener("click", () => {
-        submitImportFile().catch(error => console.error(error));
-    });
-
-    closeImportResult?.addEventListener("click", closeImportResultModal);
-    closeImportResultButton?.addEventListener("click", closeImportResultModal);
 
     viewAllStaff?.addEventListener("click", event => {
         event.preventDefault();
@@ -1576,8 +1587,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     saveLeave?.addEventListener("click", () => {
         saveLeaveData().catch(error => console.error(error));
     });
+    leaveDocumentInput?.addEventListener("change", event => {
+        const file = event.target.files?.[0];
+        if (!file) {
+            resetLeaveDocumentInput();
+            return;
+        }
 
-    [staffImportModal, importResultModal, allStaffModal].forEach(modal => {
+        if (!validateLeaveDocument(file)) {
+            resetLeaveDocumentInput();
+            return;
+        }
+
+        if (leaveDocumentName) {
+            leaveDocumentName.textContent = file.name;
+        }
+    });
+    refreshLeaveDocuments?.addEventListener("click", () => {
+        loadLeaveDocuments().catch(error => console.error(error));
+    });
+    leaveDocumentSearch?.addEventListener("input", renderLeaveDocuments);
+    leaveDocumentStatus?.addEventListener("change", renderLeaveDocuments);
+    leaveDocumentsTable?.addEventListener("click", event => {
+        const editButton = event.target.closest(".leave-document-edit");
+        if (!editButton) return;
+
+        const requestItem = leaveDocumentsData.find(item => String(item.id) === String(editButton.dataset.id));
+        if (!requestItem) {
+            showToast("Data surat izin tidak ditemukan", "error");
+            return;
+        }
+
+        openEditLeaveModal(requestItem);
+    });
+
+    [allStaffModal].forEach(modal => {
         modal?.addEventListener("click", event => {
             if (event.target !== modal) return;
             modal.classList.add("hidden");
@@ -1636,6 +1680,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 await loadShiftData();
 
+                if (isFinanceRole()) {
+                    await loadLeaveDocuments();
+                }
+
 
                 setupSearch();
             }
@@ -1643,6 +1691,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (isOwnerRole()) {
                 await loadLeaveRequests();
+                await loadEmployees();
             }
 
 
@@ -2307,9 +2356,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             employeeCurrentPage += 1;
             renderEmployees();
         });
-
-    loadEmployees();
-
 
     saveEmployee?.addEventListener("click", async () => {
 

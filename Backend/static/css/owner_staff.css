@@ -1736,25 +1736,52 @@ button:hover{
 
 .attendance-card .attendance-row-actions{
     width:100%;
-    display:grid;
-    grid-template-columns:repeat(2, 88px);
+    display:flex;
     justify-content:end;
+    align-items:center;
+    flex-wrap:wrap;
     gap:8px;
 }
 
 .attendance-card .attendance-row-actions .edit-btn,
 .attendance-card .attendance-row-actions .delete-btn,
 .attendance-card .attendance-row-actions .secondary-button{
-    width:88px;
-    min-width:88px;
-    height:34px;
-    min-height:34px;
-    padding:0 8px !important;
+    width:38px;
+    min-width:38px;
+    height:38px;
+    min-height:38px;
+    padding:0 !important;
     justify-content:center !important;
-    border-radius:9px !important;
-    font-size:11px !important;
+    border-radius:11px !important;
+    font-size:15px !important;
     line-height:1 !important;
-    box-shadow:none;
+    box-shadow:0 8px 18px rgba(75, 46, 19, .08);
+}
+
+.attendance-card .attendance-row-actions .action-icon i{
+    margin:0;
+}
+
+.attendance-card .attendance-row-actions .secondary-button{
+    background:#FFF8F3 !important;
+    border-color:#E8D8CC !important;
+    color:#6B421E !important;
+}
+
+.attendance-card .attendance-row-actions .secondary-button:hover{
+    background:#F4E4D8 !important;
+    color:#4B2E13 !important;
+}
+
+.attendance-card .attendance-row-actions .edit-btn:hover,
+.attendance-card .attendance-row-actions .delete-btn:hover,
+.attendance-card .attendance-row-actions .secondary-button:hover{
+    transform:translateY(-2px) scale(1.03) !important;
+}
+
+.attendance-card .attendance-row-actions .action-icon:focus-visible{
+    outline:3px solid rgba(90, 55, 24, .18);
+    outline-offset:2px;
 }
 
 .primary-button {
@@ -1796,6 +1823,10 @@ button:hover{
 .secondary-button:hover {
     background: #F7F3EF !important;
     transform: translateY(-2px) !important;
+}
+
+body[data-staff-mode="operational"] .employee-card{
+    display:none !important;
 }
 
 /* =====================================================
@@ -1914,6 +1945,56 @@ button:hover{
     background: #FBF8F6;
     color: var(--text);
     font-weight: 600;
+}
+
+.leave-file-picker {
+    min-height: 84px;
+    border: 1px dashed #CDBBAF;
+    border-radius: 14px;
+    background: #FFF8F3;
+    color: #5A3718;
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 3px;
+    padding: 14px;
+    cursor: pointer;
+    transition: .25s ease;
+}
+
+.leave-file-picker:hover {
+    background: #F7ECE4;
+    border-color: #A98A72;
+    transform: translateY(-1px);
+}
+
+.leave-file-picker i {
+    grid-row: 1 / span 2;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #5A3718;
+    color: #fff;
+    font-size: 18px;
+}
+
+.leave-file-picker strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #2F1D0F;
+    font-size: 14px;
+}
+
+.leave-file-picker small {
+    color: var(--text-light);
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .inline-check {
@@ -2586,6 +2667,200 @@ html{
 
 }
 
+.leave-documents-card{
+    margin-top:28px;
+    background:#fff;
+    border:1px solid #EADFD6;
+    border-radius:16px;
+    padding:24px;
+    box-shadow:0 12px 28px rgba(75,46,19,.06);
+}
+
+.leave-documents-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    margin-bottom:18px;
+}
+
+.leave-documents-header h2{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:0;
+    color:#5A3718;
+    font-size:22px;
+    font-weight:700;
+    line-height:1.2;
+}
+
+.leave-documents-header h2 i{
+    width:28px;
+    height:28px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    color:#5A3718;
+    background:#F3E8DF;
+    border-radius:8px;
+    font-size:16px;
+}
+
+.leave-documents-header p{
+    margin-top:6px;
+    color:#777;
+    font-size:14px;
+}
+
+.leave-documents-toolbar{
+    display:grid;
+    grid-template-columns:minmax(260px, 1fr) 180px;
+    align-items:center;
+    gap:14px;
+    margin-bottom:18px;
+}
+
+.leave-documents-toolbar select{
+    width:100%;
+    height:46px;
+    border:1px solid #E6D8CE;
+    border-radius:12px;
+    padding:0 14px;
+    background:#fff;
+    color:#2F1D0F;
+    font:inherit;
+    outline:none;
+}
+
+.leave-documents-toolbar select:focus{
+    border-color:#8B5E34;
+    box-shadow:0 0 0 3px rgba(139,94,52,.15);
+}
+
+.leave-documents-table-wrapper{
+    overflow-x:auto;
+    border:1px solid #EADFD6;
+    border-radius:14px;
+    background:#fff;
+}
+
+.leave-documents-table{
+    width:100%;
+    min-width:920px;
+    border-collapse:collapse;
+    table-layout:fixed;
+}
+
+.leave-documents-table thead th{
+    padding:14px 16px;
+    background:#F6EDE6;
+    color:#5A3718;
+    font-size:12px;
+    font-weight:700;
+    text-align:left;
+    text-transform:uppercase;
+}
+
+.leave-documents-table tbody td{
+    height:66px;
+    padding:14px 16px;
+    border-top:1px solid #EEE4DD;
+    vertical-align:middle;
+    color:#2F1D0F;
+    font-size:13px;
+}
+
+.leave-documents-table tbody tr:hover{
+    background:#FFFCFA;
+}
+
+.leave-documents-table td:first-child strong,
+.leave-documents-table td:first-child span{
+    display:block;
+}
+
+.leave-documents-table td:first-child span{
+    margin-top:4px;
+    color:#8A7B71;
+    font-size:12px;
+}
+
+.leave-document-link{
+    width:max-content;
+    min-height:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:0 12px;
+    border-radius:10px;
+    background:#EEF6FF;
+    color:#2563EB;
+    text-decoration:none;
+    font-weight:700;
+}
+
+.leave-document-link:hover{
+    background:#DBEAFF;
+    transform:translateY(-1px);
+}
+
+.leave-document-empty{
+    color:#9A8D84;
+    font-weight:600;
+}
+
+.leave-document-edit{
+    min-height:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:0 12px;
+    border:none;
+    border-radius:10px;
+    background:#5A3718;
+    color:#fff;
+    font:inherit;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+}
+
+.leave-document-edit:hover{
+    background:#3E2510;
+    transform:translateY(-1px);
+}
+
+.leave-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:92px;
+    height:34px;
+    padding:0 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.leave-status.pending{
+    background:#FFF4D9;
+    color:#A06400;
+}
+
+.leave-status.approved{
+    background:#DCFCE7;
+    color:#15803D;
+}
+
+.leave-status.rejected{
+    background:#FEE2E2;
+    color:#DC2626;
+}
+
 .employee-card{
 
     margin-top:28px;
@@ -2734,6 +3009,26 @@ html{
 
     margin-top:18px;
 
+}
+
+.view-all-btn{
+    width:40px;
+    height:40px;
+    border:1px solid #E2D2C5;
+    border-radius:12px;
+    background:#fff;
+    color:#5A3718;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:17px;
+    box-shadow:0 8px 18px rgba(75,46,19,.06);
+}
+
+.view-all-btn:hover{
+    background:#5A3718;
+    color:#fff;
 }
 
 .view-attendance-btn{
@@ -3516,6 +3811,28 @@ html{
     .employee-toolbar select{
 
         width:100%;
+
+    }
+
+    .leave-documents-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .leave-documents-toolbar{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .leave-documents-header .secondary-button{
+
+        width:100%;
+
+        justify-content:center !important;
 
     }
 

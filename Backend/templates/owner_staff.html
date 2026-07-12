@@ -271,17 +271,6 @@
                                 </div>
 
                                 <button
-                                    class="secondary-button"
-                                    id="btn-import-staff"
-                                    type="button">
-
-                                    <i class="bi bi-file-earmark-spreadsheet"></i>
-
-                                    Import Excel
-
-                                </button>
-
-                                <button
                                     class="primary-button"
                                     id="btn-top-schedule"
                                     type="button">
@@ -324,10 +313,11 @@
                             <button
                                 id="btnViewAttendance"
                                 class="view-all-btn"
-                                type="button">
+                                type="button"
+                                title="Lihat semua kehadiran"
+                                aria-label="Lihat semua kehadiran">
 
-                                Lihat Semua Kehadiran
-                                <i class="bi bi-arrow-right"></i>
+                                <i class="bi bi-clock-history"></i>
 
                             </button>
 
@@ -444,6 +434,98 @@
                     <!-- ======================================
                             END STAFF LAYOUT
                     ====================================== -->
+
+                    </div>
+
+                    <div class="leave-documents-card" id="leaveDocumentsCard" hidden>
+
+                        <div class="leave-documents-header">
+
+                            <div>
+
+                                <h2>
+                                    <i class="bi bi-folder2-open" aria-hidden="true"></i>
+                                    Kelola Surat Izin
+                                </h2>
+
+                                <p>
+                                    Pantau lampiran izin, sakit, dan cuti yang menunggu review Owner.
+                                </p>
+
+                            </div>
+
+                            <button
+                                class="secondary-button"
+                                id="refreshLeaveDocuments"
+                                type="button">
+
+                                <i class="bi bi-arrow-clockwise"></i>
+
+                                Refresh
+
+                            </button>
+
+                        </div>
+
+                        <div class="leave-documents-toolbar">
+
+                            <div class="employee-search">
+
+                                <i class="bi bi-search"></i>
+
+                                <input
+                                    id="leaveDocumentSearch"
+                                    type="search"
+                                    placeholder="Cari nama karyawan atau alasan...">
+
+                            </div>
+
+                            <select id="leaveDocumentStatus">
+
+                                <option value="">Semua Status</option>
+                                <option value="PENDING">Menunggu</option>
+                                <option value="APPROVED">Disetujui</option>
+                                <option value="REJECTED">Ditolak</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="leave-documents-table-wrapper">
+
+                            <table class="leave-documents-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>Karyawan</th>
+                                        <th>Jenis</th>
+                                        <th>Tanggal</th>
+                                        <th>Alasan</th>
+                                        <th>Lampiran</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody id="leaveDocumentsTable">
+
+                                    <tr>
+
+                                        <td colspan="7" class="table-loading">
+                                            Memuat surat izin...
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
 
                     </div>
 
@@ -611,72 +693,6 @@
 
                     </section>
 
-
-    <!-- IMPORT STAFF MODAL -->
-    <div class="menu-modal-backdrop hidden" id="staffImportModal">
-        <div class="menu-modal import-modal" role="dialog" aria-modal="true">
-            <div class="menu-modal-header">
-                <h2>Import Data Staff</h2>
-                <button class="modal-close" id="closeImportModal" type="button" aria-label="Tutup">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-            <div class="menu-form">
-                <div>
-                    <h3>Import Data Staff dari Excel</h3>
-                    <p class="modal-help">Upload file Excel untuk menambahkan banyak data Staff sekaligus. Format yang didukung: .xlsx</p>
-                </div>
-                <label class="upload-box" for="staffExcelInput">
-                    <i class="bi bi-cloud-arrow-up-fill"></i>
-                    <strong>Pilih File Excel</strong>
-                    <span id="selectedExcelName">Belum ada file dipilih</span>
-                    <input id="staffExcelInput" type="file" accept=".xlsx" hidden>
-                </label>
-                <div class="template-actions">
-                    <a class="template-link" href="/api/staff/import-template">
-                        <i class="bi bi-download"></i>
-                        Download Template Excel
-                    </a>
-                    <a class="template-link" href="/api/staff/dummy-excel">
-                        <i class="bi bi-file-earmark-spreadsheet"></i>
-                        Download Data Dummy
-                    </a>
-                </div>
-                <div class="menu-form-actions">
-                    <button class="cancel-btn" id="cancelImport" type="button">Batal</button>
-                    <button class="save-btn" id="submitImport" type="button" disabled>Import Data</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- IMPORT RESULT MODAL -->
-    <div class="menu-modal-backdrop hidden" id="importResultModal">
-        <div class="menu-modal import-modal" role="dialog" aria-modal="true">
-            <div class="menu-modal-header">
-                <h2>Import Selesai</h2>
-                <button class="modal-close" id="closeImportResult" type="button" aria-label="Tutup">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-            <div class="menu-form">
-                <div class="import-result-grid">
-                    <div><small>Total Data</small><strong id="resultTotal">0</strong></div>
-                    <div><small>Berhasil</small><strong id="resultImported">0</strong></div>
-                    <div><small>Dilewati</small><strong id="resultSkipped">0</strong></div>
-                    <div><small>Gagal</small><strong id="resultFailed">0</strong></div>
-                </div>
-                <div id="importErrorSection" class="import-error-section hidden">
-                    <h3>Detail Data Gagal</h3>
-                    <div id="importErrorList"></div>
-                </div>
-                <div class="menu-form-actions">
-                    <button class="save-btn" id="closeImportResultButton" type="button">Tutup</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- ALL STAFF MODAL -->
     <div class="menu-modal-backdrop hidden" id="allStaffModal">
         <div class="menu-modal staff-list-modal" role="dialog" aria-modal="true">
@@ -786,6 +802,15 @@
                 <label>
                     Alasan
                     <textarea id="leaveReasonInput" rows="4" placeholder="Contoh: sakit demam / izin keluarga"></textarea>
+                </label>
+                <label>
+                    Lampiran Surat Izin
+                    <span class="leave-file-picker">
+                        <i class="bi bi-paperclip"></i>
+                        <strong id="leaveDocumentName">Pilih file surat</strong>
+                        <small>PDF, gambar, DOC, atau DOCX. Maksimal 5 MB.</small>
+                        <input id="leaveDocumentInput" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" hidden>
+                    </span>
                 </label>
                 <input id="leaveAutoApprove" type="hidden" value="false">
                 <p class="modal-help">
@@ -1101,7 +1126,7 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/role_access_ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/owner_staff.js') }}?v=20260712-2"></script>
+    <script src="{{ url_for('static', filename='js/owner_staff.js') }}?v=20260712-7"></script>
     <script src="{{ url_for('static', filename='js/owner_account_controls.js') }}"></script>
 
 </body>
