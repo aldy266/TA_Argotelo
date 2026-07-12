@@ -76,6 +76,13 @@
                 <span>Staff</span>
             </a>
 
+            {% if current_user_role in ["FINANCE", "TIM_FINANCE"] %}
+            <a href="{{ url_for('employee_attendance_page') }}">
+                <i class="bi bi-person-check"></i>
+                <span>Absensi</span>
+            </a>
+            {% endif %}
+
             {% if current_user_role == "OWNER" %}
             <a href="{{ url_for('owner.owner_menu') }}">
                 <i class="bi bi-card-list"></i>

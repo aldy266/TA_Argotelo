@@ -8,6 +8,7 @@ from sqlalchemy import text
 from config import Config
 from model import Role, Shift, User, db
 from utils.roles import ORG_ROLES
+from utils.staff_profiles import ensure_staff_profiles_for_employee_users
 
 from routes.auth import auth_bp
 from routes.owner import owner_bp
@@ -80,6 +81,33 @@ def seed_default_roles():
             db.session.add(Role(role_name=role_name, description=description))
 
     db.session.commit()
+
+
+def remove_accidental_alias_roles():
+    replacements = {
+        "KEUANGAN": "FINANCE",
+        "KUANGAN": "FINANCE",
+        "TOKO": "TIM_TOKO",
+    }
+
+    try:
+        for alias_name, target_name in replacements.items():
+            alias_role = Role.query.filter_by(role_name=alias_name).first()
+            target_role = Role.query.filter_by(role_name=target_name).first()
+            if not alias_role:
+                continue
+
+            if target_role:
+                User.query.filter_by(role_id=alias_role.id).update({
+                    "role_id": target_role.id
+                })
+
+            db.session.delete(alias_role)
+
+        db.session.commit()
+    except Exception as error:
+        db.session.rollback()
+        print(f"Skip accidental alias role cleanup: {error}")
 
 
 def seed_default_shifts():
@@ -251,6 +279,8 @@ def initialize_database():
     remove_legacy_staff_schedule_unique_constraint()
     ensure_transaction_cash_columns()
     seed_default_roles()
+    remove_accidental_alias_roles()
+    ensure_staff_profiles_for_employee_users()
     seed_default_shifts()
 
 

@@ -10,6 +10,7 @@ from flask import (
 
 from model import Role, db, User
 from utils.roles import FINANCE_ROLE_CODES, OPERATIONAL_ROLE_CODES
+from utils.staff_profiles import ensure_staff_profile_for_user
 
 import bcrypt
 
@@ -468,6 +469,8 @@ def create_account():
 
     try:
         db.session.add(user)
+        db.session.flush()
+        ensure_staff_profile_for_user(user)
         db.session.commit()
         return api_success("Akun berhasil dibuat", serialize_user_account(user), 201)
     except Exception:
@@ -526,6 +529,7 @@ def update_account(user_id):
         user.is_active = bool(is_active)
 
     try:
+        ensure_staff_profile_for_user(user)
         db.session.commit()
         return api_success("Akun berhasil diperbarui", serialize_user_account(user))
     except Exception:
@@ -547,6 +551,7 @@ def toggle_account(user_id):
         user.is_active = not bool(user.is_active)
 
     try:
+        ensure_staff_profile_for_user(user)
         db.session.commit()
         status_text = "diaktifkan" if user.is_active else "dinonaktifkan"
         return api_success(f"Akun berhasil {status_text}", serialize_user_account(user))

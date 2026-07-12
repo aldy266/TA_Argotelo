@@ -113,6 +113,8 @@ def login_destination(role_name):
     role = normalize_role(role_name)
     if role in OWNER_ROLE_CODES or role in FINANCE_ROLE_CODES:
         return "/owner/dashboard"
+    if role in STORE_ROLE_CODES:
+        return "/cashier/pos"
     if role in OPERATIONAL_ROLE_CODES or role in HRD_ROLE_CODES:
         return "/attendance"
     return "/"

@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function applyRolePermissions() {
         const role = String(state.user?.role || "").toUpperCase();
-        state.readOnly = role === "KASIR";
+        state.readOnly = ["KASIR", "KOORDINATOR_TOKO", "TIM_TOKO"].includes(role);
         [
             el.stockBtn,
             el.exportBtn,

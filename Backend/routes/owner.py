@@ -28,7 +28,7 @@ from model import (
     waktu_wib,
 )
 from utils.auth import role_name_required
-from utils.roles import role_form_code, role_group, role_label
+from utils.roles import STORE_ROLE_CODES, role_form_code, role_group, role_label
 
 
 owner_bp = Blueprint("owner", __name__)
@@ -326,7 +326,7 @@ def owner_dashboard():
 @role_name_required("OWNER", "FINANCE", "KASIR")
 def owner_inventory():
     user = User.query.get(session.get("user_id"))
-    if user and user.role and user.role.role_name.upper() == "KASIR":
+    if user and user.role and user.role.role_name.upper() in STORE_ROLE_CODES:
         return redirect(url_for("cashier.inventory"))
     return render_template("owner_inventory.html")
 

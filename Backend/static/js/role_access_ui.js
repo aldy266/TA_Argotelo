@@ -24,20 +24,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         nav.prepend(link);
     }
 
+    function ensureAttendanceLink(nav) {
+        if (!nav || nav.querySelector('a[href="/attendance"]')) return;
+        const link = document.createElement("a");
+        link.href = "/attendance";
+        link.innerHTML = '<i class="bi bi-person-check"></i><span>Absensi</span>';
+        nav.appendChild(link);
+    }
+
     try {
         const user = await currentUser();
         const role = String(user.role || "").toUpperCase();
         const financeRoles = ["FINANCE", "TIM_FINANCE"];
+        const storeRoles = ["KASIR", "KOORDINATOR_TOKO", "TIM_TOKO"];
         const operationalRoles = [
-            "KASIR",
             "HRD",
             "QC",
             "TRAINER_BD",
             "TIM_TRAINER_BD",
             "GUDANG_PENGIRIMAN",
             "TIM_GUDANG",
-            "KOORDINATOR_TOKO",
-            "TIM_TOKO",
             "KOORDINATOR_PRODUKSI",
             "TIM_PRODUKSI",
             "KOOR_IPAL_BAHAN_BAKU",
@@ -52,10 +58,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         if (financeRoles.includes(role)) {
+            ensureAttendanceLink(document.querySelector(".sidebar-menu"));
             hideNavByHref("/owner/menu");
         }
 
-        if (operationalRoles.includes(role)) {
+        if (storeRoles.includes(role)) {
+            const nav = document.querySelector(".sidebar-menu");
+            ensureCashierPosLink(nav);
+            ensureAttendanceLink(nav);
+        }
+
+        if (storeRoles.includes(role) || operationalRoles.includes(role)) {
             hideNavByHref("/owner/dashboard");
             hideNavByHref("/owner/staff");
             hideNavByHref("/owner/menu");

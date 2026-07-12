@@ -129,16 +129,14 @@ if (loginForm) {
 
                 const role = String(result.user.role || "").toUpperCase();
                 const financeRoles = ["FINANCE", "TIM_FINANCE"];
+                const storeRoles = ["KASIR", "KOORDINATOR_TOKO", "TIM_TOKO"];
                 const operationalRoles = [
-                    "KASIR",
                     "HRD",
                     "QC",
                     "TRAINER_BD",
                     "TIM_TRAINER_BD",
                     "GUDANG_PENGIRIMAN",
                     "TIM_GUDANG",
-                    "KOORDINATOR_TOKO",
-                    "TIM_TOKO",
                     "KOORDINATOR_PRODUKSI",
                     "TIM_PRODUKSI",
                     "KOOR_IPAL_BAHAN_BAKU",
@@ -149,6 +147,8 @@ if (loginForm) {
 
                 if (role === "OWNER" || financeRoles.includes(role)) {
                     window.location.href = "/owner/dashboard";
+                } else if (storeRoles.includes(role)) {
+                    window.location.href = "/cashier/pos";
                 } else if (operationalRoles.includes(role)) {
                     window.location.href = "/attendance";
                 } else {
