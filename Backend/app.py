@@ -7,6 +7,7 @@ from sqlalchemy import text
 
 from config import Config
 from model import Role, Shift, User, db
+from utils.roles import ORG_ROLES
 
 from routes.auth import auth_bp
 from routes.owner import owner_bp
@@ -16,6 +17,7 @@ from routes.inventory import inventory_bp
 from routes.purchase_order import purchase_order_bp
 from routes.staff import staff_bp
 from routes.attendance import attendance_bp
+from utils.auth import login_required
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -65,10 +67,11 @@ def inject_current_user_role():
 
 def seed_default_roles():
     default_roles = [
-        ("OWNER", "Pemilik Sistem"),
-        ("FINANCE", "Bagian Keuangan"),
-        ("KASIR", "Kasir / Tim Toko"),
-        ("HRD", "Human Resource"),
+        (code, label)
+        for code, label, _group in ORG_ROLES
+    ] + [
+        ("KASIR", "Kasir / Legacy Tim Toko"),
+        ("HRD", "Human Resource / Legacy"),
     ]
 
     for role_name, description in default_roles:
@@ -286,6 +289,12 @@ def register_page():
     return render_template(
         "register.html"
     )
+
+
+@app.route("/attendance")
+@login_required
+def employee_attendance_page():
+    return render_template("employee_attendance.html")
 
 
 @app.route("/api/health")

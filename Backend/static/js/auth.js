@@ -127,55 +127,32 @@ if (loginForm) {
 
 
 
-                switch(
-                    result.user.role
-                ){
+                const role = String(result.user.role || "").toUpperCase();
+                const financeRoles = ["FINANCE", "TIM_FINANCE"];
+                const operationalRoles = [
+                    "KASIR",
+                    "HRD",
+                    "QC",
+                    "TRAINER_BD",
+                    "TIM_TRAINER_BD",
+                    "GUDANG_PENGIRIMAN",
+                    "TIM_GUDANG",
+                    "KOORDINATOR_TOKO",
+                    "TIM_TOKO",
+                    "KOORDINATOR_PRODUKSI",
+                    "TIM_PRODUKSI",
+                    "KOOR_IPAL_BAHAN_BAKU",
+                    "TIM_IPAL_BAHAN_BAKU",
+                    "KOOR_PRODUK_OLAHAN",
+                    "TIM_PRODUK_OLAHAN"
+                ];
 
-
-                    case "OWNER":
-
-
-                        window.location.href =
-                        "/owner/dashboard";
-
-
-                        break;
-
-
-
-
-                    case "FINANCE":
-
-
-                        window.location.href =
-                        "/owner/dashboard";
-
-
-                        break;
-
-
-
-
-                    case "KASIR":
-
-
-                        window.location.href =
-                        "/cashier/pos";
-
-
-                        break;
-
-
-
-
-                    default:
-
-
-                        alert(
-                            "Role tidak dikenali"
-                        );
-
-
+                if (role === "OWNER" || financeRoles.includes(role)) {
+                    window.location.href = "/owner/dashboard";
+                } else if (operationalRoles.includes(role)) {
+                    window.location.href = "/attendance";
+                } else {
+                    alert("Role tidak dikenali");
                 }
 
 

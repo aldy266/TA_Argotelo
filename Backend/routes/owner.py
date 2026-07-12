@@ -28,6 +28,7 @@ from model import (
     waktu_wib,
 )
 from utils.auth import role_name_required
+from utils.roles import role_form_code, role_group, role_label
 
 
 owner_bp = Blueprint("owner", __name__)
@@ -1129,8 +1130,8 @@ def create_staff_account():
             "user_id": user_id,
             "employee_code": employee_code,
             "full_name": fullname,
-            "department": "Finec",
-            "position": role
+            "department": role_group(role),
+            "position": role_label(role)
 
         })
 
@@ -1189,7 +1190,7 @@ def staff_account(user_id):
                 "id":row.id,
                 "fullname":row.fullname,
                 "username":row.username,
-                "role":row.role_name
+                "role": role_form_code(row.role_name)
             }
         })
 
@@ -1327,12 +1328,14 @@ def update_staff_account(user_id):
             UPDATE staff
             SET
                 full_name=:fullname,
-                position=:role
+                department=:department,
+                position=:position
             WHERE user_id=:id
         """), {
 
             "fullname": fullname,
-            "role": role,
+            "department": role_group(role),
+            "position": role_label(role),
             "id": user_id
 
         })

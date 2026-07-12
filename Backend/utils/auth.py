@@ -2,6 +2,7 @@ from functools import wraps
 from flask import jsonify, request, session, redirect, abort
 
 from model import User
+from utils.roles import expand_role_names
 
 
 # ==========================
@@ -49,7 +50,7 @@ def role_required(role_id):
 
 
 def role_name_required(*role_names):
-    normalized_roles = {role.upper() for role in role_names}
+    normalized_roles = expand_role_names(role_names)
 
     def decorator(f):
 

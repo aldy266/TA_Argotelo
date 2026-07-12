@@ -1,14 +1,17 @@
 import io
 import re
 from pathlib import Path
+from uuid import uuid4
 
 from flask import Blueprint, request, jsonify, session, send_file
 from datetime import datetime, timedelta, date, time
 from functools import wraps
 from sqlalchemy import func, text
+from werkzeug.utils import secure_filename
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from model import db, Staff, Shift, StaffSchedule, Attendance, LeaveRequest, User
+from utils.roles import expand_role_names, role_form_code, role_group, role_label, role_sort_key
 
 staff_bp = Blueprint("staff_api", __name__, url_prefix="/api/staff")
 
@@ -25,10 +28,13 @@ STAFF_IMPORT_HEADERS = [
 STAFF_IMPORT_REQUIRED = ["employee_code", "full_name", "department"]
 ALLOWED_STAFF_STATUS = {"ACTIVE", "INACTIVE"}
 MAX_IMPORT_SIZE = 5 * 1024 * 1024
+MAX_LEAVE_DOCUMENT_SIZE = 5 * 1024 * 1024
+ALLOWED_LEAVE_DOCUMENT_EXTENSIONS = {"pdf", "jpg", "jpeg", "png", "webp", "doc", "docx"}
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 BASE_DIR = Path(__file__).resolve().parents[1]
 SAMPLE_DATA_DIR = BASE_DIR / "sample_data"
 DUMMY_STAFF_FILE = SAMPLE_DATA_DIR / "data_dummy_staff.xlsx"
+LEAVE_DOCUMENT_DIR = BASE_DIR / "static" / "uploads" / "leave_documents"
 
 # ====================================================
 # AUTHORIZATION HELPERS
@@ -50,13 +56,7 @@ def require_role(*roles):
     if not user:
         return None
     
-    aliases = {
-        "CASHIER": "KASIR"
-    }
-    allowed_roles = {
-        aliases.get(role.upper(), role.upper())
-        for role in roles
-    }
+    allowed_roles = expand_role_names(roles)
     user_role = user.role.role_name.upper()
 
     if user_role not in allowed_roles:
@@ -180,10 +180,35 @@ def sync_attendance_with_schedule(schedule, attendance=None):
     late_minutes = max(int((attendance.clock_in - tolerance_limit).total_seconds() // 60), 0)
     attendance.late_minutes = late_minutes
 
-    if not attendance.clock_out:
+    if attendance.clock_out:
+        attendance.work_minutes = calculate_work_minutes(
+            attendance.clock_in,
+            attendance.clock_out,
+            attendance.work_minutes
+        )
+        attendance.status = "COMPLETED"
+    else:
         attendance.status = "LATE" if late_minutes else "PRESENT"
 
     return attendance
+
+
+def calculate_work_minutes(clock_in, clock_out, stored_minutes=0):
+    if stored_minutes and stored_minutes > 0:
+        return int(stored_minutes)
+
+    if not clock_in or not clock_out:
+        return 0
+
+    return max(int((clock_out - clock_in).total_seconds() // 60), 0)
+
+
+def schedule_datetime_range(schedule):
+    start_at = datetime.combine(schedule.schedule_date, schedule.shift.start_time)
+    end_at = datetime.combine(schedule.schedule_date, schedule.shift.end_time)
+    if end_at <= start_at:
+        end_at += timedelta(days=1)
+    return start_at, end_at
 
 
 def leave_attendance_status(leave_type):
@@ -239,6 +264,20 @@ def get_schedule_attendance(schedule):
 
 
 def clock_in_schedule(schedule, now):
+    shift_start, shift_end = schedule_datetime_range(schedule)
+
+    if now < shift_start:
+        return None, (
+            f"Absen masuk belum dibuka. Jam kerja dimulai pukul {schedule.shift.start_time.strftime('%H:%M')}",
+            403
+        )
+
+    if now > shift_end:
+        return None, (
+            "Absen masuk sudah ditutup karena jam kerja telah selesai",
+            403
+        )
+
     attendance = get_schedule_attendance(schedule)
 
     if attendance.status in ["LEAVE", "SICK", "ABSENT"]:
@@ -247,7 +286,6 @@ def clock_in_schedule(schedule, now):
     if attendance.clock_in:
         return None, ("Staff sudah clock in", 409)
 
-    shift_start = datetime.combine(schedule.schedule_date, schedule.shift.start_time)
     tolerance_limit = shift_start + timedelta(
         minutes=schedule.shift.tolerance_minutes or 0
     )
@@ -262,6 +300,7 @@ def clock_in_schedule(schedule, now):
 
 def clock_out_schedule(schedule, now):
     attendance = Attendance.query.filter_by(schedule_id=schedule.id).first()
+    _shift_start, shift_end = schedule_datetime_range(schedule)
     if not attendance or not attendance.clock_in:
         return None, ("Staff belum clock in", 409)
 
@@ -270,6 +309,12 @@ def clock_out_schedule(schedule, now):
 
     if attendance.status in ["LEAVE", "SICK", "ABSENT"]:
         return None, ("Status kehadiran tidak dapat clock out", 409)
+
+    if now < shift_end:
+        return None, (
+            f"Absen pulang belum dibuka. Jam kerja selesai pukul {schedule.shift.end_time.strftime('%H:%M')}",
+            403
+        )
 
     attendance.clock_out = now
     attendance.work_minutes = int((now - attendance.clock_in).total_seconds() // 60)
@@ -407,6 +452,61 @@ def validate_import_file(file_storage):
         return "Ukuran file maksimal 5 MB."
 
     return None
+
+
+def validate_leave_document(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+
+    filename = secure_filename(file_storage.filename)
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+
+    if extension not in ALLOWED_LEAVE_DOCUMENT_EXTENSIONS:
+        return "Format surat izin harus PDF, gambar, DOC, atau DOCX."
+
+    current_pos = file_storage.stream.tell()
+    file_storage.stream.seek(0, io.SEEK_END)
+    size = file_storage.stream.tell()
+    file_storage.stream.seek(current_pos)
+
+    if size > MAX_LEAVE_DOCUMENT_SIZE:
+        return "Ukuran surat izin maksimal 5 MB."
+
+    return None
+
+
+def save_leave_document(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+
+    validation_error = validate_leave_document(file_storage)
+    if validation_error:
+        raise ValueError(validation_error)
+
+    LEAVE_DOCUMENT_DIR.mkdir(parents=True, exist_ok=True)
+    filename = secure_filename(file_storage.filename)
+    extension = filename.rsplit(".", 1)[-1].lower()
+    saved_name = f"{waktu_wib().strftime('%Y%m%d%H%M%S')}-{uuid4().hex[:10]}.{extension}"
+    save_path = LEAVE_DOCUMENT_DIR / saved_name
+    file_storage.save(save_path)
+    return f"/static/uploads/leave_documents/{saved_name}"
+
+
+def serialize_leave_request(leave_req):
+    return {
+        "id": leave_req.id,
+        "staff_id": leave_req.staff_id,
+        "staff_name": leave_req.staff.full_name,
+        "leave_type": leave_req.leave_type,
+        "start_date": leave_req.start_date.isoformat(),
+        "end_date": leave_req.end_date.isoformat(),
+        "reason": leave_req.reason,
+        "document_url": leave_req.document_url,
+        "status": leave_req.status,
+        "created_at": leave_req.created_at.isoformat() if leave_req.created_at else None,
+        "reviewed_at": leave_req.reviewed_at.isoformat() if leave_req.reviewed_at else None,
+        "reviewer": leave_req.reviewer.fullname if leave_req.reviewer else None
+    }
 
 
 def row_is_empty(row_values):
@@ -1278,6 +1378,11 @@ def get_attendance(user):
         
         data = []
         for row in query:
+            work_minutes = calculate_work_minutes(
+                row.clock_in,
+                row.clock_out,
+                row.work_minutes or 0
+            )
             data.append({
                 "id": row.id,
                 "schedule_id": row.schedule_id,
@@ -1295,7 +1400,7 @@ def get_attendance(user):
                 "clock_out": row.clock_out.isoformat() if row.clock_out else None,
                 "status": row.status or "NOT_CHECKED_IN",
                 "late_minutes": row.late_minutes or 0,
-                "work_minutes": row.work_minutes or 0
+                "work_minutes": work_minutes
             })
         
         return jsonify({
@@ -1471,8 +1576,72 @@ def get_current_user_today_schedule(user):
     return schedule, None
 
 
+def serialize_current_attendance(schedule):
+    attendance = Attendance.query.filter_by(schedule_id=schedule.id).first()
+    if attendance:
+        sync_attendance_with_schedule(schedule, attendance)
+
+    now = waktu_wib()
+    shift_start, shift_end = schedule_datetime_range(schedule)
+    work_minutes = calculate_work_minutes(
+        attendance.clock_in if attendance else None,
+        attendance.clock_out if attendance else None,
+        attendance.work_minutes if attendance else 0
+    )
+
+    return {
+        "schedule_id": schedule.id,
+        "staff_name": schedule.staff.full_name,
+        "position": role_label(schedule.staff.user.role.role_name if schedule.staff.user and schedule.staff.user.role else schedule.staff.position),
+        "department": role_group(schedule.staff.user.role.role_name if schedule.staff.user and schedule.staff.user.role else schedule.staff.department),
+        "schedule_date": schedule.schedule_date.isoformat(),
+        "shift_name": schedule.shift.shift_name,
+        "start_time": schedule.shift.start_time.strftime("%H:%M"),
+        "end_time": schedule.shift.end_time.strftime("%H:%M"),
+        "status": attendance.status if attendance else "NOT_CHECKED_IN",
+        "clock_in": attendance.clock_in.isoformat() if attendance and attendance.clock_in else None,
+        "clock_out": attendance.clock_out.isoformat() if attendance and attendance.clock_out else None,
+        "work_minutes": work_minutes,
+        "can_clock_in": bool(attendance is None or not attendance.clock_in) and shift_start <= now <= shift_end,
+        "can_clock_out": bool(attendance and attendance.clock_in and not attendance.clock_out) and now >= shift_end,
+        "clock_in_locked_message": (
+            f"Absen masuk dibuka pukul {schedule.shift.start_time.strftime('%H:%M')}"
+            if now < shift_start else ""
+        ),
+        "clock_out_locked_message": (
+            f"Absen pulang dibuka pukul {schedule.shift.end_time.strftime('%H:%M')}"
+            if now < shift_end else ""
+        )
+    }
+
+
+@staff_bp.route("/attendance/me", methods=["GET"])
+@check_authorization("EMPLOYEE")
+def current_user_attendance(user):
+    try:
+        schedule, message = get_current_user_today_schedule(user)
+        if not schedule:
+            return jsonify({
+                "success": False,
+                "message": message
+            }), 404
+
+        data = serialize_current_attendance(schedule)
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "data": data
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
 @staff_bp.route("/attendance/clock-in", methods=["PATCH"])
-@check_authorization("FINANCE")
+@check_authorization("EMPLOYEE")
 def clock_in_current_user(user):
     """Clock in for the current logged-in staff profile."""
     try:
@@ -1501,7 +1670,8 @@ def clock_in_current_user(user):
                 "schedule_id": schedule.id,
                 "status": attendance.status,
                 "clock_in": attendance.clock_in.isoformat(),
-                "late_minutes": attendance.late_minutes
+                "late_minutes": attendance.late_minutes,
+                **serialize_current_attendance(schedule)
             }
         }), 200
     except Exception as e:
@@ -1513,7 +1683,7 @@ def clock_in_current_user(user):
 
 
 @staff_bp.route("/attendance/clock-out", methods=["PATCH"])
-@check_authorization("FINANCE")
+@check_authorization("EMPLOYEE")
 def clock_out_current_user(user):
     """Clock out for the current logged-in staff profile."""
     try:
@@ -1543,7 +1713,8 @@ def clock_out_current_user(user):
                 "status": attendance.status,
                 "clock_out": attendance.clock_out.isoformat(),
                 "late_minutes": attendance.late_minutes,
-                "work_minutes": attendance.work_minutes
+                "work_minutes": attendance.work_minutes,
+                **serialize_current_attendance(schedule)
             }
         }), 200
     except Exception as e:
@@ -1713,24 +1884,38 @@ def get_month_statistics(user):
 def get_leave_requests(user):
     """Get pending leave requests"""
     try:
-        requests = LeaveRequest.query.filter_by(status="PENDING").all()
-        
-        data = [{
-            "id": r.id,
-            "staff_id": r.staff_id,
-            "staff_name": r.staff.full_name,
-            "leave_type": r.leave_type,
-            "start_date": r.start_date.isoformat(),
-            "end_date": r.end_date.isoformat(),
-            "reason": r.reason,
-            "document_url": r.document_url,
-            "status": r.status,
-            "created_at": r.created_at.isoformat()
-        } for r in requests]
+        requests = LeaveRequest.query.filter_by(status="PENDING").order_by(
+            LeaveRequest.created_at.desc()
+        ).all()
+        data = [serialize_leave_request(r) for r in requests]
         
         return jsonify({
             "success": True,
             "data": data
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@staff_bp.route("/leave-request/manage", methods=["GET"])
+@check_authorization("FINANCE", "OWNER")
+def manage_leave_requests(user):
+    """Get leave request documents for finance management."""
+    try:
+        status = normalize_cell(request.args.get("status")).upper()
+        query = LeaveRequest.query
+
+        if status in {"PENDING", "APPROVED", "REJECTED"}:
+            query = query.filter(LeaveRequest.status == status)
+
+        requests = query.order_by(LeaveRequest.created_at.desc()).limit(200).all()
+
+        return jsonify({
+            "success": True,
+            "data": [serialize_leave_request(r) for r in requests]
         }), 200
     except Exception as e:
         return jsonify({
@@ -1744,7 +1929,9 @@ def get_leave_requests(user):
 def create_leave_request(user):
     """Create leave/sick request for a staff member"""
     try:
-        data = request.get_json(silent=True) or {}
+        is_multipart = request.content_type and request.content_type.startswith("multipart/form-data")
+        data = request.form if is_multipart else (request.get_json(silent=True) or {})
+        document_file = request.files.get("document") if is_multipart else None
 
         if not data.get("staff_id") or not data.get("leave_type"):
             return jsonify({
@@ -1788,6 +1975,7 @@ def create_leave_request(user):
                 "message": "Rentang izin maksimal 1 tahun"
             }), 400
 
+        document_url = save_leave_document(document_file) if document_file else None
         auto_approve = False
         leave_req = LeaveRequest(
             staff_id=staff.id,
@@ -1795,7 +1983,7 @@ def create_leave_request(user):
             start_date=start_date,
             end_date=end_date,
             reason=normalize_cell(data.get("reason")) or None,
-            document_url=normalize_cell(data.get("document_url")) or None,
+            document_url=document_url or normalize_cell(data.get("document_url")) or None,
             status="APPROVED" if auto_approve else "PENDING",
             reviewed_by=user.id if auto_approve else None,
             reviewed_at=waktu_wib() if auto_approve else None
@@ -1825,15 +2013,92 @@ def create_leave_request(user):
                 "leave_type": leave_req.leave_type,
                 "start_date": leave_req.start_date.isoformat(),
                 "end_date": leave_req.end_date.isoformat(),
+                "document_url": leave_req.document_url,
                 "status": leave_req.status,
                 "applied_count": applied_count
             }
         }), 201
-    except ValueError:
+    except ValueError as e:
         db.session.rollback()
         return jsonify({
             "success": False,
-            "message": "Data izin/sakit tidak valid"
+            "message": str(e) or "Data izin/sakit tidak valid"
+        }), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@staff_bp.route("/leave-request/<int:request_id>", methods=["PATCH", "PUT"])
+@check_authorization("FINANCE")
+def update_leave_request(user, request_id):
+    """Update a finance-created leave request and optionally replace its document."""
+    try:
+        leave_req = LeaveRequest.query.get(request_id)
+        if not leave_req:
+            return jsonify({
+                "success": False,
+                "message": "Surat izin tidak ditemukan"
+            }), 404
+
+        if leave_req.status != "PENDING":
+            return jsonify({
+                "success": False,
+                "message": "Surat izin yang sudah disetujui atau ditolak tidak dapat diedit"
+            }), 409
+
+        is_multipart = request.content_type and request.content_type.startswith("multipart/form-data")
+        data = request.form if is_multipart else (request.get_json(silent=True) or {})
+        document_file = request.files.get("document") if is_multipart else None
+
+        leave_type = normalize_cell(data.get("leave_type") or leave_req.leave_type).upper()
+        if leave_type not in {"SICK", "LEAVE", "PERMISSION"}:
+            return jsonify({
+                "success": False,
+                "message": "Jenis izin tidak valid"
+            }), 400
+
+        start_date_value = data.get("start_date") or leave_req.start_date.isoformat()
+        end_date_value = data.get("end_date") or start_date_value
+        start_date = datetime.fromisoformat(start_date_value).date()
+        end_date = datetime.fromisoformat(end_date_value).date()
+
+        if end_date < start_date:
+            return jsonify({
+                "success": False,
+                "message": "Tanggal selesai tidak boleh sebelum tanggal mulai"
+            }), 400
+
+        if (end_date - start_date).days > 366:
+            return jsonify({
+                "success": False,
+                "message": "Rentang izin maksimal 1 tahun"
+            }), 400
+
+        document_url = save_leave_document(document_file) if document_file else None
+
+        leave_req.leave_type = leave_type
+        leave_req.start_date = start_date
+        leave_req.end_date = end_date
+        leave_req.reason = normalize_cell(data.get("reason")) or None
+        if document_url:
+            leave_req.document_url = document_url
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Surat izin berhasil diperbarui",
+            "data": serialize_leave_request(leave_req)
+        }), 200
+    except ValueError as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e) or "Data surat izin tidak valid"
         }), 400
     except Exception as e:
         db.session.rollback()
@@ -1948,12 +2213,39 @@ def get_staff_accounts():
             "id": row.id,
             "name": row.full_name or "-",
             "username": row.username,
-            "role": row.role_name,
+            "role": role_form_code(row.role_name),
+            "role_label": role_label(row.role_name),
+            "role_group": role_group(row.role_name),
             "status": row.status,
             "last_login": row.updated_at.strftime("%d/%m/%Y %H:%M")
             if row.updated_at else "-"
 
         })
+
+    return jsonify({
+        "success": True,
+        "data": data
+    })
+
+
+@staff_bp.route("/roles", methods=["GET"])
+def get_staff_roles():
+    roles = db.session.execute(text("""
+        SELECT role_name, description
+        FROM roles
+        WHERE UPPER(role_name) NOT IN ('OWNER', 'KASIR', 'HRD')
+        ORDER BY role_name
+    """)).fetchall()
+
+    data = []
+    for row in roles:
+        data.append({
+            "code": row.role_name,
+            "label": role_label(row.role_name),
+            "group": role_group(row.role_name)
+        })
+
+    data.sort(key=lambda item: role_sort_key(item["code"]))
 
     return jsonify({
         "success": True,
